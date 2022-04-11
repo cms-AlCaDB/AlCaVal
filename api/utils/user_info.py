@@ -36,6 +36,12 @@ class UserInfo():
 	    """
 	    return self.get_user_info()['username']
 
+	def get_user_name(self):
+		"""
+		Get user name and last name
+		"""
+		return self.get_user_info()['fullname']
+        
 	def get_role(self):
 	    """
 	    Get list of groups that user is member of
