@@ -1,0 +1,26 @@
+body {
+    margin: 0;
+    font-family: arial,x-locale-body,sans-serif;
+    letter-spacing: -.0027777778rem;
+    font-size: 100%;
+    line-height: 2;
+}
+
+.web-title {
+  text-decoration: none;
+  color: darkblue; 
+}
+
+.login-btn {
+  width: auto;
+  padding:10px;
+}
+
+p {
+  text-align: center;
+}
+
+h4 {
+  margin: 5px;
+}
+

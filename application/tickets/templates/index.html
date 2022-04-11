@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow' >
+    {{ form.hidden_tag() }}
+
+    <div class="form-group row">
+    	{{ form.batch_name.label(class="col-sm-3 col-form-label-sm") }} 
+    	<div class="col-sm-9">
+    	 {{ form.batch_name(class="form-control form-control-sm", placeholder="Appropriate batch name") }} 
+    	</div>
+
+    	{{ form.cmssw_release.label(class="col-sm-3 col-form-label-sm") }} 
+    	<div class="col-sm-9">
+    	 {{ form.cmssw_release(class="form-control form-control-sm", placeholder="E.g CMSSW_12_3_...") }} 
+    	</div>
+
+    	{{ form.label.label(class="col-sm-3 col-form-label-sm") }}
+    	<div class="col-sm-9">
+    	 {{ form.label(class="form-control form-control-sm", placeholder="E.g. AlCaTest") }} 
+    	</div>
+
+    	{{ form.hlt_gt.label(class="col-sm-3 col-form-label-sm") }}
+    	<div class="col-sm-9">
+		 {{ form.hlt_gt(class="form-control form-control-sm", placeholder="HLT Global Tag. Target or Reference") }} 
+    	</div>
+
+    	{{ form.prompt_gt.label(class="col-sm-3 col-form-label-sm") }}
+    	<div class="col-sm-9">
+    	 {{ form.prompt_gt(class="form-control form-control-sm", placeholder="Prompt Global Tag. Target or Reference") }} 
+    	</div>
+
+    	{{ form.express_gt.label(class="col-sm-3 col-form-label-sm") }}
+    	<div class="col-sm-9">
+    	 {{ form.express_gt(class="form-control form-control-sm", placeholder="Express Global Tag. Target or Reference") }} 
+    	</div>
+
+    	{{ form.workflow_ids.label(class="col-sm-3 col-form-label-sm") }}
+    	<div class="col-sm-9">
+    	 {{ form.workflow_ids(class="form-control form-control-sm", placeholder="Workflow IDs separated by comma. E.g. 1.1,1.2") }} 
+    	</div>
+    </div>
+
+
+    <div style="text-align: center;">
+	    {{ form.submit(class_="btn btn-primary") }}
+	</div>
+</form>
+
+
+
+{% endblock %}
+
