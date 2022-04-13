@@ -7,26 +7,42 @@ oidc = OpenIDConnect()
 def create_app():
 	app = Flask(__name__)
 	app.config.from_object('config')
-	
 	oidc.init_app(app)
 
+	# Add API resources
 	from api.ticket_api import CreateTicketAPI
 	from api.system_api import UserInfoAPI
+	from api.search_api import SearchAPI, SuggestionsAPI, WildSearchAPI
 
 	api = Api(app)
 	api.add_resource(CreateTicketAPI, '/api/tickets/create')
 	api.add_resource(UserInfoAPI, '/api/system/user_info')
 
+	api.add_resource(SearchAPI, '/api/search')
+	api.add_resource(SuggestionsAPI, '/api/suggestions')
+	api.add_resource(WildSearchAPI, '/api/wild_search')
+
+	# Register Blueprints
 	from .relval.views import relval_blueprint
 	from .home_view import home_blueprint
 	from .tickets.view import ticket_blueprint
 
 	app.register_blueprint(relval_blueprint, url_prefix='/relval')
 	app.register_blueprint(home_blueprint, url_prefix='/')
-	app.register_blueprint(ticket_blueprint, url_prefix='/tickets')
+	app.register_blueprint(ticket_blueprint, url_prefix='/')
 
+
+	# To avoid trailing slashes at the end of the url
+	app.url_map.strict_slashes = False
+	@app.before_request
+	def clear_trailing():
+	    from flask import redirect, request
+	    rp = request.path 
+	    if rp != '/' and rp.endswith('/'):
+	        return redirect(rp[:-1])
+
+	# Init database connection
 	Database.set_database_name('relval')
-
 	Database.add_search_rename('tickets', 'created_on', 'history.0.time')
 	Database.add_search_rename('tickets', 'created_by', 'history.0.user')
 	Database.add_search_rename('tickets', 'workflows', 'workflow_ids<float>')

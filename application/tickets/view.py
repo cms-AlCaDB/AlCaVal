@@ -1,19 +1,40 @@
 import json
 import requests
-from flask import Blueprint, render_template, redirect, request
+from flask import Blueprint, render_template, redirect, request, flash, url_for
 from .forms import TicketForm
 from .. import oidc
 from resources.smart_tricks import askfor, DictObj
 
 ticket_blueprint = Blueprint('tickets', __name__, template_folder='templates')
 
-@ticket_blueprint.route('/edit', methods=['GET', 'POST'])
+def get_userinfo():
+    userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
+    user = DictObj(userinfo)
+    return user
+
+@ticket_blueprint.route('/tickets/edit', methods=['GET', 'POST'])
 @oidc.check
 def create_ticket():
-	form = TicketForm()
-	if form.validate_on_submit():
-		data = form.data
-		res = askfor.put('api/tickets/create', data = data, headers=request.headers)
-	userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
-	user = DictObj(userinfo)
-	return render_template('index.html', user_name=user.response.fullname, form=form)
+    user = get_userinfo()
+    form = TicketForm()
+    if form.validate_on_submit():
+        data = form.data
+        res = askfor.put('api/tickets/create', data=data, headers=request.headers).json()
+        if res['success']:
+            flash(u'Success! Ticket created!', 'success')
+        else:
+            flash(res['message'], 'danger')
+    return render_template('index.html', user_name=user.response.fullname, form=form)
+
+
+# Tickets table
+from .Table import ItemTable
+
+@ticket_blueprint.route('/tickets', methods=['GET'])
+@oidc.check
+def tickets():
+    user = get_userinfo()
+    response = askfor.get('api/search?db_name=tickets' +'&'+ request.query_string.decode()).json()
+    items = response['response']['results']
+    table = ItemTable(items, classes=['table', 'table-striped', 'table-hover'])
+    return render_template('Tickets.html.jinja', user_name=user.response.fullname, table=table)
