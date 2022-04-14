@@ -7,8 +7,8 @@ import traceback
 import time
 from flask import request, make_response
 from flask_restful import Resource
-from .utils.user_info import UserInfo
-from .utils.exceptions import ObjectNotFound, ObjectAlreadyExists
+from ..utils.user_info import UserInfo
+from ..utils.exceptions import ObjectNotFound, ObjectAlreadyExists
 
 
 class APIBase(Resource):

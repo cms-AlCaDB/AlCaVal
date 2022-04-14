@@ -2,7 +2,7 @@
 Module that contains Ticket class
 """
 from copy import deepcopy
-from ..model.model import ModelBase
+from ..model.model_base import ModelBase
 
 
 class Ticket(ModelBase):

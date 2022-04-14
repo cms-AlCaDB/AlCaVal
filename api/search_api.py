@@ -4,7 +4,7 @@ Module that contains all search APIs
 import re
 import time
 import flask
-from .api_base import APIBase
+from core_lib.api.api_base import APIBase
 from database.database import Database
 from .model.ticket import Ticket
 from .model.relval import RelVal

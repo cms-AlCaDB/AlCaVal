@@ -1,29 +1,9 @@
-# import json
-# import flask
-# from flask import jsonify, request
-# from .api_base import APIBase
-# from application import oidc
-# from .controller.ticket_controller import TicketController
-
-# ticket_controller = TicketController()
-
-# class CreateTicketAPI(APIBase):
-#     def __init__(self):
-#         APIBase.__init__(self) 
-
-#     @APIBase.ensure_role('user')
-#     def put(self):
-#         ticket_json = dict(request.form)
-#         ticket_json.update({'workflow_ids': ticket_json['workflow_ids'].strip().split(',')})
-#         obj = ticket_controller.create(ticket_json)
-#         return self.output_text({'response': obj.get_json(), 'success': True, 'message': ''})
-
 """
 Module that contains all ticket APIs
 """
 import json
 import flask
-from .api_base import APIBase
+from core_lib.api.api_base import APIBase
 from .model.ticket import Ticket
 from .controller.ticket_controller import TicketController
 
