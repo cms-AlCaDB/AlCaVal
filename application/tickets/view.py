@@ -2,15 +2,11 @@ import json
 import requests
 from flask import Blueprint, render_template, redirect, request, flash, url_for
 from .forms import TicketForm
-from .. import oidc
-from resources.smart_tricks import askfor, DictObj
+from .. import oidc, get_userinfo
+
+from resources.smart_tricks import askfor
 
 ticket_blueprint = Blueprint('tickets', __name__, template_folder='templates')
-
-def get_userinfo():
-    userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
-    user = DictObj(userinfo)
-    return user
 
 @ticket_blueprint.route('/tickets/edit', methods=['GET', 'POST'])
 @oidc.check
@@ -24,7 +20,7 @@ def create_ticket():
             flash(u'Success! Ticket created!', 'success')
         else:
             flash(res['message'], 'danger')
-    return render_template('index.html', user_name=user.response.fullname, form=form)
+    return render_template('TicketEdit.html.jinja', user_name=user.response.fullname, form=form)
 
 
 # Tickets table
@@ -36,5 +32,5 @@ def tickets():
     user = get_userinfo()
     response = askfor.get('api/search?db_name=tickets' +'&'+ request.query_string.decode()).json()
     items = response['response']['results']
-    table = ItemTable(items, classes=['table', 'table-striped', 'table-hover'])
+    table = ItemTable(items, classes=['table', 'table-hover'])
     return render_template('Tickets.html.jinja', user_name=user.response.fullname, table=table)

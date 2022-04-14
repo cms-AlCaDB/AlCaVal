@@ -1,8 +1,14 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api
 from database.database import Database
 from flask_oidc import OpenIDConnect                                            
 oidc = OpenIDConnect()
+
+from resources.smart_tricks import askfor, DictObj
+def get_userinfo():
+    userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
+    user = DictObj(userinfo)
+    return user
 
 def create_app():
 	app = Flask(__name__)
