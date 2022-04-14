@@ -3,12 +3,19 @@ from flask_table import Table, Col, LinkCol
 
 
 class ActionCol(Col):
-    def td_format(self, content):
+    def td_contents(self, item, attr_list):
+        return self.td_format(self.from_attr_list(item, attr_list), item)
+
+    def td_format(self, content, item):
         edit = f"<a href='/tickets/edit?prepid={content}'>Edit</a>"
         clone = f"<a href='/tickets/edit?clone={content}'>Clone</a>"
         matrix = f"<a href='api/tickets/run_the_matrix/{content}'>runTheMatrix.py</a>"
-        output = " | ".join([edit, clone, matrix])
-        return output
+        if item['status']== 'new':
+            # create_relval = f"""<a onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
+            create_relval = f"""<a href="api/tickets/create_relvals?prepid={content}">Create Relval</a>"""
+            return " | ".join([edit, clone, create_relval, matrix])
+        else:
+            return " | ".join([edit, clone, matrix])
 
 class WFCol(Col):
     def td_format(self, content):
@@ -45,7 +52,7 @@ class ItemTable(Table):
     workflow_ids = WFCol('Workflows', td_html_attrs={'style': 'white-space: nowrap'})
 
     allow_sort = False
-    
+    table_id = 'ticket_list'
     allow_empty = True
 
     def sort_url(self, col_key, reverse=False):
@@ -54,3 +61,6 @@ class ItemTable(Table):
         else:
             direction = 'asc'
         return url_for('tickets.tickets', sort=col_key, direction=direction)
+
+    def get_tr_attrs(self, item):
+        return {'id': item['prepid']}

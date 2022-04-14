@@ -43,10 +43,16 @@
 
 
     <div style="text-align: center;">
-	    {{ form.submit(class_="btn btn-primary") }}
+	    {{ form.submit(class_="btn btn-primary", value="Save Ticket") }}
+        <button class="btn btn-danger" onclick=cancel()>Cancel</button>
 	</div>
 </form>
 
+<script type="text/javascript">
+    function cancel(){
+        window.location = '/tickets';
+    }
+</script>
 
 
 {% endblock %}

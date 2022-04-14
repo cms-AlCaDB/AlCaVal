@@ -12,7 +12,17 @@
 
 	<script type="text/javascript">
 		$(document).ready( function () {
-		    $('.table').DataTable( {"scrollX": true} );
+		    $('#ticket_list').DataTable( {"scrollX": true} );
 		} );
+
+		function sleep(ms) {
+	      return new Promise(resolve => setTimeout(resolve, ms));
+	    }
+
+		function create_relval(idname){
+		    console.log(idname)
+		    console.log(document.getElementById(idname))
+			// var retVal = confirm("Create RelVals for Prep-ID: ?\nAre you sure you want to generate RelVals for " + idname + " ticket? \nAfter RelVals are created, this ticket cannot be modified, additional workflows will require a new ticket.");
+		}
 	</script>
 {% endblock %}

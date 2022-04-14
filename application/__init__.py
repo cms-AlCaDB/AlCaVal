@@ -16,12 +16,22 @@ def create_app():
 	oidc.init_app(app)
 
 	# Add API resources
-	from api.ticket_api import CreateTicketAPI
+	from api.ticket_api import (CreateTicketAPI, 
+								DeleteTicketAPI,
+	                            UpdateTicketAPI,
+	                            GetTicketAPI,
+	                            GetEditableTicketAPI,
+	                            CreateRelValsForTicketAPI,
+	                            GetWorkflowsOfCreatedRelValsAPI,
+	                            GetRunTheMatrixOfTicketAPI)
 	from api.system_api import UserInfoAPI
 	from api.search_api import SearchAPI, SuggestionsAPI, WildSearchAPI
 
 	api = Api(app)
 	api.add_resource(CreateTicketAPI, '/api/tickets/create')
+	api.add_resource(GetEditableTicketAPI, 
+					 '/api/tickets/get_editable', 
+					 '/api/tickets/get_editable/<string:prepid>')
 	api.add_resource(UserInfoAPI, '/api/system/user_info')
 
 	api.add_resource(SearchAPI, '/api/search')
