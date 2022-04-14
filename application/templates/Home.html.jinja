@@ -1,0 +1,16 @@
+{% extends 'Base.html.jinja' %}
+
+{% block headercontent %} {% endblock %}
+
+{% block content %}
+	<h1 class='card-title' style="text-align: center; margin-top: 10px;">Home</h1>
+
+	<div style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white'>
+		<h3 class="m-3">Quick Links</h3>
+		<ul>
+			<li><a href="/tickets/edit">Create New Ticket</a></li>
+			<li><a href="/tickets?created_by={{ user.response.username }}">My Tickets</a> - show tickets create by me</li>
+		</ul>
+	</div>
+
+{% endblock %}

@@ -1,10 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'Base.html.jinja' %}
 {% block headercontent %}
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
 	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 {% endblock %}
 
 {% block content %}
+	<h2 style="text-align: center; margin-top: 10px;">Tickets</h2>
 	<div style="padding: 5px; margin-top: 20px;">
 		{{ table.__html__() }}
 	</div>
