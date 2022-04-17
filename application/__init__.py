@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api
 from database.database import Database
+from core_lib.utils.global_config import Config
 from flask_oidc import OpenIDConnect                                            
 oidc = OpenIDConnect()
 
@@ -29,9 +30,17 @@ def create_app():
 
 	api = Api(app)
 	api.add_resource(CreateTicketAPI, '/api/tickets/create')
+	api.add_resource(DeleteTicketAPI, '/api/tickets/delete')
+	api.add_resource(UpdateTicketAPI, '/api/tickets/update')
+	api.add_resource(GetTicketAPI, '/api/tickets/get/<string:prepid>')
 	api.add_resource(GetEditableTicketAPI, 
 					 '/api/tickets/get_editable', 
 					 '/api/tickets/get_editable/<string:prepid>')
+	api.add_resource(CreateRelValsForTicketAPI, '/api/tickets/create_relvals')
+	api.add_resource(GetWorkflowsOfCreatedRelValsAPI,
+                 '/api/tickets/relvals_workflows/<string:prepid>')
+	api.add_resource(GetRunTheMatrixOfTicketAPI, '/api/tickets/run_the_matrix/<string:prepid>')
+
 	api.add_resource(UserInfoAPI, '/api/system/user_info')
 
 	api.add_resource(SearchAPI, '/api/search')
@@ -57,6 +66,7 @@ def create_app():
 	    if rp != '/' and rp.endswith('/'):
 	        return redirect(rp[:-1])
 
+	config = Config.load('config.cfg', 'prod')
 	# Init database connection
 	Database.set_database_name('relval')
 	Database.add_search_rename('tickets', 'created_on', 'history.0.time')
