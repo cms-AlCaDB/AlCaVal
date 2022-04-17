@@ -91,7 +91,6 @@ class Ticket(ModelBase):
 
     def __init__(self, json_input=None, check_attributes=True):
         if json_input:
-            print(json_input)
             json_input = deepcopy(json_input)
             json_input['workflow_ids'] = [float(wid) for wid in json_input['workflow_ids']]
             json_input['recycle_gs'] = bool(json_input.get('recycle_gs', False))
