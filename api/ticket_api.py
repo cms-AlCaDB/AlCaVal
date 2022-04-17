@@ -26,7 +26,8 @@ class CreateTicketAPI(APIBase):
         """
         Create a ticket with the provided JSON content
         """
-        ticket_json = dict(flask.request.form)
+        data = list(flask.request.form.keys())[0]
+        ticket_json = json.loads(data)
         ticket_json.update({'workflow_ids': ticket_json['workflow_ids'].strip().split(',')})
         obj = ticket_controller.create(ticket_json)
         return self.output_text({'response': obj.get_json(), 'success': True, 'message': ''})
@@ -47,8 +48,7 @@ class DeleteTicketAPI(APIBase):
         """
         Delete a ticket with the provided JSON content
         """
-        data = flask.request.data
-        ticket_json = json.loads(data.decode('utf-8'))
+        ticket_json = dict(flask.request.form)
         obj = ticket_controller.delete(ticket_json)
         return self.output_text({'response': obj, 'success': True, 'message': ''})
 
@@ -68,8 +68,9 @@ class UpdateTicketAPI(APIBase):
         """
         Update a ticket with the provided JSON content
         """
-        data = flask.request.data
-        ticket_json = json.loads(data.decode('utf-8'))
+        data = list(flask.request.form.keys())[0]
+        ticket_json = json.loads(data)
+        ticket_json.update({'workflow_ids': ticket_json['workflow_ids'].strip().split(',')})
         obj = ticket_controller.update(ticket_json)
         return self.output_text({'response': obj, 'success': True, 'message': ''})
 
@@ -131,8 +132,8 @@ class CreateRelValsForTicketAPI(APIBase):
         """
         Create RelVals for given ticket
         """
-        data = flask.request.data
-        request_data = json.loads(data.decode('utf-8'))
+        data = flask.request.form
+        request_data = data
         prepid = request_data.get('prepid')
         if not prepid:
             self.logger.error('No prepid in given data: %s', json.dumps(request_data, indent=2))
