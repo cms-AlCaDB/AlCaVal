@@ -315,20 +315,20 @@ class TicketController(ControllerBase):
 
         workflow_ids = ','.join([str(x) for x in ticket.get('workflow_ids')])
         self.logger.info('Creating RelVals %s for %s', workflow_ids, ticket_prepid)
-        # Prepare remote directory with run_the_matrix_pdmv.py
+        # Prepare remote directory with run_the_matrix_alca.py
         command = [f'mkdir -p {remote_directory}']
         _, err, code = ssh_executor.execute_command(command)
         if code != 0:
             raise Exception(f'Error code {code} preparing workspace: {err}')
 
-        ssh_executor.upload_file('core/utils/run_the_matrix_pdmv.py',
-                                 f'{remote_directory}/run_the_matrix_pdmv.py')
+        ssh_executor.upload_file('api/utils/run_the_matrix_alca.py',
+                                 f'{remote_directory}/run_the_matrix_alca.py')
         # Defined a name for output file
         file_name = f'{ticket_prepid}_{int(time.time())}.json'
-        # Execute run_the_matrix_pdmv.py
+        # Execute run_the_matrix_alca.py
         command = [f'cd {remote_directory}']
         command.extend(cmssw_setup(cmssw_release, scram_arch=scram_arch).split('\n'))
-        command += ['python3 run_the_matrix_pdmv.py '
+        command += ['python3 run_the_matrix_alca.py '
                     f'-l={workflow_ids} '
                     f'-w={matrix} '
                     f'-o={file_name} '
