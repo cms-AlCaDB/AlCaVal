@@ -7,15 +7,18 @@ class ActionCol(Col):
         return self.td_format(self.from_attr_list(item, attr_list), item)
 
     def td_format(self, content, item):
+        divAction = "<div class='actions'>{mylinks}</div>"
         edit = f"<a href='/tickets/edit?prepid={content}'>Edit</a>"
         clone = f"<a href='/tickets/edit?clone={content}'>Clone</a>"
         matrix = f"<a href='api/tickets/run_the_matrix/{content}'>runTheMatrix.py</a>"
-        if item['status']== 'new':
-            # create_relval = f"""<a onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
-            create_relval = f"""<a href="api/tickets/create_relvals?prepid={content}">Create Relval</a>"""
-            return " | ".join([edit, clone, create_relval, matrix])
+        if item['status'] == 'new':
+            delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" href="javascript:void(0);">Delete</a> """
+            create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
+            links = "".join([edit, clone, delete, create_relval, matrix])
+            return divAction.format(mylinks=links)
         else:
-            return " | ".join([edit, clone, matrix])
+            links = "".join([edit, clone, matrix])
+            return divAction.format(mylinks=links)
 
 class WFCol(Col):
     def td_format(self, content):

@@ -10,19 +10,94 @@
 		{{ table.__html__() }}
 	</div>
 
+<div class="modal"><!-- Place at bottom of page --></div>
+<div class="trigger">Trigger</div>
+<div class="log"></div>
+
+	<script>
+		(function(){
+			{% if userinfo.role_index < 1 %}
+				document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
+				document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
+			{% endif %}
+		})();
+	</script>
+
 	<script type="text/javascript">
+		$body = $("body");
+		$(document).on({
+		    ajaxStart: function() { $body.addClass("loading");    },
+		    ajaxStop: function() { $body.removeClass("loading"); }    
+		});
+		$( document ).ajaxStart(function() {});
+		$( document ).ajaxStop(function() {});
+
 		$(document).ready( function () {
 		    $('#ticket_list').DataTable( {"scrollX": true} );
 		} );
 
-		function sleep(ms) {
-	      return new Promise(resolve => setTimeout(resolve, ms));
-	    }
+		function create_relval(prepid) {
+		  var httpRequest;
+		  makeRequest();
 
-		function create_relval(idname){
-		    console.log(idname)
-		    console.log(document.getElementById(idname))
-			// var retVal = confirm("Create RelVals for Prep-ID: ?\nAre you sure you want to generate RelVals for " + idname + " ticket? \nAfter RelVals are created, this ticket cannot be modified, additional workflows will require a new ticket.");
+		  function makeRequest() {
+		    httpRequest = new XMLHttpRequest();
+		    if (!httpRequest) {
+		      alert('Giving up :( Cannot create an XMLHTTP instance');
+		      return false;
+		    }
+		    response = confirm('Create Relvals for PrepID:'+ prepid + '.\nYou can not delete the ticket once relvals are created.\nDo you want to proceed?');
+		    if (response) {
+				$.event.trigger( "ajaxStart" );
+			    httpRequest.onreadystatechange = alertContents;
+			    httpRequest.open('POST', 'api/tickets/create_relvals');
+				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			    httpRequest.send('prepid='+ prepid);
+		    }
+		  }
+
+		  function alertContents() {
+		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+			  $.event.trigger( "ajaxStop" );
+		      if (httpRequest.status === 200) {
+		      	var resp = JSON.parse(httpRequest.responseText);
+		      	console.log(typeof resp);
+		        console.log(resp.response.results);
+				window.location.reload(false)
+		      } else {
+		        alert('There was a problem with the request.'+ httpRequest.responseText);
+		      }
+		    }
+		  }
 		}
+
+		function delete_ticket(prepid) {
+		    httpRequest = new XMLHttpRequest();
+		    if (!httpRequest) {
+		      alert('Giving up :( Cannot create an XMLHTTP instance');
+		      return false;
+		    }
+		    response = confirm('Delete:'+ prepid + '.\nAre you sure you want to delete '+ prepid + ' ticket?');
+		    if (response) {
+				$.event.trigger( "ajaxStart" );
+			    httpRequest.onreadystatechange = alertContents;
+			    httpRequest.open('DELETE', 'api/tickets/delete');
+				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			    httpRequest.send('prepid='+ prepid);
+		    }
+
+		  function alertContents() {
+		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+			  $.event.trigger( "ajaxStop" );
+		      if (httpRequest.status === 200) {
+		      	var resp = JSON.parse(httpRequest.responseText);
+				window.location.reload(false)
+		      } else {
+		        alert('There was a problem with the request.'+ httpRequest.responseText);
+		      }
+		    }
+		  }
+		}
+
 	</script>
 {% endblock %}
