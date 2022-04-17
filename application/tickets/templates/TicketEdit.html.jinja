@@ -1,10 +1,24 @@
 {% extends 'Base.html.jinja' %}
 
 {% block content %}
+
+{% if createNew %}
+    <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Creating</span> new ticket</h2>
+{% else %}
+    <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Editing ticket</span> {{form.prepid.data}}</h2>
+{% endif %}
+
 <form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white' >
+    
+    {{ form.csrf_token }}
     {{ form.hidden_tag() }}
 
     <div class="form-group row">
+        {{ form.prepid.label(class="col-sm-3 col-form-label-sm") }} 
+        <div class="col-sm-9">
+         {{ form.prepid(class="form-control form-control-sm", disabled=True) }} 
+        </div>
+
     	{{ form.batch_name.label(class="col-sm-3 col-form-label-sm") }} 
     	<div class="col-sm-9">
     	 {{ form.batch_name(class="form-control form-control-sm", placeholder="Appropriate batch name") }} 
@@ -39,12 +53,18 @@
     	<div class="col-sm-9">
     	 {{ form.workflow_ids(class="form-control form-control-sm", placeholder="Workflow IDs separated by comma. E.g. 1.1,1.2") }} 
     	</div>
+
+        {{ form.notes.label(class="col-sm-3 col-form-label-sm") }}
+        <div class="col-sm-9">
+         {{ form.notes(class="form-control form-control-sm" ) }} 
+        </div>
+
     </div>
 
 
     <div style="text-align: center;">
 	    {{ form.submit(class_="btn btn-primary", value="Save Ticket") }}
-        <button class="btn btn-danger" onclick=cancel()>Cancel</button>
+        <button class="btn btn-danger" onclick="cancel(); return false;">Cancel</button>
 	</div>
 </form>
 
