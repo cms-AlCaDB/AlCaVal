@@ -58,6 +58,10 @@ class ItemTable(Table):
     table_id = 'ticket_list'
     allow_empty = True
 
+    #Header Atrributes
+    thead_attrs = {'style': 'white-space: nowrap'}
+
+
     def sort_url(self, col_key, reverse=False):
         if reverse:
             direction =  'desc'

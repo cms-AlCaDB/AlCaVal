@@ -10,9 +10,9 @@
 		{{ table.__html__() }}
 	</div>
 
-<div class="modal"><!-- Place at bottom of page --></div>
-<div class="trigger">Trigger</div>
-<div class="log"></div>
+
+    <footer class="footer fixed-bottom badge-light" style="padding-bottom: 5px; flex: right; background: ; box-shadow: -1px 0px 7px 1px gray;">
+    </footer>
 
 	<script>
 		(function(){
@@ -22,6 +22,17 @@
 			{% endif %}
 		})();
 	</script>
+
+	<style type="text/css">
+		/*Makee rows compact*/
+		table.dataTable tbody td {
+		  padding: 3px 10px;
+		}
+
+		.pagecounter{
+			margin-left: 10px;
+		}
+	</style>
 
 	<script type="text/javascript">
 		$body = $("body");
@@ -33,8 +44,16 @@
 		$( document ).ajaxStop(function() {});
 
 		$(document).ready( function () {
-		    $('#ticket_list').DataTable( {"scrollX": true} );
-		} );
+		    $('#ticket_list').DataTable({
+					"scrollX": true,
+					"pageLength": 5,
+	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
+				    initComplete: (settings, json)=>{
+				        $('.table_info').appendTo('footer');
+				        $('.pagecounter').appendTo('footer');
+				    },
+			});
+		});
 
 		function create_relval(prepid) {
 		  var httpRequest;
