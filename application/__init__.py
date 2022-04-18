@@ -25,6 +25,18 @@ def create_app():
 	                            CreateRelValsForTicketAPI,
 	                            GetWorkflowsOfCreatedRelValsAPI,
 	                            GetRunTheMatrixOfTicketAPI)
+	from api.relval_api import (CreateRelValAPI,
+                            DeleteRelValAPI,
+                            UpdateRelValAPI,
+                            GetRelValAPI,
+                            GetEditableRelValAPI,
+                            GetCMSDriverAPI,
+                            GetConfigUploadAPI,
+                            GetRelValJobDictAPI,
+                            GetDefaultRelValStepAPI,
+                            RelValNextStatus,
+                            RelValPreviousStatus,
+                            UpdateRelValWorkflowsAPI)
 	from api.system_api import UserInfoAPI
 	from api.search_api import SearchAPI, SuggestionsAPI, WildSearchAPI
 
@@ -41,18 +53,33 @@ def create_app():
                  '/api/tickets/relvals_workflows/<string:prepid>')
 	api.add_resource(GetRunTheMatrixOfTicketAPI, '/api/tickets/run_the_matrix/<string:prepid>')
 
-	api.add_resource(UserInfoAPI, '/api/system/user_info')
+	api.add_resource(CreateRelValAPI, '/api/relvals/create')
+	api.add_resource(DeleteRelValAPI, '/api/relvals/delete')
+	api.add_resource(UpdateRelValAPI, '/api/relvals/update')
+	api.add_resource(GetRelValAPI, '/api/relvals/get/<string:prepid>')
+	api.add_resource(GetEditableRelValAPI,
+	                 '/api/relvals/get_editable',
+	                 '/api/relvals/get_editable/<string:prepid>')
+	api.add_resource(GetCMSDriverAPI, '/api/relvals/get_cmsdriver/<string:prepid>')
+	api.add_resource(GetConfigUploadAPI, '/api/relvals/get_config_upload/<string:prepid>')
+	api.add_resource(GetRelValJobDictAPI, '/api/relvals/get_dict/<string:prepid>')
+	api.add_resource(GetDefaultRelValStepAPI, '/api/relvals/get_default_step')
+	api.add_resource(RelValNextStatus, '/api/relvals/next_status')
+	api.add_resource(RelValPreviousStatus, '/api/relvals/previous_status')
+	api.add_resource(UpdateRelValWorkflowsAPI, '/api/relvals/update_workflows')
 
+
+	api.add_resource(UserInfoAPI, '/api/system/user_info')
 	api.add_resource(SearchAPI, '/api/search')
 	api.add_resource(SuggestionsAPI, '/api/suggestions')
 	api.add_resource(WildSearchAPI, '/api/wild_search')
 
 	# Register Blueprints
-	from .relval.views import relval_blueprint
+	from .relvals.views import relval_blueprint
 	from .home_view import home_blueprint
 	from .tickets.view import ticket_blueprint
 
-	app.register_blueprint(relval_blueprint, url_prefix='/relval')
+	app.register_blueprint(relval_blueprint, url_prefix='/')
 	app.register_blueprint(home_blueprint, url_prefix='/')
 	app.register_blueprint(ticket_blueprint, url_prefix='/')
 
