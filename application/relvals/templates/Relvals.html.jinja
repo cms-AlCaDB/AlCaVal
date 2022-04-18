@@ -1,0 +1,142 @@
+{% extends 'Base.html.jinja' %}
+{% block headercontent %}
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+{% block content %}
+	<h2 style="text-align: center; margin-top: 10px;">Relvals</h2>
+	<div style="padding: 5px; margin-top: 20px;">
+		{{ table.__html__() }}
+	</div>
+
+    <footer class="footer fixed-bottom badge-light" style="padding-bottom: 5px; flex: right; background: ; box-shadow: -1px 0px 7px 1px gray;">
+    </footer>
+
+	<script>
+		(function(){
+			{% if userinfo.role_index < 1 %}
+				document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
+				document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
+			{% endif %}
+		})();
+	</script>
+	<style type="text/css">
+		/*Makee rows compact*/
+		table.dataTable tbody td {
+		  padding: 3px 10px;
+		}
+
+		.pagecounter{
+			margin-left: 10px;
+		}
+	</style>
+
+	<script type="text/javascript">
+		$body = $("body");
+		$(document).on({
+		    ajaxStart: function() { $body.addClass("loading");    },
+		    ajaxStop: function() { $body.removeClass("loading"); }    
+		});
+		$( document ).ajaxStart(function() {});
+		$( document ).ajaxStop(function() {});
+
+		$(document).ready( function () {
+		    $('#relvals_list').DataTable({
+					"scrollX": true,
+					"pageLength": 50,
+					"order": [],
+					"columnDefs": [ { orderable: false, targets: [0]}],
+	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
+				    initComplete: (settings, json)=>{
+				        $('.table_info').appendTo('footer');
+				        $('.pagecounter').appendTo('footer');
+				    },
+			});
+		} );
+
+		function create_relval(prepid) {
+		  var httpRequest;
+		  makeRequest();
+
+		  function makeRequest() {
+		    httpRequest = new XMLHttpRequest();
+		    if (!httpRequest) {
+		      alert('Giving up :( Cannot create an XMLHTTP instance');
+		      return false;
+		    }
+		    response = confirm('Create Relvals for PrepID:'+ prepid + '.\nYou can not delete the ticket once relvals are created.\nDo you want to proceed?');
+		    if (response) {
+				$.event.trigger( "ajaxStart" );
+			    httpRequest.onreadystatechange = alertContents;
+			    httpRequest.open('POST', 'api/tickets/create_relvals');
+				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			    httpRequest.send('prepid='+ prepid);
+		    }
+		  }
+
+		  function alertContents() {
+		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+			  $.event.trigger( "ajaxStop" );
+		      if (httpRequest.status === 200) {
+		      	var resp = JSON.parse(httpRequest.responseText);
+		      	console.log(typeof resp);
+		        console.log(resp.response.results);
+				window.location.reload(false)
+		      } else {
+		        alert('There was a problem with the request.'+ httpRequest.responseText);
+		      }
+		    }
+		  }
+		}
+
+		function delete_ticket(prepid) {
+		    httpRequest = new XMLHttpRequest();
+		    if (!httpRequest) {
+		      alert('Giving up :( Cannot create an XMLHTTP instance');
+		      return false;
+		    }
+		    response = confirm('Delete:'+ prepid + '.\nAre you sure you want to delete '+ prepid + ' ticket?');
+		    if (response) {
+				$.event.trigger( "ajaxStart" );
+			    httpRequest.onreadystatechange = alertContents;
+			    httpRequest.open('DELETE', 'api/tickets/delete');
+				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			    httpRequest.send('prepid='+ prepid);
+		    }
+
+		  function alertContents() {
+		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+			  $.event.trigger( "ajaxStop" );
+		      if (httpRequest.status === 200) {
+		      	var resp = JSON.parse(httpRequest.responseText);
+				window.location.reload(false)
+		      } else {
+		        alert('There was a problem with the request.'+ httpRequest.responseText);
+		      }
+		    }
+		  }
+		}
+
+       // Handle click on "Select all" control
+	   $('#select-all-id').on('click', function(){
+	      // Check/uncheck all checkboxes in the table
+	      console.log('this is Pritam')
+		  var ele=document.getElementsByName('table-checkbox');  
+          for(var i=0; i<ele.length; i++){  
+          	if(ele[i].type=='checkbox')  
+            	ele[i].checked=true;  
+        	}
+		  ele.forEach(element => {
+			if(document.getElementById('select-all-id').checked)
+				element.checked = true;
+			else
+				element.checked = false;
+		  });
+	      // var rows = table.rows({ 'search': 'applied' }).nodes();
+	      // $('input[type="checkbox"]', rows).prop('checked', this.checked);
+	   });
+
+
+	</script>
+{% endblock %}
