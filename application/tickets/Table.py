@@ -10,11 +10,15 @@ class ActionCol(Col):
         divAction = "<div class='actions'>{mylinks}</div>"
         edit = f"<a href='/tickets/edit?prepid={content}'>Edit</a>"
         clone = f"<a href='/tickets/edit?clone={content}'>Clone</a>"
+        show_relvals = f"<a class='show_relvals_{content}' href='/relvals?ticket={content}'>Show RelVals</a>"
         matrix = f"<a href='api/tickets/run_the_matrix/{content}'>runTheMatrix.py</a>"
         if item['status'] == 'new':
             delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" href="javascript:void(0);">Delete</a> """
             create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
             links = "".join([edit, clone, delete, create_relval, matrix])
+            return divAction.format(mylinks=links)
+        elif item['status'] == 'done':
+            links = "".join([edit, clone, show_relvals, matrix])
             return divAction.format(mylinks=links)
         else:
             links = "".join([edit, clone, matrix])

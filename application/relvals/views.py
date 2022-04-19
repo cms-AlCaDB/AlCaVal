@@ -13,4 +13,10 @@ def get_relval():
     response = askfor.get('api/search?db_name=relvals' +'&'+ request.query_string.decode()).json()
     items = response['response']['results']
     table = RelvalTable(items, classes=['table', 'table-hover'])
-    return render_template('Relvals.html.jinja', user_name=user.response.fullname, table=table, userinfo=user.response)
+
+    ticket = request.args.get('ticket')
+    prepid = request.args.get('prepid')
+    return render_template('Relvals.html.jinja', user_name=user.response.fullname, 
+                            table=table, userinfo=user.response, 
+                            ticket=ticket, prepid=prepid
+                          )

@@ -5,7 +5,7 @@ from werkzeug.datastructures import MultiDict
 from .forms import TicketForm
 from .. import oidc, get_userinfo
 
-from resources.smart_tricks import askfor
+from resources.smart_tricks import askfor, DictObj
 
 ticket_blueprint = Blueprint('tickets', __name__, template_folder='templates', static_folder='static')
 
@@ -74,6 +74,7 @@ def create_ticket():
     return render_template('TicketEdit.html.jinja', user_name=user.response.fullname, form=form, createNew=creating_new)
 
 
+
 # Tickets table
 from .Table import ItemTable
 
@@ -84,4 +85,5 @@ def tickets():
     response = askfor.get('api/search?db_name=tickets' +'&'+ request.query_string.decode()).json()
     items = response['response']['results']
     table = ItemTable(items, classes=['table', 'table-hover'])
-    return render_template('Tickets.html.jinja', user_name=user.response.fullname, table=table, userinfo=user.response)
+    itemdict = DictObj({value['_id']: value for value in items})
+    return render_template('Tickets.html.jinja', user_name=user.response.fullname, table=table, userinfo=user.response, items = itemdict)

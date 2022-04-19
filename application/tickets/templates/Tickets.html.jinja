@@ -10,7 +10,7 @@
 		{{ table.__html__() }}
 	</div>
 
-
+	<div class="modal"><!-- For loading animation --></div>
     <footer class="footer fixed-bottom badge-light" style="padding-bottom: 5px; flex: right; background: ; box-shadow: -1px 0px 7px 1px gray;">
     </footer>
 
@@ -35,10 +35,11 @@
 	</style>
 
 	<script type="text/javascript">
-		$body = $("body");
 		$(document).on({
-		    ajaxStart: function() { $body.addClass("loading");    },
-		    ajaxStop: function() { $body.removeClass("loading"); }    
+		    ajaxStart: function() { 
+		    	$("body").addClass("loading");  },
+		    ajaxStop: function() { 
+		    	$("body").removeClass("loading"); }    
 		});
 		$( document ).ajaxStart(function() {});
 		$( document ).ajaxStop(function() {});
@@ -46,7 +47,7 @@
 		$(document).ready( function () {
 		    $('#ticket_list').DataTable({
 					"scrollX": true,
-					"pageLength": 5,
+					"pageLength": 50,
 	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
 				    initComplete: (settings, json)=>{
 				        $('.table_info').appendTo('footer');
@@ -77,13 +78,12 @@
 
 		  function alertContents() {
 		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-			  $.event.trigger( "ajaxStop" );
 		      if (httpRequest.status === 200) {
-		      	var resp = JSON.parse(httpRequest.responseText);
-		      	console.log(typeof resp);
-		        console.log(resp.response.results);
-				window.location.reload(false)
+			    $.event.trigger( "ajaxStop" );
+			    window.location.href = 'relvals?ticket='+prepid;	
+				// window.location.reload(true);
 		      } else {
+			    $.event.trigger( "ajaxStop" );
 		        alert('There was a problem with the request.'+ httpRequest.responseText);
 		      }
 		    }

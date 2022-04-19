@@ -5,7 +5,14 @@
 {% endblock %}
 
 {% block content %}
-	<h2 style="text-align: center; margin-top: 10px;">Relvals</h2>
+	{% if ticket %}
+		<h2 style="text-align: center; margin-top: 10px;">Relvals for ticket <b>{{ ticket }}</b></h2>
+	{% elif prepid %}
+		<h2 style="text-align: center; margin-top: 10px;">Relval</h2>
+	{% else %}
+		<h2 style="text-align: center; margin-top: 10px;">Relvals</h2>
+	{% endif %}
+
 	<div style="padding: 5px; margin-top: 20px;">
 		{{ table.__html__() }}
 	</div>
@@ -118,10 +125,19 @@
 		  }
 		}
 
+	   // Checking indeterminate state
+       $('[name="table-checkbox"]').on('click', function(){
+		  var allboxes=document.getElementsByName('table-checkbox');  
+		  var allcheck=document.getElementById('select-all-id');  
+		  allcheck.indeterminate = false;
+		  allboxes.forEach(box => {
+		  	if (box.checked)
+			  allcheck.indeterminate = true;
+		  });
+       });
        // Handle click on "Select all" control
 	   $('#select-all-id').on('click', function(){
 	      // Check/uncheck all checkboxes in the table
-	      console.log('this is Pritam')
 		  var ele=document.getElementsByName('table-checkbox');  
           for(var i=0; i<ele.length; i++){  
           	if(ele[i].type=='checkbox')  
@@ -133,8 +149,6 @@
 			else
 				element.checked = false;
 		  });
-	      // var rows = table.rows({ 'search': 'applied' }).nodes();
-	      // $('input[type="checkbox"]', rows).prop('checked', this.checked);
 	   });
 
 

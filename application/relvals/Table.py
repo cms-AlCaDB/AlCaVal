@@ -10,12 +10,14 @@ class ActionCol(Col):
         edit = f"<a href='/relvals/edit?prepid={content}'>Edit</a>"
         clone = f"<a href='/relvals/edit?clone={content}'>Clone</a>"
         cmsDriver = f"<a href='api/relvals/get_cmsdriver/{content}'>cmsDriver</a>"
+        job_dict = f"<a href='api/relvals/get_dict/{content}' title='Show job dict of ReqMgr2'>Job dict</a>"
+        ticket = f"<a href='tickets?created_relvals={content}'>Ticket</a>"
         if item['status'] == 'new':
             delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval('{content}')" href="javascript:void(0);">Delete</a> """
-            links = "".join([edit, clone, delete, cmsDriver])
+            links = "".join([edit, clone, delete, cmsDriver, job_dict, ticket])
             return divAction.format(mylinks=links)
         else:
-            links = "".join([edit, clone, cmsDriver])
+            links = "".join([edit, clone, cmsDriver, job_dict, ticket])
             return divAction.format(mylinks=links)
 
 ### Custom checkbox column class 
