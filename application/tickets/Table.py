@@ -11,18 +11,16 @@ class ActionCol(Col):
         edit = f"<a href='/tickets/edit?prepid={content}'>Edit</a>"
         clone = f"<a href='/tickets/edit?clone={content}'>Clone</a>"
         show_relvals = f"<a class='show_relvals_{content}' href='/relvals?ticket={content}'>Show RelVals</a>"
+        show_relvals = show_relvals if len(item['created_relvals']) != 0 else ""
+
         matrix = f"<a href='api/tickets/run_the_matrix/{content}'>runTheMatrix.py</a>"
-        if item['status'] == 'new':
-            delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" href="javascript:void(0);">Delete</a> """
-            create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
-            links = "".join([edit, clone, delete, create_relval, matrix])
-            return divAction.format(mylinks=links)
-        elif item['status'] == 'done':
-            links = "".join([edit, clone, show_relvals, matrix])
-            return divAction.format(mylinks=links)
-        else:
-            links = "".join([edit, clone, matrix])
-            return divAction.format(mylinks=links)
+
+        delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" href="javascript:void(0);">Delete</a> """
+        delete = delete if len(item['created_relvals']) == 0 else ""
+        create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
+        create_relval = create_relval if item['status'] == 'new' else ""
+        links = "".join([edit, clone, delete, show_relvals, create_relval, matrix])
+        return divAction.format(mylinks=links)
 
 class WFCol(Col):
     def td_format(self, content):
@@ -58,12 +56,15 @@ class ItemTable(Table):
 
     workflow_ids = WFCol('Workflows', td_html_attrs={'style': 'white-space: nowrap'})
 
+    notes = Col('Notes', td_html_attrs={'style': 'white-space: nowrap'})
+
     allow_sort = False
     table_id = 'ticket_list'
     allow_empty = True
 
-    #Header Atrributes
-    thead_attrs = {'style': 'white-space: nowrap'}
+    #Atrributes
+    html_attrs = {"style":"margin-left: 0px; width: 100%;"}
+    thead_attrs = {'style': 'white-space: nowrap;'}
 
 
     def sort_url(self, col_key, reverse=False):

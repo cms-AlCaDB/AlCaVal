@@ -7,18 +7,18 @@ class ActionCol(Col):
 
     def td_format(self, content, item):
         divAction = "<div class='actions'>{mylinks}</div>"
+
         edit = f"<a href='/relvals/edit?prepid={content}'>Edit</a>"
         clone = f"<a href='/relvals/edit?clone={content}'>Clone</a>"
         cmsDriver = f"<a href='api/relvals/get_cmsdriver/{content}'>cmsDriver</a>"
         job_dict = f"<a href='api/relvals/get_dict/{content}' title='Show job dict of ReqMgr2'>Job dict</a>"
         ticket = f"<a href='tickets?created_relvals={content}'>Ticket</a>"
-        if item['status'] == 'new':
-            delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval('{content}')" href="javascript:void(0);">Delete</a> """
-            links = "".join([edit, clone, delete, cmsDriver, job_dict, ticket])
-            return divAction.format(mylinks=links)
-        else:
-            links = "".join([edit, clone, cmsDriver, job_dict, ticket])
-            return divAction.format(mylinks=links)
+
+        delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval(['{content}'])" href="javascript:void(0);">Delete</a>"""
+        delete = delete if item['status'] == 'new' else ""
+        
+        links = "".join([edit, clone, delete, cmsDriver, job_dict, ticket])
+        return divAction.format(mylinks=links)
 
 ### Custom checkbox column class 
 class CheckboxCol(Col):
@@ -84,7 +84,8 @@ class RelvalTable(Table):
     table_id = 'relvals_list'
     allow_empty = True
 
-    #Header Atrributes
+    #Atrributes
+    html_attrs = {"style":"margin-left: 0px; width: 100%;"}
     thead_attrs = {'style': 'white-space: nowrap'}
 
     def sort_url(self, col_key, reverse=False):
