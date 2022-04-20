@@ -31,7 +31,7 @@ class SearchAPI(APIBase):
 
         db_name = args.pop('db_name', None)
         page = int(args.pop('page', 0))
-        limit = int(args.pop('limit', 20))
+        limit = int(args.pop('limit', 2000))
         sort = args.pop('sort', None)
         sort_asc = args.pop('sort_asc', None)
 
