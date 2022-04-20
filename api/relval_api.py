@@ -48,13 +48,14 @@ class DeleteRelValAPI(APIBase):
         """
         Delete a with the provided JSON content
         """
-        data = flask.request.data
-        relval_json = json.loads(data.decode('utf-8'))
+        data = list(flask.request.form.keys())[0]
+        relval_json = data.split(',')
         if isinstance(relval_json, dict):
             results = relval_controller.delete(relval_json)
         elif isinstance(relval_json, list):
             results = []
-            for single_relval_json in relval_json:
+            for prepid in relval_json:
+                single_relval_json = {'prepid': prepid}
                 results.append(relval_controller.delete(single_relval_json))
         else:
             raise Exception('Expected a single RelVal dict or a list of RelVal dicts')
