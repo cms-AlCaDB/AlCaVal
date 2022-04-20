@@ -6,7 +6,7 @@
 
 {% block content %}
 	<h2 style="text-align: center; margin-top: 10px;">Tickets</h2>
-	<div style="padding: 5px; margin-top: 20px;">
+	<div id="id_table1" style="padding: 5px; margin-top: 20px;">
 		{{ table.__html__() }}
 	</div>
 
@@ -31,6 +31,7 @@
 
 		.pagecounter{
 			margin-left: 10px;
+			float: right;
 		}
 	</style>
 
@@ -44,17 +45,16 @@
 		$( document ).ajaxStart(function() {});
 		$( document ).ajaxStop(function() {});
 
-		$(document).ready( function () {
-		    $('#ticket_list').DataTable({
+		var datatable = $('#ticket_list').DataTable({
 					"scrollX": true,
 					"pageLength": 50,
+					"bStateSave": true,
 	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
 				    initComplete: (settings, json)=>{
 				        $('.table_info').appendTo('footer');
 				        $('.pagecounter').appendTo('footer');
 				    },
 			});
-		});
 
 		function create_relval(prepid) {
 		  var httpRequest;
@@ -80,8 +80,8 @@
 		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
 		      if (httpRequest.status === 200) {
 			    $.event.trigger( "ajaxStop" );
-			    window.location.href = 'relvals?ticket='+prepid;	
-				// window.location.reload(true);
+			    // window.location.href = 'relvals?ticket='+prepid;	
+				window.location.reload(true);
 		      } else {
 			    $.event.trigger( "ajaxStop" );
 		        alert('There was a problem with the request.'+ httpRequest.responseText);
@@ -107,11 +107,12 @@
 
 		  function alertContents() {
 		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-			  $.event.trigger( "ajaxStop" );
 		      if (httpRequest.status === 200) {
-		      	var resp = JSON.parse(httpRequest.responseText);
+		      	console.log('Ticket '+prepid+' deleted!');
 				window.location.reload(false)
+				$.event.trigger( "ajaxStop" );
 		      } else {
+				$.event.trigger( "ajaxStop" );
 		        alert('There was a problem with the request.'+ httpRequest.responseText);
 		      }
 		    }
