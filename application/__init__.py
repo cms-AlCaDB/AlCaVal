@@ -1,7 +1,12 @@
+import os
+import sys
+import logging
+import logging.handlers
 from flask import Flask, request
 from flask_restful import Api
 from database.database import Database
 from core_lib.utils.global_config import Config
+from core_lib.utils.username_filter import UsernameFilter
 from flask_oidc import OpenIDConnect                                            
 oidc = OpenIDConnect()
 
@@ -11,7 +16,37 @@ def get_userinfo():
     user = DictObj(userinfo)
     return user
 
+def setup_logging(debug):
+    """
+    Setup logging format and place - console for debug mode and rotating files for production
+    """
+    logger = logging.getLogger()
+    logger.propagate = False
+    if debug:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+    else:
+        if not os.path.isdir('logs'):
+            os.mkdir('logs')
+
+        handler = logging.handlers.RotatingFileHandler('logs/relval.log', 'a', 8*1024*1024, 50)
+        handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(fmt='[%(asctime)s][%(user)s][%(levelname)s] %(message)s')
+    handler.setFormatter(formatter)
+    handler.addFilter(UsernameFilter())
+    logger.handlers.clear()
+    logger.addHandler(handler)
+    return logger
+
 def create_app():
+	log_format = '[%(asctime)s][%(levelname)s] %(message)s'
+	logging.basicConfig(format=log_format, level=logging.DEBUG)
+	# Set flask logging to warning
+	logging.getLogger('werkzeug').setLevel(logging.WARNING)
+	# Set paramiko logging to warning
+	logging.getLogger('paramiko').setLevel(logging.WARNING)
+
 	app = Flask(__name__)
 	app.config.from_object('config')
 	oidc.init_app(app)
@@ -39,6 +74,8 @@ def create_app():
                             UpdateRelValWorkflowsAPI)
 	from api.system_api import UserInfoAPI
 	from api.search_api import SearchAPI, SuggestionsAPI, WildSearchAPI
+
+	from api.jira_api import GetJiraTicketsAPI
 
 	api = Api(app)
 	api.add_resource(CreateTicketAPI, '/api/tickets/create')
@@ -74,14 +111,18 @@ def create_app():
 	api.add_resource(SuggestionsAPI, '/api/suggestions')
 	api.add_resource(WildSearchAPI, '/api/wild_search')
 
+	api.add_resource(GetJiraTicketsAPI, '/api/jira/tickets')
+
 	# Register Blueprints
 	from .relvals.views import relval_blueprint
 	from .home_view import home_blueprint
 	from .tickets.view import ticket_blueprint
+	from .dqm.view import dqm_blueprint
 
 	app.register_blueprint(relval_blueprint, url_prefix='/')
 	app.register_blueprint(home_blueprint, url_prefix='/')
 	app.register_blueprint(ticket_blueprint, url_prefix='/')
+	app.register_blueprint(dqm_blueprint, url_prefix='/')
 
 
 	# To avoid trailing slashes at the end of the url
@@ -104,4 +145,7 @@ def create_app():
 	Database.add_search_rename('relvals', 'workflows', 'workflows.name')
 	Database.add_search_rename('relvals', 'workflow', 'workflows.name')
 	Database.add_search_rename('relvals', 'output_dataset', 'output_datasets')
+
+	logger = setup_logging(True)
+	logger.info('Starting... Debug: ')
 	return app
