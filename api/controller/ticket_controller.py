@@ -54,6 +54,7 @@ class TicketController(ControllerBase):
         editing_info['prepid'] = False
         editing_info['batch_name'] = creating_new
         editing_info['cmssw_release'] = creating_new
+        editing_info['jira_ticket'] = not_done
         editing_info['command'] = not_done
         editing_info['command_steps'] = not_done
         editing_info['cpu_cores'] = not_done
@@ -68,6 +69,9 @@ class TicketController(ControllerBase):
         editing_info['recycle_input_of'] = not_done
         editing_info['rewrite_gt_string'] = not_done
         editing_info['sample_tag'] = not_done
+        editing_info['hlt_gt'] = not_done
+        editing_info['prompt_gt'] = not_done
+        editing_info['express_gt'] = not_done
         editing_info['scram_arch'] = not_done
         editing_info['workflow_ids'] = not_done
 
@@ -355,6 +359,7 @@ class TicketController(ControllerBase):
         Create a RelVal from given workflow
         """
         cmssw_release = ticket.get('cmssw_release')
+        jira_ticket = ticket.get('jira_ticket')
         scram_arch = ticket.get('scram_arch')
         n_streams = ticket.get('n_streams')
         gpu_dict = ticket.get('gpu')
@@ -363,6 +368,7 @@ class TicketController(ControllerBase):
         relval_json = {'prepid': 'TempRelValObject-00000',
                        'batch_name': ticket.get('batch_name'),
                        'cmssw_release': cmssw_release,
+                       'jira_ticket': jira_ticket,
                        'cpu_cores': ticket.get('cpu_cores'),
                        'label': ticket.get('label'),
                        'memory': ticket.get('memory'),
