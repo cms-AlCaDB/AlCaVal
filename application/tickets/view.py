@@ -41,10 +41,13 @@ def create_ticket():
 
     form = TicketForm(data=MultiDict(session['ticket_data']))
 
-    editInfo = session['ticket_editingInfo']
-    olddata = session['ticket_data']
-    common_keys = set(form._fields.keys()).intersection(set(editInfo.keys()))
+    mtickets = askfor.get('api/jira/tickets').json()['response']
+    tickets_list = form.jira_ticket.choices + mtickets
+    form.jira_ticket.choices = tickets_list
     if edit:
+        editInfo = session['ticket_editingInfo']
+        olddata = session['ticket_data']
+        common_keys = set(form._fields.keys()).intersection(set(editInfo.keys()))
         for field in common_keys:
             rkw_value = form._fields.get(field).render_kw
             if rkw_value:
