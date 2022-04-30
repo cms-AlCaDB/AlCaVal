@@ -462,7 +462,7 @@ class RelValController(ControllerBase):
                                   stderr)
                 raise Exception(f'Error creting remote directory: {stderr}')
 
-            ssh_executor.upload_file('./core/utils/resolve_auto_global_tag.py',
+            ssh_executor.upload_file('./api/utils/resolve_auto_global_tag.py',
                                      f'{remote_directory}/resolve_auto_global_tag.py')
             stdout, stderr, exit_code = ssh_executor.execute_command(command)
             if exit_code != 0:
