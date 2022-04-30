@@ -36,30 +36,29 @@ h4 {
 /* Taken from stack-overflow
 https://stackoverflow.com/questions/1964839/how-can-i-create-a-please-wait-loading-animation-using-jquery
  */
-.modal {
+.loadingAnim {
     display:    none;
     position:   fixed;
-    z-index:    1000;
-    top:        0;
-    left:       0;
+    z-index:    1;
+    align-items: middle;
     height:     100%;
     width:      100%;
     background: rgba( 255, 255, 255, .8 ) 
-                url('http://i.stack.imgur.com/FhHRx.gif') 
+                /*url('http://i.stack.imgur.com/FhHRx.gif') */
                 50% 50% 
                 no-repeat;
 }
 
 /* When the body has the loading class, we turn
    the scrollbar off with overflow:hidden */
-body.loading .modal {
+body.loading .loadingAnim {
     overflow: hidden;   
 }
 
 /* Anytime the body has the loading class, our
    modal element will be visible */
-body.loading .modal {
-    display: block;
+body.loading .loadingAnim {
+    display: grid;
 }
 
 /*End*/
