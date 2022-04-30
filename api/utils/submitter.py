@@ -51,7 +51,7 @@ class RequestSubmitter(BaseSubmitter):
                  f'{service_url}/relvals?prepid={prepid}\n')
         body += f'Error message:\n\n{error_message}'
         recipients = emailer.get_recipients(relval)
-        emailer.send(subject, body, recipients)
+        self.__send_email(repr(subject), repr(body), recipients)
 
     def __handle_success(self, relval):
         """
@@ -73,7 +73,21 @@ class RequestSubmitter(BaseSubmitter):
             body += 'and this job will never start running in computing!\n'
 
         recipients = emailer.get_recipients(relval)
-        emailer.send(subject, body, recipients)
+        self.__send_email(repr(subject), repr(body), recipients)
+
+    def __send_email(self, subject, body, recipients):
+        credentials_file = Config.get('credentials_file')
+        remote_directory = Config.get('remote_path').rstrip('/')
+        with SSHExecutor('lxplus.cern.ch', credentials_file) as ssh:
+            ssh.upload_file('./core_lib/utils/emailer.py', f'{remote_directory}/emailer.py')
+            command = [f'cd {remote_directory}']
+            command.append(f"""python3 -c "from emailer import Emailer; emailer = Emailer(); \
+                        emailer.send(str({subject}), str({body}), {recipients})" || exit $? """)
+            stdout, stderr, exit_code = ssh.execute_command(command)
+            if exit_code != 0:
+                self.logger.error('Error sending email:\nstdout:%s\nstderr:%s',
+                                  stdout,
+                                  stderr)
 
     def prepare_workspace(self, relval, controller, ssh_executor, workspace_dir):
         """
@@ -240,8 +254,8 @@ class RequestSubmitter(BaseSubmitter):
                 time.sleep(3)
                 self.approve_workflow(workflow_name, connection)
                 connection.close()
-                if not Config.get('development'):
-                    refresh_workflows_in_stats([workflow_name])
+                # if not Config.get('development'):
+                #     refresh_workflows_in_stats([workflow_name])
 
             except Exception as ex:
                 self.__handle_error(relval, str(ex))

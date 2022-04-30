@@ -41,9 +41,9 @@ class Emailer():
         body = body.strip()
         message.set_content(body)
         message['Subject'] = subject
-        message['From'] = 'PdmV Service Account <pdmvserv@cern.ch>'
+        message['From'] = 'AlCa Service Account <alcauser@cern.ch>'
         message['To'] = ', '.join(recipients)
-        message['Cc'] = 'pdmvserv@cern.ch'
+        message['Cc'] = 'alcauser@cern.ch'
         # Send the message via our own SMTP server.
         smtp = smtplib.SMTP()
         smtp.connect()
