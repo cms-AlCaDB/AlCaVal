@@ -29,6 +29,11 @@
     	 {{ form.cmssw_release(class="form-control form-control-sm", placeholder="E.g CMSSW_12_3_...") }} 
     	</div>
 
+        {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm") }} 
+        <div class="col-sm-9">
+         {{ form.jira_ticket(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }}
+        </div>
+
     	{{ form.label.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
     	 {{ form.label(class="form-control form-control-sm", placeholder="E.g. AlCaTest") }} 
