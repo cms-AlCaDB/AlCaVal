@@ -237,8 +237,8 @@ class RelValNextStatus(APIBase):
         """
         Move one or multiple RelVals to next status
         """
-        data = flask.request.data
-        relval_json = json.loads(data.decode('utf-8'))
+        data = list(flask.request.form.keys())[0]
+        relval_json = data.split(',')
         if isinstance(relval_json, dict):
             prepid = relval_json.get('prepid')
             relval = relval_controller.get(prepid)
@@ -246,7 +246,8 @@ class RelValNextStatus(APIBase):
             results = results[0].get_json()
         elif isinstance(relval_json, list):
             relvals = []
-            for single_relval_json in relval_json:
+            for single_prepid in relval_json:
+                single_relval_json = {'prepid': single_prepid}
                 prepid = single_relval_json.get('prepid')
                 relval = relval_controller.get(prepid)
                 relvals.append(relval)
