@@ -10,13 +10,15 @@
 		{{ table.__html__() }}
 	</div>
 
-	<div class="modal"><!-- For loading animation --></div>
     <footer class="footer fixed-bottom badge-light" style="padding-bottom: 5px; flex: right; background: ; box-shadow: -1px 0px 7px 1px gray;">
     </footer>
 
 	<script>
 		(function(){
 			{% if userinfo.role_index < 1 %}
+				document.querySelectorAll('.cls_edit_ticket').forEach(element => {element.remove();});
+				document.querySelectorAll('.cls_clone_ticket').forEach(element => {element.remove();});
+				document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
 				document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
 				document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
 			{% endif %}
@@ -36,14 +38,6 @@
 	</style>
 
 	<script type="text/javascript">
-		$(document).on({
-		    ajaxStart: function() { 
-		    	$("body").addClass("loading");  },
-		    ajaxStop: function() { 
-		    	$("body").removeClass("loading"); }    
-		});
-		$( document ).ajaxStart(function() {});
-		$( document ).ajaxStop(function() {});
 
 		var datatable = $('#ticket_list').DataTable({
 					"scrollX": true,
@@ -57,66 +51,57 @@
 			});
 
 		function create_relval(prepid) {
-		  var httpRequest;
-		  makeRequest();
+	      var req = new XMLHttpRequest();
+	      const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
+		  activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
+		  $('#goahead_confirmationModal').on('click', function(){
+			$('#confirmationModal').modal('toggle');
+			$('body').addClass('loading');
+		    req.onreadystatechange = alertContents;
+		    req.open('POST', 'api/tickets/create_relvals');
+			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		    req.send('prepid='+ prepid);
+		  });
 
-		  function makeRequest() {
-		    httpRequest = new XMLHttpRequest();
-		    if (!httpRequest) {
-		      alert('Giving up :( Cannot create an XMLHTTP instance');
-		      return false;
-		    }
-		    response = confirm('Create Relvals for PrepID:'+ prepid + '.\nYou can not delete the ticket once relvals are created.\nDo you want to proceed?');
-		    if (response) {
-				$.event.trigger( "ajaxStart" );
-			    httpRequest.onreadystatechange = alertContents;
-			    httpRequest.open('POST', 'api/tickets/create_relvals');
-				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    httpRequest.send('prepid='+ prepid);
-		    }
-		  }
-
-		  function alertContents() {
-		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-		      if (httpRequest.status === 200) {
-			    $.event.trigger( "ajaxStop" );
-			    // window.location.href = 'relvals?ticket='+prepid;	
-				window.location.reload(true);
+ 		  function alertContents() {
+		    if (req.readyState === XMLHttpRequest.DONE) {
+		      if (req.status === 200) {
+				window.location.reload(false);
+				window.onload = function() { $('body').removeClass('loading');}
 		      } else {
-			    $.event.trigger( "ajaxStop" );
-		        alert('There was a problem with the request.'+ httpRequest.responseText);
+			    $('body').removeClass('loading');
+			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+		        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
 		      }
 		    }
 		  }
 		}
 
 		function delete_ticket(prepid) {
-		    httpRequest = new XMLHttpRequest();
-		    if (!httpRequest) {
-		      alert('Giving up :( Cannot create an XMLHTTP instance');
-		      return false;
-		    }
-		    response = confirm('Delete:'+ prepid + '.\nAre you sure you want to delete '+ prepid + ' ticket?');
-		    if (response) {
-				$.event.trigger( "ajaxStart" );
-			    httpRequest.onreadystatechange = alertContents;
-			    httpRequest.open('DELETE', 'api/tickets/delete');
-				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    httpRequest.send('prepid='+ prepid);
-		    }
+		    req = new XMLHttpRequest();
+			const message = 'Do you want to proceed?';
+			activateConfirmModal('Deleting a Ticket <b>'+ prepid+'</b>?', message);
+			$('#goahead_confirmationModal').on('click', function(){
+				$('#confirmationModal').modal('toggle');
+				$('body').addClass('loading');
+				req.onreadystatechange = alertContents;
+				req.open('DELETE', 'api/tickets/delete');
+				req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+				req.send('prepid='+ prepid);
+			});
 
-		  function alertContents() {
-		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-		      if (httpRequest.status === 200) {
-		      	console.log('Ticket '+prepid+' deleted!');
-				window.location.reload(false)
-				$.event.trigger( "ajaxStop" );
-		      } else {
-				$.event.trigger( "ajaxStop" );
-		        alert('There was a problem with the request.'+ httpRequest.responseText);
-		      }
-		    }
-		  }
+			function alertContents() {
+				if (req.readyState === XMLHttpRequest.DONE) {
+				  if (req.status === 200) {
+					window.location.reload(false);
+					window.onload = function() { $('body').removeClass('loading');}
+				  } else {
+				    $('body').removeClass('loading');
+				    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+				    alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+				  }
+				}
+			}
 		}
 
 	</script>

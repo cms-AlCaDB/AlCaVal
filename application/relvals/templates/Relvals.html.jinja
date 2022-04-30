@@ -23,20 +23,26 @@
 		</div>
 		<div id="id_footer_actions2" class="actions" style="display: inline-flex; padding: 12.08px;" hidden>
 	       <span id="selected_items_id">Selected items: </span>
-		   <a id="multiple_relval_actions_edit" onclick="delete_selected_relvals()" href="javascript:void(0);">Edit</a>
+		   <a id="multiple_relval_actions_edit" onclick="create_new_relval()" href="javascript:void(0);">Edit</a>
 		   <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);">Delete</a>
+		   <a id="multiple_relval_next_status" onclick="nextStatus_selected_relvals()" href="javascript:void(0);">Next Status</a>
 		</div>		
     </footer>
 
 	<script>
 		(function(){
 			{% if userinfo.role_index < 1 %}
-				document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
-				document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
+				console.log({{ userinfo.role_index }});
+				document.querySelectorAll('.cls_edit_relval').forEach(element => {element.remove();});
+				document.querySelectorAll('.cls_clone_relval').forEach(element => {element.remove();});
+				document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
+				document.querySelectorAll('.cls_previous_status').forEach(element => {element.remove();});
+				document.querySelectorAll('.cls_next_status').forEach(element => {element.remove();});
+				document.querySelectorAll('.delete_relval').forEach(element => {element.remove();});
 			{% endif %}
-			console.log('changes');
 		})();
 	</script>
+
 	<style type="text/css">
 		/*Makee rows compact*/
 		table.dataTable tbody td {
@@ -50,13 +56,6 @@
 	</style>
 
 	<script type="text/javascript">
-		$body = $("body");
-		$(document).on({
-		    ajaxStart: function() { $body.addClass("loading");    },
-		    ajaxStop: function() { $body.removeClass("loading"); }    
-		});
-		$( document ).ajaxStart(function() {});
-		$( document ).ajaxStop(function() {});
 
 		$(document).ready( function () {
 		    $('#relvals_list').DataTable({
@@ -73,37 +72,28 @@
 			});
 		} );
 
-		function create_relval(prepid) {
-		  var httpRequest;
-		  makeRequest();
+		function create_new_relval(prepid) {
+	      var req = new XMLHttpRequest();
+	      const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
+		  activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
+		  $('#goahead_confirmationModal').on('click', function(){
+			$('#confirmationModal').modal('toggle');
+			$('body').addClass('loading');
+		    req.onreadystatechange = alertContents;
+		    req.open('POST', 'api/tickets/create_relvals');
+			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		    req.send('prepid='+ prepid);
+		  });
 
-		  function makeRequest() {
-		    httpRequest = new XMLHttpRequest();
-		    if (!httpRequest) {
-		      alert('Giving up :( Cannot create an XMLHTTP instance');
-		      return false;
-		    }
-		    response = confirm('Create Relvals for PrepID:'+ prepid + '.\nYou can not delete the ticket once relvals are created.\nDo you want to proceed?');
-		    if (response) {
-				$.event.trigger( "ajaxStart" );
-			    httpRequest.onreadystatechange = alertContents;
-			    httpRequest.open('POST', 'api/tickets/create_relvals');
-				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    httpRequest.send('prepid='+ prepid);
-		    }
-		  }
-
-		  function alertContents() {
-		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-		      if (httpRequest.status === 200) {
-		      	var resp = JSON.parse(httpRequest.responseText);
-		      	console.log(typeof resp);
-		        console.log(resp.response.results);
-				window.location.reload(false)
-			    $.event.trigger( "ajaxStop" );
+ 		  function alertContents() {
+		    if (req.readyState === XMLHttpRequest.DONE) {
+		      if (req.status === 200) {
+				window.location.reload(false);
+				window.onload = function() { $('body').removeClass('loading');}
 		      } else {
-			    $.event.trigger( "ajaxStop" );
-		        alert('There was a problem with the request.'+ httpRequest.responseText);
+			    $('body').removeClass('loading');
+			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+		        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
 		      }
 		    }
 		  }
@@ -123,25 +113,67 @@
 
 		function delete_relval(prepids) {
 			console.log(prepids);
-		    httpRequest = new XMLHttpRequest();
-		    response = confirm('Are you sure you want to delete '+ prepids.length + ' relvals?');
-		    if (response) {
-				$.event.trigger( "ajaxStart" );
-			    httpRequest.onreadystatechange = alertContents;
-			    httpRequest.open('DELETE', 'api/relvals/delete');
-				httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    httpRequest.send(prepids.toString());
+		    req = new XMLHttpRequest();
+		    var relvals_list = '';
+		    for (var i = 0; i < prepids.length; i++) {
+		    	relvals_list += '<p>'+prepids[i]+'</p>';
 		    }
+			activateConfirmModal('Deleting <b>'+ prepids.length +'</b> relvals', 'Are you sure you want to delete following relvals?'+relvals_list);
+		  	$('#goahead_confirmationModal').on('click', function(){
+				$('#confirmationModal').modal('toggle');
+				$('body').addClass('loading');
+			    req.onreadystatechange = alertContents;
+			    req.open('DELETE', 'api/relvals/delete');
+				req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			    req.send(prepids.toString());
+			 });
+
+	 		function alertContents() {
+			    if (req.readyState === XMLHttpRequest.DONE) {
+			      if (req.status === 200) {
+					window.location.reload(true);
+					window.onload = function() { $('body').removeClass('loading');}
+			      } else {
+				    $('body').removeClass('loading');
+				    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+			        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+			      }
+			    }
+			}
+		}
+
+
+		function nextStatus_selected_relvals(){
+			var selected = document.getElementsByName('table-checkbox');
+			var prepids=[];
+			selected.forEach(element =>{
+				if (element.checked){
+					var id = element.id;
+					prepids.push(id.replace("id_", ""));
+				}
+			});
+			nextStatus(prepids);
+		}
+
+		function nextStatus(prepids) {
+			console.log(prepids);
+		    req = new XMLHttpRequest();
+			$('body').addClass('loading');
+		    req.onreadystatechange = alertContents;
+		    req.open('POST', 'api/relvals/next_status');
+			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		    req.send(prepids.toString());
 
 		  function alertContents() {
-		    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-		      if (httpRequest.status === 200) {
-		      	var resp = JSON.parse(httpRequest.responseText);
+		    if (req.readyState === XMLHttpRequest.DONE) {
+		      if (req.status === 200) {
+		      	var resp = JSON.parse(req.responseText);
 				window.location.reload(false)
-				$.event.trigger( "ajaxStop" );
+				window.onload = function() { $('body').removeClass('loading');}
 		      } else {
-		        alert('There was a problem with the request.'+ httpRequest.responseText);
-				$.event.trigger( "ajaxStop" );
+			    $('body').removeClass('loading');
+			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+		        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
 		      }
 		    }
 		  }
