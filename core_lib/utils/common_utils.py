@@ -250,8 +250,10 @@ def get_workflows_from_stats(workflow_names):
         return []
 
     data = {'docs': [{'id': name} for name in workflow_names]}
+    headers = {'Content-type': 'application/json',
+               'Accept': 'application/json'}
     with ConnectionWrapper('http://vocms074.cern.ch:5984') as stats_conn:
-        response = stats_conn.api('POST', '/requests/_bulk_get', data)
+        response = stats_conn.api('POST', '/requests/_bulk_get', data, headers)
 
     response = json.loads(response.decode('utf-8')).get('results', [])
     workflows = [r['docs'][-1]['ok'] for r in response if r.get('docs') if r['docs'][-1].get('ok')]
