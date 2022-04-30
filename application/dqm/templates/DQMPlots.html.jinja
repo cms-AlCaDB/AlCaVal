@@ -1,0 +1,54 @@
+{% extends 'Base.html.jinja' %}
+{% block headercontent %}
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+{% block content %}
+	<h2 style="text-align: center; margin-top: 10px;">DQM plots</h2>
+
+	<div style="padding: 5px; margin-top: 20px;">
+		{{ table.__html__() }}
+	</div>
+
+    <footer class="footer fixed-bottom badge-light" style="padding-bottom: 2px; display: inline-block; background: ; box-shadow: -1px 0px 7px 1px gray;">
+	    {#<div id="id_footer_actions1" class="actions" style="display: inline-flex; padding: 12.08px;">
+		   <a id="multiple_relval_actions_edit" href="/relvals/edit">New Relval</a>
+		</div> #}
+		<div id="id_footer_actions2" class="actions" style="display: inline-flex; padding: 12.08px;" hidden>
+	       <span id="selected_items_id">Selected items: </span>
+		   <a id="multiple_relval_actions_edit" onclick="delete_selected_relvals()" href="javascript:void(0);">Edit</a>
+		   <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);">Delete</a>
+		</div>		
+    </footer>
+
+
+	<style type="text/css">
+		/*Makee rows compact*/
+		table.dataTable tbody td {
+		  padding: 3px 10px;
+		}
+
+		.pagecounter {
+			margin-left: 10px;
+			float: right;
+		}
+	</style>
+
+	<script type="text/javascript">
+		$(document).ready( function () {
+		    $('#dqmplot_list').DataTable({
+					"scrollX": true,
+					"pageLength": 50,
+					"bStateSave": true,
+					"order": [],
+					// "columnDefs": [ { orderable: false, targets: [0]}],
+	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
+				    initComplete: (settings, json)=>{
+				        $('.table_info').appendTo('footer');
+				        $('.pagecounter').appendTo('footer');
+				    },
+			});
+		} );
+	</script>
+{% endblock %}

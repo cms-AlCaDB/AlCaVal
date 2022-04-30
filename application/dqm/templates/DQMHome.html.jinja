@@ -1,0 +1,17 @@
+{% extends 'Base.html.jinja' %}
+
+
+{% block headercontent %} {% endblock %}
+
+{% block content %}
+	<h1 class='card-title' style="text-align: center; margin-top: 10px;">DQM Plots Comparison</h1>
+
+	<div style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white'>
+		<h3 class="m-3">Quick Links</h3>
+		<ul>
+			<li><a href="/dqm/compare">Compare newly generated plots</a></li>
+			<li><a href="/dqm/plots">Show DQM plots</a> - List of plots previously compared</li>
+		</ul>
+	</div>
+
+{% endblock %}

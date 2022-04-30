@@ -1,0 +1,42 @@
+{% extends 'Base.html.jinja' %}
+
+{% block content %}
+
+<form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white' >
+    
+    {{ form.csrf_token }}
+    {{ form.hidden_tag() }}
+
+    <div class="form-group row">
+        {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm") }} 
+        <div class="col-sm-9">
+         {{ form.jira_ticket(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }} 
+        </div>
+
+    	{{ form.target_dataset.label(class="col-sm-3 col-form-label-sm") }} 
+    	<div class="col-sm-9">
+    	 {{ form.target_dataset(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }} 
+    	</div>
+
+    	{{ form.reference_dataset.label(class="col-sm-3 col-form-label-sm") }} 
+    	<div class="col-sm-9">
+    	 {{ form.reference_dataset(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }} 
+    	</div>
+
+    </div>
+
+
+    <div style="text-align: center;">
+	    {{ form.submit(class_="btn btn-primary") }}
+        <button class="btn btn-danger" onclick="cancel(); return false;">Cancel</button>
+	</div>
+</form>
+
+<script type="text/javascript">
+    function cancel(){
+        window.location = '/dqm';
+    }
+</script>
+
+
+{% endblock %}
