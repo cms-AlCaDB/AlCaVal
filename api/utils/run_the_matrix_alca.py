@@ -10,6 +10,7 @@ import inspect
 import re
 #pylint: disable=wrong-import-position,import-error
 import Configuration.PyReleaseValidation.relval_steps as steps_module
+import alcaval_steps as alcasteps_module
 from Configuration.PyReleaseValidation.MatrixInjector import MatrixInjector
 #pylint: enable=wrong-import-position,import-error
 
@@ -93,6 +94,8 @@ def get_workflows_module(name):
     Load a specified module from Configuration.PyReleaseValidation
     """
     workflows_module_name = 'Configuration.PyReleaseValidation.relval_' + name
+    if name=='alca':
+        workflows_module_name = 'relval_' + name
     workflows_module = importlib.import_module(workflows_module_name)
     print('Loaded %s. Found %s workflows inside' % (workflows_module_name,
                                                     len(workflows_module.workflows)))
@@ -257,6 +260,7 @@ def main():
             print('Overrides: %s' % (workflow_matrix.overrides))
 
         # Go through steps and get the arguments
+        steps = steps_module.steps | alcasteps_module.steps
         for workflow_step_index, workflow_step_name in enumerate(workflow_matrix[1]):
             print('\nStep %s. %s' % (workflow_step_index + 1, workflow_step_name))
             if workflow_step_index == 0 and opt.recycle_gs:
@@ -264,13 +268,13 @@ def main():
                 workflow_step_name += 'INPUT'
                 print('Step name changed to %s to recycle input' % (workflow_step_name))
 
-            if workflow_step_name not in steps_module.steps:
+            if workflow_step_name not in steps:
                 print('Could not find %s in steps module' % (workflow_step_name),
                       file=sys.stderr)
                 sys.exit(1)
 
             # Merge user command, workflow and overrides
-            workflow_step = steps_module.steps[workflow_step_name]
+            workflow_step = steps[workflow_step_name]
             if workflow_step is None:
                 print('Workflow step %s is none, skipping it' % (workflow_step_name))
                 continue

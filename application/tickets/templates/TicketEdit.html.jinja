@@ -3,9 +3,9 @@
 {% block content %}
 
 {% if createNew %}
-    <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Creating</span> new ticket</h2>
+    <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Creating</span> <b>new ticket</b></h2>
 {% else %}
-    <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Editing ticket</span> {{form.prepid.data}}</h2>
+    <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Editing ticket</span> <b>{{form.prepid.data}}</b></h2>
 {% endif %}
 
 <form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white' >
@@ -13,55 +13,82 @@
     {{ form.csrf_token }}
     {{ form.hidden_tag() }}
 
-    <div class="form-group row">
+    <div class="form-group">
+        <div class="row">
         {{ form.prepid.label(class="col-sm-3 col-form-label-sm") }} 
         <div class="col-sm-9">
          {{ form.prepid(class="form-control form-control-sm", disabled=True) }} 
         </div>
+        </div>
 
+        <div class="row">
     	{{ form.batch_name.label(class="col-sm-3 col-form-label-sm") }} 
     	<div class="col-sm-9">
     	 {{ form.batch_name(class="form-control form-control-sm", placeholder="Appropriate batch name") }} 
     	</div>
+        </div>
 
+        <div class="row">
     	{{ form.cmssw_release.label(class="col-sm-3 col-form-label-sm") }} 
     	<div class="col-sm-9">
     	 {{ form.cmssw_release(class="form-control form-control-sm", placeholder="E.g CMSSW_12_3_...") }} 
     	</div>
+        </div>
 
+        <div class="row">
         {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm") }} 
         <div class="col-sm-9">
          {{ form.jira_ticket(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }}
         </div>
+        </div>
 
+        <div class="row">
+        {{ form.matrix.label(class="col-sm-3 col-form-label-sm") }} 
+        <div class="col-sm-4">
+         {{ form.matrix(class="form-control form-control-sm") }}
+        </div>
+        </div>
+
+        <div class="row">
     	{{ form.label.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
     	 {{ form.label(class="form-control form-control-sm", placeholder="E.g. AlCaTest") }} 
+        </div>
     	</div>
 
+        <div class="row">
     	{{ form.hlt_gt.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
 		 {{ form.hlt_gt(class="form-control form-control-sm", placeholder="HLT Global Tag. Target or Reference") }} 
+        </div>
     	</div>
 
+        <div class="row">
     	{{ form.prompt_gt.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
     	 {{ form.prompt_gt(class="form-control form-control-sm", placeholder="Prompt Global Tag. Target or Reference") }} 
+        </div>
     	</div>
 
+        <div class="row">
     	{{ form.express_gt.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
     	 {{ form.express_gt(class="form-control form-control-sm", placeholder="Express Global Tag. Target or Reference") }} 
+        </div>
     	</div>
 
+        <div class="row">
     	{{ form.workflow_ids.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
     	 {{ form.workflow_ids(class="form-control form-control-sm", placeholder="Workflow IDs separated by comma. E.g. 1.1,1.2") }} 
+        </div>
     	</div>
 
+        <div class="row">
         {{ form.notes.label(class="col-sm-3 col-form-label-sm") }}
         <div class="col-sm-9">
          {{ form.notes(class="form-control form-control-sm" ) }} 
+        </div>
         </div>
 
     </div>

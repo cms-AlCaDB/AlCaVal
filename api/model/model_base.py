@@ -24,7 +24,7 @@ class ModelBase(PdmVModelBase):
         'globaltag': lambda gt: ModelBase.matches_regex(gt, ModelBase.__globaltag_regex),
         'label': lambda label: ModelBase.matches_regex(label, '[a-zA-Z0-9_]{0,75}'),
         'matrix': lambda m: m in ('standard', 'upgrade', 'generator',
-                                  'pileup', 'premix', 'extendedgen', 'gpu'),
+                                  'pileup', 'premix', 'extendedgen', 'gpu', 'alca'),
         'memory': lambda mem: 0 <= mem <= 32000,
         'processing_string': lambda ps: ModelBase.matches_regex(ps, ModelBase.__ps_regex),
         'relval': lambda r: ModelBase.matches_regex(r, ModelBase.__relval_regex),

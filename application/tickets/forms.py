@@ -42,6 +42,16 @@ class TicketForm(FlaskForm):
                                default=''
                                )
     label = StringField('Label (--label)')
+
+    matrix_choices = [
+        ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
+        ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
+        ['extendedgen', 'extendedgen'], ['gpu', 'gpu']
+    ]
+    matrix = SelectField('Matrix (--what)', choices=matrix_choices,
+                           validators=[InputRequired()],
+                           default='alca'
+                        )
     hlt_gt = StringField('HLT Global Tag')
     prompt_gt = StringField('Prompt Global Tag')
     express_gt = StringField('Express Global Tag')
