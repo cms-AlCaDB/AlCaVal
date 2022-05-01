@@ -27,6 +27,8 @@ class Ticket(ModelBase):
         'prompt_gt': '',
         #Express GT
         'express_gt': '',
+        #Common Prompt GT
+        'common_prompt_gt': '',
         # Additional command to add to all cmsDrivers
         'command': '',
         # List of steps that additional command should be applied to
@@ -93,6 +95,7 @@ class Ticket(ModelBase):
         'hlt_gt': ModelBase.lambda_check('sample_tag'),
         'prompt_gt': ModelBase.lambda_check('sample_tag'),
         'express_gt': ModelBase.lambda_check('sample_tag'),
+        'common_prompt_gt': ModelBase.lambda_check('sample_tag'),
         'status': lambda status: status in ('new', 'done'),
         'scram_arch': lambda s: not s or ModelBase.lambda_check('scram_arch')(s),
         'workflow_ids': lambda wf: len(wf) > 0,

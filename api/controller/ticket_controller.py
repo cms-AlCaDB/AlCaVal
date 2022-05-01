@@ -72,6 +72,7 @@ class TicketController(ControllerBase):
         editing_info['hlt_gt'] = not_done
         editing_info['prompt_gt'] = not_done
         editing_info['express_gt'] = not_done
+        editing_info['common_prompt_gt'] = not_done
         editing_info['scram_arch'] = not_done
         editing_info['workflow_ids'] = not_done
 

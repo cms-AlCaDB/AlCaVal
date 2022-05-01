@@ -55,6 +55,9 @@ class TicketForm(FlaskForm):
     hlt_gt = StringField('HLT Global Tag')
     prompt_gt = StringField('Prompt Global Tag')
     express_gt = StringField('Express Global Tag')
+    common_prompt_gt = StringField('Common Prompt Global Tag', 
+                        render_kw={'placeholder': 'Global tag to be used in RECO step of HLT workflow'}
+                        )
     notes = TextAreaField('Notes',  render_kw={"rows": 10, 
                           'placeholder': "Notes: e.g. Description of the request. "})
     workflow_ids = StringField('Workflow IDs', validators=[DataRequired()])

@@ -78,6 +78,13 @@
     	</div>
 
         <div class="row">
+        {{ form.common_prompt_gt.label(class="col-sm-3 col-form-label-sm") }}
+        <div class="col-sm-9">
+         {{ form.common_prompt_gt(class="form-control form-control-sm") }} 
+        </div>
+        </div>
+
+        <div class="row">
     	{{ form.workflow_ids.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
     	 {{ form.workflow_ids(class="form-control form-control-sm", placeholder="Workflow IDs separated by comma. E.g. 1.1,1.2") }} 
