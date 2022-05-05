@@ -22,7 +22,7 @@ class ActionCol(Col):
 
         delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" href="javascript:void(0);">Delete</a> """
         delete = delete if len(item['created_relvals']) == 0 else ""
-        create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
+        create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_alca_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
         create_relval = create_relval if item['status'] == 'new' else ""
         links = "".join([edit, clone, delete, show_relvals, wf_list, create_relval, matrix, jira])
         return divAction.format(mylinks=links)

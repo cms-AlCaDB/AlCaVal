@@ -6,14 +6,14 @@ $(document).ready(function() {
 });
 
 function activateConfirmModal(title, body){
-    $('.modal-title').html(title);
-    $('.modal-body').html(body);
+    $('#confirmationModalLongTitle').html(title);
+    $('#confirmationModalBody').html(body);
     $('#confirmationModal').modal({keyboard: true});
     return true;
 }
 
 function alertModal(title, message){
-    $('.modal-title').html(title);
-    $('.modal-body').html(message);
+    $('#alertModalLongTitle').html(title);
+    $('#alertModalBody').html(message);
     $('#alertModal').modal({keyboard: true});
 }

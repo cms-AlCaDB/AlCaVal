@@ -89,4 +89,5 @@ def tickets():
     items = response['response']['results']
     table = ItemTable(items, classes=['table', 'table-hover'])
     itemdict = DictObj({value['_id']: value for value in items})
-    return render_template('Tickets.html.jinja', user_name=user.response.fullname, table=table, userinfo=user.response, items = itemdict)
+    itemdict = {value['_id']: value for value in items}
+    return render_template('Tickets.html.jinja', user_name=user.response.fullname, table=table, userinfo=user.response, items = json.dumps(itemdict))
