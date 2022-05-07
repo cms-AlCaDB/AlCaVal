@@ -64,10 +64,7 @@ def create_ticket():
             res = askfor.put('api/tickets/create', data=str(json.dumps(data)), headers=request.headers).json()
             if res['success']: flash(u'Success! Ticket created!', 'success')
         else:
-            data.update({'status': olddata['status'], 
-                         'history': olddata['history'],
-                         'created_relvals': olddata['created_relvals']
-                        })
+            data = olddata | data
             res = askfor.post('api/tickets/update', data=str(json.dumps(data)), headers=request.headers).json()
             if res['success']: flash(u'Success! Ticket updated!', 'success')
 
