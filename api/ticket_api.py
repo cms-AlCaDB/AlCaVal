@@ -28,7 +28,6 @@ class CreateTicketAPI(APIBase):
         """
         data = list(flask.request.form.keys())[0]
         ticket_json = json.loads(data)
-        ticket_json.update({'workflow_ids': ticket_json['workflow_ids'].strip().split(',')})
         obj = ticket_controller.create(ticket_json)
         return self.output_text({'response': obj.get_json(), 'success': True, 'message': ''})
 
@@ -70,7 +69,6 @@ class UpdateTicketAPI(APIBase):
         """
         data = list(flask.request.form.keys())[0]
         ticket_json = json.loads(data)
-        ticket_json.update({'workflow_ids': ticket_json['workflow_ids'].strip().split(',')})
         obj = ticket_controller.update(ticket_json)
         return self.output_text({'response': obj, 'success': True, 'message': ''})
 

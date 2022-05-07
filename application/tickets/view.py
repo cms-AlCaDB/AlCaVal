@@ -59,6 +59,7 @@ def create_ticket():
 
     if form.validate_on_submit():
         data = form.data
+        data.update({'workflow_ids': data['workflow_ids'].strip().split(',')})
         if creating_new:
             res = askfor.put('api/tickets/create', data=str(json.dumps(data)), headers=request.headers).json()
             if res['success']: flash(u'Success! Ticket created!', 'success')
