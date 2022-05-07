@@ -47,33 +47,33 @@
       "scrollX": true,
       "pageLength": 50,
       "bStateSave": true,
-              "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
-        initComplete: (settings, json)=>{
-            $('.table_info').appendTo('footer');
-            $('.pagecounter').appendTo('footer');
-        },
+      "sDom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
+      initComplete: (settings, json)=>{
+        $('.table_info').appendTo('footer');
+        $('.pagecounter').appendTo('footer');
+      }
     });
 
     function create_relval(prepid) {
       const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
       activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
       $('#goahead_confirmationModal').on('click', function(){
-      $('#confirmationModal').modal('toggle');
-      $('body').addClass('loading');
+        $('#confirmationModal').modal('toggle');
+        $('body').addClass('loading');
         req.onreadystatechange = alertContents;
         req.open('POST', 'api/tickets/create_relvals');
-      req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         req.send('prepid='+ prepid);
       });
 
       function alertContents() {
         if (req.readyState === XMLHttpRequest.DONE) {
           if (req.status === 200) {
-        window.location.reload(false);
-        window.onload = function() { $('body').removeClass('loading');}
+            window.location.reload(false);
+            window.onload = function() { $('body').removeClass('loading');}
           } else {
-          $('body').removeClass('loading');
-          const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            $('body').removeClass('loading');
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
             alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
           }
         }
@@ -95,8 +95,8 @@
       function alertContents() {
         if (req.readyState === XMLHttpRequest.DONE) {
           if (req.status === 200) {
-          window.location.reload(false);
-          window.onload = function() { $('body').removeClass('loading');}
+            window.location.reload(false);
+            window.onload = function() { $('body').removeClass('loading');}
           } else {
             $('body').removeClass('loading');
             const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
