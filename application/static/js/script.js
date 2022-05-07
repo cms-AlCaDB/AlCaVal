@@ -17,3 +17,18 @@ function alertModal(title, message){
     $('#alertModalBody').html(message);
     $('#alertModal').modal({keyboard: true});
 }
+
+function formToJSON(array) {
+    var d = {};
+    $(array).each(function() {
+        if (d[this.name] !== undefined){
+            if (!Array.isArray(d[this.name])) {
+                d[this.name] = [d[this.name]];
+            }
+            d[this.name].push(parseFloat(this.value));
+        }else{
+            d[this.name] = [parseFloat(this.value)];
+        }
+    });
+    return d;
+}

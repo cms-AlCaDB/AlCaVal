@@ -1,213 +1,226 @@
 {% extends 'Base.html.jinja' %}
 {% block headercontent %}
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 {% endblock %}
 
 {% block content %}
-	<h2 style="text-align: center; margin-top: 10px;">Tickets</h2>
-	<div id="id_table1" style="padding: 5px; margin-top: 20px;">
-		{{ table.__html__() }}
-	</div>
+  <h2 style="text-align: center; margin-top: 10px;">Tickets</h2>
+  <div id="id_table1" style="padding: 5px; margin-top: 20px;">
+    {{ table.__html__() }}
+  </div>
 
 {% include 'ConditionModal.html' %}
 
     <footer class="footer fixed-bottom badge-light" style="padding-bottom: 5px; flex: right; background: ; box-shadow: -1px 0px 7px 1px gray;">
     </footer>
 
-	<script>
-		(function(){
-			{% if userinfo.role_index < 1 %}
-				document.querySelectorAll('.cls_edit_ticket').forEach(element => {element.remove();});
-				document.querySelectorAll('.cls_clone_ticket').forEach(element => {element.remove();});
-				document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
-				document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
-				document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
-			{% endif %}
-		})();
-	</script>
+  <script>
+    (function(){
+      {% if userinfo.role_index < 1 %}
+        document.querySelectorAll('.cls_edit_ticket').forEach(element => {element.remove();});
+        document.querySelectorAll('.cls_clone_ticket').forEach(element => {element.remove();});
+        document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
+        document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
+        document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
+      {% endif %}
+    })();
+  </script>
 
-	<style type="text/css">
-		/*Makee rows compact*/
-		table.dataTable tbody td {
-		  padding: 3px 10px;
-		}
+  <style type="text/css">
+    /*Makee rows compact*/
+    table.dataTable tbody td {
+      padding: 3px 10px;
+    }
 
-		.pagecounter{
-			margin-left: 10px;
-			float: right;
-		}
-	</style>
+    .pagecounter{
+      margin-left: 10px;
+      float: right;
+    }
+  </style>
 
-	<script type="text/javascript">
-    var req = new XMLHttpRequest();		
-		var items = {{ items }};
-		var datatable = $('#ticket_list').DataTable({
-					"scrollX": true,
-					"pageLength": 50,
-					"bStateSave": true,
-	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
-				    initComplete: (settings, json)=>{
-				        $('.table_info').appendTo('footer');
-				        $('.pagecounter').appendTo('footer');
-				    },
-			});
+  <script type="text/javascript">
+    var req = new XMLHttpRequest();
+    var globalTicket;
+    var items = {{ items }};
+    var datatable = $('#ticket_list').DataTable({
+      "scrollX": true,
+      "pageLength": 50,
+      "bStateSave": true,
+              "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
+        initComplete: (settings, json)=>{
+            $('.table_info').appendTo('footer');
+            $('.pagecounter').appendTo('footer');
+        },
+    });
 
-		function create_alca_relval(prepid){
-			$( "#alcaval-submit-id" ).on( "click", function( event ) {
-			  event.preventDefault();
-			  $('#alcaRelvalForm').modal('toggle');
-			  console.log( $("#testform").serialize() );
-			});
-		}
-
-		function create_relval(prepid) {
+    function create_relval(prepid) {
       const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
-		  activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
-		  $('#goahead_confirmationModal').on('click', function(){
-			$('#confirmationModal').modal('toggle');
-			$('body').addClass('loading');
-		    req.onreadystatechange = alertContents;
-		    req.open('POST', 'api/tickets/create_relvals');
-			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		    req.send('prepid='+ prepid);
-		  });
+      activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
+      $('#goahead_confirmationModal').on('click', function(){
+      $('#confirmationModal').modal('toggle');
+      $('body').addClass('loading');
+        req.onreadystatechange = alertContents;
+        req.open('POST', 'api/tickets/create_relvals');
+      req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        req.send('prepid='+ prepid);
+      });
 
- 		  function alertContents() {
-		    if (req.readyState === XMLHttpRequest.DONE) {
-		      if (req.status === 200) {
-				window.location.reload(false);
-				window.onload = function() { $('body').removeClass('loading');}
-		      } else {
-			    $('body').removeClass('loading');
-			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-		        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-		      }
-		    }
-		  }
-		}
+      function alertContents() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          if (req.status === 200) {
+        window.location.reload(false);
+        window.onload = function() { $('body').removeClass('loading');}
+          } else {
+          $('body').removeClass('loading');
+          const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
+    }
 
-		function delete_ticket(prepid) {
-			const message = 'Do you want to proceed?';
-			activateConfirmModal('Deleting a Ticket <b>'+ prepid+'</b>?', message);
-			$('#goahead_confirmationModal').on('click', function(){
-				$('#confirmationModal').modal('toggle');
-				$('body').addClass('loading');
-				req.onreadystatechange = alertContents;
-				req.open('DELETE', 'api/tickets/delete');
-				req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-				req.send('prepid='+ prepid);
-			});
+    function delete_ticket(prepid) {
+      const message = 'Do you want to proceed?';
+      activateConfirmModal('Deleting a Ticket <b>'+ prepid+'</b>?', message);
+      $('#goahead_confirmationModal').on('click', function(){
+        $('#confirmationModal').modal('toggle');
+        $('body').addClass('loading');
+        req.onreadystatechange = alertContents;
+        req.open('DELETE', 'api/tickets/delete');
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        req.send('prepid='+ prepid);
+      });
 
-			function alertContents() {
-				if (req.readyState === XMLHttpRequest.DONE) {
-				  if (req.status === 200) {
-					window.location.reload(false);
-					window.onload = function() { $('body').removeClass('loading');}
-				  } else {
-				    $('body').removeClass('loading');
-				    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-				    alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-				  }
-				}
-			}
-		}
+      function alertContents() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          if (req.status === 200) {
+          window.location.reload(false);
+          window.onload = function() { $('body').removeClass('loading');}
+          } else {
+            $('body').removeClass('loading');
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
+    }
 
-		function create_alca_relval(prepid) {
-			$('#exampleModal').on('show.bs.modal', function (event) {
 
-			  var button = $(event.relatedTarget) // Button that triggered the modal
-			  var recipient = button.data('whatever') // Extract info from data-* attributes
-			  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-			  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-			  var modal = $(this)
-			  modal.find('#exampleModalLabel').text('Please classify workflows IDs for the given conditions by selecting below')
-			  modal.find('#cr_hlt_gt').val(items[prepid].hlt_gt)
-			  modal.find('#cr_prompt_gt').val(items[prepid].prompt_gt)
-			  modal.find('#cr_express_gt').val(items[prepid].express_gt)
+    function create_alca_relval(prepid) {
+      $('#exampleModal').on('show.bs.modal', function (event) {
+        console.log('shown')
+        var button = $(event.relatedTarget) // Button that triggered the modal
+        var recipient = button.data('whatever') // Extract info from data-* attributes
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        var modal = $(this)
+        modal.find('#exampleModalLabel').text('Please classify workflows IDs for the given conditions by selecting below')
+        modal.find('#cr_hlt_gt').val(items[prepid].hlt_gt)
+        modal.find('#cr_prompt_gt').val(items[prepid].prompt_gt)
+        modal.find('#cr_express_gt').val(items[prepid].express_gt)
 
-			  document.getElementById('cr_hlt_gt').disabled = true;
-			  document.getElementById('cr_prompt_gt').disabled = true;
-			  document.getElementById('cr_express_gt').disabled = true;
+        document.getElementById('cr_hlt_gt').disabled = true;
+        document.getElementById('cr_prompt_gt').disabled = true;
+        document.getElementById('cr_express_gt').disabled = true;
+        getTableItems(prepid)
+        $(this).off('show.bs.modal');
+      });
+      $('#exampleModal').modal('show');
 
-			  var wfs = items[prepid].workflow_ids
-			  var workflow_options_hlt = ''
-			  var workflow_options_prompt = ''
-			  var workflow_options_express = ''
-			  if (items[prepid].attached_wfs == undefined){
-			  	var attached_wfs = {"HLT": [], "Prompt": [], "Express": []}
-				}
-			  // var attached_wfs = {"HLT": [136.801, 136.802], "Prompt": [136.103, 136.104], "Express": [136.105, 136.106]}
-			  for (var i = 0; i < wfs.length; i++) {
-			  	
-			  	if (attached_wfs.HLT.includes(wfs[i])) {
-			  		workflow_options_hlt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
-			  	} else {
-			  		workflow_options_hlt += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
-			  	}
-			  	if (attached_wfs.Prompt.includes(wfs[i])) {
-			  		workflow_options_prompt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
-			  	} else {
-			  		workflow_options_prompt += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
-			  	}
-			  	if (attached_wfs.Express.includes(wfs[i])) {
-			  		workflow_options_express += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
-			  	} else {
-			  		workflow_options_express += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
-			  	}
-			  }
-			  document.getElementById('wf_hlt_gt').innerHTML = workflow_options_hlt
-			  document.getElementById('wf_prompt_gt').innerHTML = workflow_options_prompt
-			  document.getElementById('wf_express_gt').innerHTML = workflow_options_express
+      // Run Multi-Select plugin and regresh choices
+      var workflows = ['wf_hlt_gt', 'wf_prompt_gt', 'wf_express_gt']
+      for (var i = 0; i < workflows.length; i++) {
+        workflows[i]
+        $('#'+workflows[i]).multiselect({
+          numberDisplayed: 1,
+          includeSelectAllOption: true,
+          maxHeight: 200,
+          dropDown: true,
+          buttonWidth: '160px'
+        });
+        $('#'+workflows[i]).multiselect('refresh');
+      }
 
-			})
-			$('#exampleModal').modal();
+      function getTableItems(prepid) {
+        req.onreadystatechange = alertContents;
+        req.open('GET', 'api/search?db_name=tickets&prepid='+prepid, false);
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $('body').addClass('loading');    
+        req.send();
+        console.log('Print before response')
+        function alertContents() {
+          AlertException(req, prepid);
+        }
+      }
 
-			// Run Multi-Select plugin and regresh choices
-			var workflows = ['wf_hlt_gt', 'wf_prompt_gt', 'wf_express_gt']
-			for (var i = 0; i < workflows.length; i++) {
-				workflows[i]
-				$('#'+workflows[i]).multiselect({
-	      	numberDisplayed: 1,
-	        includeSelectAllOption: true,
-	        maxHeight: 200,
-	        dropDown: true,
-	        buttonWidth: '160px'
-	      });
-	      $('#'+workflows[i]).multiselect('refresh');
-			}
+      function AlertException(req, prepid) {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          $('body').removeClass('loading');
+          if (req.status === 200) {
+            console.log(JSON.parse(req.responseText).response.results[0]);
+            setWorkflowInForm(prepid, JSON.parse(req.responseText).response.results[0].attached_wfs)
+            globalTicket = JSON.parse(req.responseText).response.results[0];
+          } else {
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
 
-			$( "#alcaval-submit-id" ).on( "click", function( event ) {
-			  event.preventDefault();
-			  $('#exampleModal').modal('toggle');
-			  console.log( $("#testform").serialize() );
-			  getTableItems(prepid)
-			});
+      function setWorkflowInForm(prepid, attached_wfs) {
+        var workflow_options_hlt = ''
+        var workflow_options_prompt = ''
+        var workflow_options_express = ''
+        var wfs = items[prepid].workflow_ids
+        for (var i = 0; i < wfs.length; i++) {
+          if (attached_wfs.HLT.includes(wfs[i])) {
+            workflow_options_hlt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
+          } else {
+            workflow_options_hlt += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
+          }
+          if (attached_wfs.Prompt.includes(wfs[i])) {
+            workflow_options_prompt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
+          } else {
+            workflow_options_prompt += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
+          }
+          if (attached_wfs.Express.includes(wfs[i])) {
+            workflow_options_express += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
+          } else {
+            workflow_options_express += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
+          }
+        }
+        document.getElementById('wf_hlt_gt').innerHTML = workflow_options_hlt
+        document.getElementById('wf_prompt_gt').innerHTML = workflow_options_prompt
+        document.getElementById('wf_express_gt').innerHTML = workflow_options_express
+      }
+    }
 
-		}
+    $( "#alcaval-submit-id" ).on( "click", function( event ) {
+      event.preventDefault();
+      $('#exampleModal').modal('toggle');     
+      var datas = formToJSON($('#testform').serializeArray());
+      globalTicket['attached_wfs'] = datas
+      saveClassifiedWfs(JSON.stringify(globalTicket))
+    });
 
-		function getTableItems(prepid) {
-			req.onreadystatechange = alertContents;
-			req.open('GET', 'api/search?db_name=tickets&prepid='+prepid);
-			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			req.send();
-	    $('body').addClass('loading');		
-			function alertContents() {
-				AlertException(req, prepid);
-			}
-		}
-
-		function AlertException(req, prepid) {
-			if (req.readyState === XMLHttpRequest.DONE) {
-		    $('body').removeClass('loading');
-			  if (req.status === 200) {
-			  	console.log(JSON.parse(req.responseText).response.results[0]);
-			  } else {
-			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-			    alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-			  }
-			}
-		}
-
-	</script>
+    function saveClassifiedWfs(indata) {
+      req.onreadystatechange = onloadFunc;
+      req.open('POST', 'api/tickets/update');
+      req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      $('body').addClass('loading');    
+      req.send(indata);
+      function onloadFunc() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          $('body').removeClass('loading');
+          if (req.status === 200) {
+            console.log(JSON.parse(req.responseText));
+          } else {
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
+    }
+  </script>
 {% endblock %}
