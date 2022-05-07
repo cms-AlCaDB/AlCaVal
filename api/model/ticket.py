@@ -21,14 +21,16 @@ class Ticket(ModelBase):
         'cmssw_release': '',
         # Jira ticket 
         'jira_ticket': '',
-        #HLT GT
+        # HLT GT
         'hlt_gt': '',
-        #Prompt GT
+        # Prompt GT
         'prompt_gt': '',
-        #Express GT
+        # Express GT
         'express_gt': '',
-        #Common Prompt GT
+        # Common Prompt GT
         'common_prompt_gt': '',
+        # Attached workflows to HLT, Prompt, Express
+        'attached_wfs': {'HLT': [], 'Prompt': [], 'Express': []},
         # Additional command to add to all cmsDrivers
         'command': '',
         # List of steps that additional command should be applied to
