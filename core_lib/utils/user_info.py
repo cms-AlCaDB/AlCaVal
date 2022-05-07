@@ -10,6 +10,8 @@ class UserInfo():
 		"""Get user info"""
 		if not self.__user:
 			userinfo = g.oidc_id_token
+			if not userinfo:
+				raise Exception('Session is expired. Please reload the page to relogin!')
 			username = userinfo['sub']
 			fullname = userinfo['name']
 			name = userinfo['given_name']
