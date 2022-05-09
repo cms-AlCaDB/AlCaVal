@@ -54,8 +54,29 @@
       }
     });
 
+    function get_attached_wfs() {
+      var attached_wfs = globalTicket.attached_wfs
+      console.log('get_attached_wfs', attached_wfs)
+      var html_output = '';
+      var keys = Object.keys(attached_wfs)
+      for (var i = 0; i < keys.length; i++) {
+        if (attached_wfs[keys[i]].length !== 0) {html_output += '<p style="text-align: left"><b>'+keys[i]+' : </b>'+attached_wfs[keys[i]].join(', ')+'</p>'}
+      }
+      if (html_output == '')
+        html_output += '<p id="workflow_list_id"> Workflows: '+globalTicket.workflow_ids.join(', ')+'</p>'
+      return html_output
+    }
+
     function create_relval(prepid) {
-      const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
+      var html_output = get_attached_wfs()
+      var message = ''
+      if(html_output.includes('workflow_list_id')){
+        message += '<p style="text-align: left">Relvals will be created for following workflows:'+html_output+'</p>'
+      } else {
+        message += '<p style="text-align: left">Relvals will be created for following AlCa workflows:'+html_output+'</p>'
+      }
+      message += '<p style="text-align: left">You can NOT modify the ticket once relvals are created. You will need to create new ticket for further addition. Do you want to proceed?</p>';
+      console.log(message)
       activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
       $('#goahead_confirmationModal').on('click', function(){
         $('#confirmationModal').modal('toggle');
@@ -202,6 +223,7 @@
       var datas = formToJSON($('#testform').serializeArray());
       globalTicket['attached_wfs'] = datas
       saveClassifiedWfs(JSON.stringify(globalTicket))
+      create_relval(globalTicket.prepid)
     });
 
     function saveClassifiedWfs(indata) {
