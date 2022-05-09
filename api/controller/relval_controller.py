@@ -36,7 +36,7 @@ class RelValController(ControllerBase):
         self.database_name = 'relvals'
         self.model_class = RelVal
 
-    def create(self, json_data):
+    def create(self, json_data, condition_name=''):
         cmssw_release = json_data.get('cmssw_release')
         batch_name = json_data.get('batch_name')
         # Use workflow name for prepid if possible, if not - first step name
@@ -47,7 +47,8 @@ class RelValController(ControllerBase):
             workflow_name = first_step.get_short_name()
             json_data['workflow_name'] = workflow_name
 
-        prepid_part = f'{cmssw_release}__{batch_name}-{workflow_name}'.strip('-_')
+        condition_name = f'{condition_name}-'
+        prepid_part = f'{cmssw_release}__{batch_name}-{condition_name}{workflow_name}'.strip('-_')
         json_data['prepid'] = f'{prepid_part}-00000'
         relval_db = Database('relvals')
         with self.locker.get_lock(f'generate-relval-prepid-{prepid_part}'):
@@ -623,7 +624,6 @@ class RelValController(ControllerBase):
                         step.set('resolved_globaltag', resolved_conditions)
                     else:
                         step.set('resolved_globaltag', conditions)
-
                 self.update_status(relval, 'approved')
                 results.append(relval)
 

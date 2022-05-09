@@ -238,7 +238,7 @@ class TicketController(ControllerBase):
     def make_relval_step(self, step_dict):
         """
         Remove, split or move arguments in step dictionary
-        returned from run_the_matrix_pdmv.py
+        returned from run_the_matrix_alca.py
         """
         # Deal with input file part
         input_dict = step_dict.get('input', {})
@@ -356,10 +356,11 @@ class TicketController(ControllerBase):
         os.remove(f'/tmp/{file_name}')
         return workflows
 
-    def create_relval_from_workflow(self, ticket, workflow_id, workflow_dict):
+    def create_relval_from_workflow(self, ticket, workflow_id, workflow_dict, cond_tag=''):
         """
         Create a RelVal from given workflow
         """
+        workflow_dict = deepcopy(workflow_dict)
         cmssw_release = ticket.get('cmssw_release')
         jira_ticket = ticket.get('jira_ticket')
         scram_arch = ticket.get('scram_arch')
@@ -376,12 +377,16 @@ class TicketController(ControllerBase):
                        'memory': ticket.get('memory'),
                        'matrix': ticket.get('matrix'),
                        'sample_tag': ticket.get('sample_tag'),
+                       'hlt_gt': ticket.get('hlt_gt'),
+                       'prompt_gt': ticket.get('prompt_gt'),
+                       'express_gt': ticket.get('express_gt'),
+                       'common_prompt_gt': ticket.get('common_prompt_gt'),
                        'scram_arch': scram_arch,
                        'steps': [],
                        'workflow_id': workflow_id,
                        'workflow_name': workflow_dict['workflow_name']}
 
-        for step_dict in workflow_dict['steps']:
+        for step_index, step_dict in enumerate(workflow_dict['steps']):
             new_step = self.make_relval_step(step_dict)
             new_step['cmssw_release'] = ''
             new_step['scram_arch'] = ''
@@ -392,10 +397,55 @@ class TicketController(ControllerBase):
             if gpu_steps and (set(gpu_steps) & set(step_steps)):
                 new_step['gpu'] = deepcopy(gpu_dict)
 
+            if cond_tag == 'HLT' and step_index == 1:
+                new_step['driver']['conditions'] = ticket.get('hlt_gt')
+            elif cond_tag == 'HLT' and step_index != 0:
+                new_step['driver']['conditions'] = ticket.get('common_prompt_gt')
+            if cond_tag == 'Prompt' and step_index != 0:
+                new_step['driver']['conditions'] = ticket.get('prompt_gt')
+            if cond_tag == 'Express' and step_index != 0:
+                new_step['driver']['conditions'] = ticket.get('express_gt')
+
             self.rewrite_gt_string_if_needed(workflow_id, new_step, rewrite_gt_string)
             relval_json['steps'].append(new_step)
 
         return RelVal(relval_json, False)
+
+    def create_relval_for_alca(self, ticket, workflows):
+        attached_wfs = ticket.get('attached_wfs')
+        wfs_are_clasified = (
+            len(attached_wfs['HLT']) != 0 or
+            len(attached_wfs['Prompt'])  != 0 or
+            len(attached_wfs['Express'])  != 0
+            )
+        relvals = []
+        relval_tags = []
+        for workflow_id, workflow_dict in workflows.items():
+            if wfs_are_clasified:
+                if float(workflow_id) in attached_wfs['HLT']:
+                    relvals.append(
+                        self.create_relval_from_workflow(ticket,
+                                                    workflow_id,
+                                                    workflow_dict, 'HLT'))
+                    relval_tags.append(('HLT', workflow_id))
+                if float(workflow_id) in attached_wfs['Prompt']:
+                    relvals.append(
+                        self.create_relval_from_workflow(ticket,
+                                                    workflow_id,
+                                                    workflow_dict, 'Prompt'))
+                    relval_tags.append(('Prompt', workflow_id))
+                if float(workflow_id) in attached_wfs['Express']:
+                    relvals.append(
+                        self.create_relval_from_workflow(ticket,
+                                                    workflow_id,
+                                                    workflow_dict, 'Express'))
+                    relval_tags.append(('Express', workflow_id))
+            else:
+                relvals.append(self.create_relval_from_workflow(ticket,
+                                                        workflow_id,
+                                                        workflow_dict))
+                relval_tags.append(('', workflow_id))
+        return (relvals, relval_tags)
 
     def create_relvals_for_ticket(self, ticket):
         """
@@ -413,11 +463,7 @@ class TicketController(ControllerBase):
             try:
                 workflows = self.generate_workflows(ticket, ssh_executor)
                 # Iterate through workflows and create RelVal objects
-                relvals = []
-                for workflow_id, workflow_dict in workflows.items():
-                    relvals.append(self.create_relval_from_workflow(ticket,
-                                                                    workflow_id,
-                                                                    workflow_dict))
+                relvals, relval_tags = self.create_relval_for_alca(ticket, workflows)
 
                 # Handle recycling if needed
                 if recycle_input_of:
@@ -430,8 +476,8 @@ class TicketController(ControllerBase):
                                            relval_controller,
                                            recycle_input_of)
 
-                for relval in relvals:
-                    relval = relval_controller.create(relval.get_json())
+                for relval, relval_tag in zip(relvals, relval_tags):
+                    relval = relval_controller.create(relval.get_json(), condition_name=relval_tag[0])
                     created_relvals.append(relval)
                     self.logger.info('Created %s', relval.get_prepid())
 
