@@ -32,3 +32,8 @@ function formToJSON(array) {
     });
     return d;
 }
+
+// Fade out success flash message
+$(document).ready(function() {
+    $('.alert-success').fadeOut(3000);    
+});
