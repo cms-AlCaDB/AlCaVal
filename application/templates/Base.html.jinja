@@ -75,7 +75,7 @@
         {% endwith %}
 
         <!-- Confirmation Modal -->
-        <div class="modal fade bd-example-modal-lg" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalTitle" aria-hidden="true">
+        <div class="modal bd-example-modal-lg" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalTitle" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered modal-lg" role="document" style="display: flex; width: fit-content; min-width: 500px;">
             <div class="modal-content">
               <div class="modal-header" style="border-bottom: unset;">
@@ -85,7 +85,8 @@
                 ...
               </div>
               <div class="modal-footer" style="border-top: unset;">
-                <button type="button" class="btn btn-primary cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary previous" id="goto_workflow_classifier_modal">Previous</button>
                 <button type="button" id="goahead_confirmationModal" class="btn btn-danger">Go ahead</button>
               </div>
             </div>
@@ -110,7 +111,7 @@
         </div>
 
         <div class="loadingAnim">
-          <div class="d-flex flex-column align-items-center justify-content-center align-middle">
+          <div class="test">
           <div class="flex-row">
             <div class="spinner-border" role="status">
               <span class="sr-only">Loading...</span>

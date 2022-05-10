@@ -35,5 +35,9 @@ function formToJSON(array) {
 
 // Fade out success flash message
 $(document).ready(function() {
-    $('.alert-success').fadeOut(3000);    
+    $('.alert-success').fadeOut(3000);
+    $('#goto_workflow_classifier_modal').on('click', function() {
+        $('#confirmationModal').modal('toggle');
+        $('#exampleModal').modal('toggle');
+    });
 });
