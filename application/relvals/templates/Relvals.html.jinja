@@ -177,7 +177,7 @@
       }
     }
 
-    function toggle_footer_actions(){
+    function monitor_checkbox_status(){
       var allboxes=document.getElementsByName('table-checkbox');  
       var allcheck=document.getElementById('select-all-id');
       var footer_action_ele1 = document.getElementById('id_footer_actions1');
@@ -214,8 +214,23 @@
     }
     // Checking indeterminate state
     $('[name="table-checkbox"]').on('click', function(){
-      toggle_footer_actions();
+      monitor_checkbox_status();
     });
+    $(document).ready(function(){
+      monitor_checkbox_status();
+    });
+
+    function uncheck_all_checkboxes(){
+      document.querySelectorAll('[type="checkbox"]').forEach(e => {e.indeterminate=false; e.checked = false; });
+      document.querySelectorAll('#id_footer_actions1').forEach(e => {e.hidden = false});
+      document.querySelectorAll('#id_footer_actions2').forEach(e => {e.hidden = true});
+    }
+    // De-select checkboxes when search is performed after checking the checkboxes
+    $('[type="search"]').keyup(function () {
+      console.log('searched')
+      uncheck_all_checkboxes()
+    });
+
      // Handle click on "Select all" control
     $('#select-all-id').on('click', function(){
       // Check/uncheck all checkboxes in the table
@@ -230,7 +245,7 @@
         else
           element.checked = false;
       });
-      toggle_footer_actions();
+      monitor_checkbox_status();
     });
 
   </script>
