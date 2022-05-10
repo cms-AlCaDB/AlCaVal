@@ -1,235 +1,237 @@
 {% extends 'Base.html.jinja' %}
 {% block headercontent %}
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.js"></script>
+  <link href="{{ url_for('static', filename='css/datatables_style_override.css') }}" rel="stylesheet" type="text/css">
 {% endblock %}
 
 {% block content %}
-	{% if ticket %}
-		<h2 style="text-align: center; margin-top: 10px;">Relvals for ticket <b><a href="/tickets?prepid={{ ticket }}">{{ ticket }}</a></b></h2>
-	{% elif prepid %}
-		<h2 style="text-align: center; margin-top: 10px;">Relval</h2>
-	{% else %}
-		<h2 style="text-align: center; margin-top: 10px;">Relvals</h2>
-	{% endif %}
+  {% if ticket %}
+    <h2 style="text-align: center; margin-top: 10px;">Relvals for ticket <b><a href="/tickets?prepid={{ ticket }}">{{ ticket }}</a></b></h2>
+  {% elif prepid %}
+    <h2 style="text-align: center; margin-top: 10px;">Relval</h2>
+  {% else %}
+    <h2 style="text-align: center; margin-top: 10px;">Relvals</h2>
+  {% endif %}
 
-	<div style="padding: 5px; margin-top: 20px;">
-		{{ table.__html__() }}
-	</div>
+  <div style="padding: 2px;">
+    {{ table.__html__() }}
+  </div>
 
-    <footer class="footer fixed-bottom badge-light" style="padding-bottom: 2px; display: inline-block; background: ; box-shadow: -1px 0px 7px 1px gray;">
-	    <div id="id_footer_actions1" class="actions" style="display: inline-flex; padding: 12.08px;">
-		   <a id="multiple_relval_actions_edit" href="/relvals/edit">New Relval</a>
-		</div>
-		<div id="id_footer_actions2" class="actions" style="display: inline-flex; padding: 12.08px;" hidden>
-	       <span id="selected_items_id">Selected items: </span>
-		   <a id="multiple_relval_actions_edit" onclick="create_new_relval()" href="javascript:void(0);">Edit</a>
-		   <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);">Delete</a>
-		   <a id="multiple_relval_next_status" onclick="nextStatus_selected_relvals()" href="javascript:void(0);">Next Status</a>
-		</div>		
-    </footer>
+  <footer class="footer fixed-bottom badge-light" style="padding: 0 12px; display: inline-flex; justify-content: space-between; box-shadow: -1px 0px 7px 1px gray;">
+    <div id="id_footer_actions1" class="actions" style="display: flex; align-items: center;">
+      <a id="multiple_relval_actions_edit" href="/relvals/edit" title="Create new relval">New Relval</a>
+    </div>
+    <div id="id_footer_actions2" class="actions" style="display: flex; align-items: center;" hidden>
+       <span id="selected_items_id">Selected items: </span>
+       {#<a id="multiple_relval_actions_edit" onclick="create_new_relval()" href="javascript:void(0);" title="Edit selected relvals">Edit</a>#}
+       <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);" title="Delete selected relvals">Delete</a>
+       <a id="multiple_relval_next_status" onclick="nextStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to next status">Next</a>
+    </div>    
+  </footer>
 
-	<script>
-		(function(){
-			{% if userinfo.role_index < 1 %}
-				console.log({{ userinfo.role_index }});
-				document.querySelectorAll('.cls_edit_relval').forEach(element => {element.remove();});
-				document.querySelectorAll('.cls_clone_relval').forEach(element => {element.remove();});
-				document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
-				document.querySelectorAll('.cls_previous_status').forEach(element => {element.remove();});
-				document.querySelectorAll('.cls_next_status').forEach(element => {element.remove();});
-				document.querySelectorAll('.delete_relval').forEach(element => {element.remove();});
-			{% endif %}
-		})();
-	</script>
+  <script>
+    (function(){
+      {% if userinfo.role_index < 1 %}
+        console.log({{ userinfo.role_index }});
+        document.querySelectorAll('.cls_edit_relval').forEach(element => {element.remove();});
+        document.querySelectorAll('.cls_clone_relval').forEach(element => {element.remove();});
+        document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
+        document.querySelectorAll('.cls_previous_status').forEach(element => {element.remove();});
+        document.querySelectorAll('.cls_next_status').forEach(element => {element.remove();});
+        document.querySelectorAll('.delete_relval').forEach(element => {element.remove();});
+      {% endif %}
+    })();
+  </script>
 
-	<style type="text/css">
-		/*Makee rows compact*/
-		table.dataTable tbody td {
-		  padding: 3px 10px;
-		}
+  <script type="text/javascript">
+    var datatable = $('#relvals_list').DataTable({
+      "scrollX": true,
+      "scrollY": true,
+      "pageLength": 50,
+      "bStateSave": true,
+      fixedHeader: {
+        header: false,
+        headerOffset: 57
+      },
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search relvals from the following table...",
+        "info": "Showing _START_ - _END_ of _TOTAL_",
+        "lengthMenu":     "Page Size: _MENU_"  
+      },
+      order: [],
+      "columnDefs": [ { orderable: false, targets: [0]}],
+      "sDom": '<"top"f>rt<"pagecounter dataTables_wrapper no-footer"ilp><"clear">',
+      initComplete: (settings, json)=>{
+        $('.table_info').appendTo('footer');
+        $('.pagecounter').appendTo('footer');
+        $('.top').appendTo('.mysearchbar');
+        $('select').removeClass('custom-select-sm');
+      }
+    });
 
-		.pagecounter {
-			margin-left: 10px;
-			float: right;
-		}
-	</style>
+    function create_new_relval(prepid) {
+      var req = new XMLHttpRequest();
+      const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
+      activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
+      $('#goahead_confirmationModal').on('click', function(){
+        $('#confirmationModal').modal('toggle');
+        $('body').addClass('loading');
+        req.onreadystatechange = alertContents;
+        req.open('POST', 'api/tickets/create_relvals');
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        req.send('prepid='+ prepid);
+      });
 
-	<script type="text/javascript">
+      function alertContents() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          if (req.status === 200) {
+            window.location.reload(false);
+            window.onload = function() { $('body').removeClass('loading');}
+          } else {
+            $('body').removeClass('loading');
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
+    }
 
-		$(document).ready( function () {
-		    $('#relvals_list').DataTable({
-					"scrollX": true,
-					"pageLength": 50,
-					"bStateSave": true,
-					"order": [],
-					"columnDefs": [ { orderable: false, targets: [0]}],
-	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
-				    initComplete: (settings, json)=>{
-				        $('.table_info').appendTo('footer');
-				        $('.pagecounter').appendTo('footer');
-				    },
-			});
-		} );
+    function delete_selected_relvals(){
+      var selected = document.getElementsByName('table-checkbox');
+      var prepids=[];
+      selected.forEach(element =>{
+        if (element.checked){
+          var id = element.id;
+          prepids.push(id.replace("id_", ""));
+        }
+      });
+      delete_relval(prepids);
+    }
 
-		function create_new_relval(prepid) {
-	      var req = new XMLHttpRequest();
-	      const message = 'You can NOT modify the ticket once relvals are created. You need to create new ticket for further addition. Do you want to proceed?';
-		  activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
-		  $('#goahead_confirmationModal').on('click', function(){
-			$('#confirmationModal').modal('toggle');
-			$('body').addClass('loading');
-		    req.onreadystatechange = alertContents;
-		    req.open('POST', 'api/tickets/create_relvals');
-			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		    req.send('prepid='+ prepid);
-		  });
+    function delete_relval(prepids) {
+      console.log(prepids);
+      req = new XMLHttpRequest();
+      var relvals_list = '';
+      for (var i = 0; i < prepids.length; i++) {
+        relvals_list += '<p>'+prepids[i]+'</p>';
+      }
+      activateConfirmModal('Deleting <b>'+ prepids.length +'</b> relvals', 'Are you sure you want to delete following relvals?'+relvals_list);
+      $('#goahead_confirmationModal').on('click', function(){
+        $('#confirmationModal').modal('toggle');
+        $('body').addClass('loading');
+        req.onreadystatechange = alertContents;
+        req.open('DELETE', 'api/relvals/delete');
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        req.send(prepids.toString());
+      });
 
- 		  function alertContents() {
-		    if (req.readyState === XMLHttpRequest.DONE) {
-		      if (req.status === 200) {
-				window.location.reload(false);
-				window.onload = function() { $('body').removeClass('loading');}
-		      } else {
-			    $('body').removeClass('loading');
-			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-		        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-		      }
-		    }
-		  }
-		}
-
-		function delete_selected_relvals(){
-			var selected = document.getElementsByName('table-checkbox');
-			var prepids=[];
-			selected.forEach(element =>{
-				if (element.checked){
-					var id = element.id;
-					prepids.push(id.replace("id_", ""));
-				}
-			});
-			delete_relval(prepids);
-		}
-
-		function delete_relval(prepids) {
-			console.log(prepids);
-		    req = new XMLHttpRequest();
-		    var relvals_list = '';
-		    for (var i = 0; i < prepids.length; i++) {
-		    	relvals_list += '<p>'+prepids[i]+'</p>';
-		    }
-			activateConfirmModal('Deleting <b>'+ prepids.length +'</b> relvals', 'Are you sure you want to delete following relvals?'+relvals_list);
-		  	$('#goahead_confirmationModal').on('click', function(){
-				$('#confirmationModal').modal('toggle');
-				$('body').addClass('loading');
-			    req.onreadystatechange = alertContents;
-			    req.open('DELETE', 'api/relvals/delete');
-				req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    req.send(prepids.toString());
-			 });
-
-	 		function alertContents() {
-			    if (req.readyState === XMLHttpRequest.DONE) {
-			      if (req.status === 200) {
-					window.location.reload(true);
-					window.onload = function() { $('body').removeClass('loading');}
-			      } else {
-				    $('body').removeClass('loading');
-				    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-			        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-			      }
-			    }
-			}
-		}
+      function alertContents() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          if (req.status === 200) {
+            window.location.reload(true);
+            window.onload = function() { $('body').removeClass('loading');}
+          } else {
+            $('body').removeClass('loading');
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
+    }
 
 
-		function nextStatus_selected_relvals(){
-			var selected = document.getElementsByName('table-checkbox');
-			var prepids=[];
-			selected.forEach(element =>{
-				if (element.checked){
-					var id = element.id;
-					prepids.push(id.replace("id_", ""));
-				}
-			});
-			nextStatus(prepids);
-		}
+    function nextStatus_selected_relvals(){
+      var selected = document.getElementsByName('table-checkbox');
+      var prepids=[];
+      selected.forEach(element =>{
+        if (element.checked){
+          var id = element.id;
+          prepids.push(id.replace("id_", ""));
+        }
+      });
+      nextStatus(prepids);
+    }
 
-		function nextStatus(prepids) {
-			console.log(prepids);
-		    req = new XMLHttpRequest();
-			$('body').addClass('loading');
-		    req.onreadystatechange = alertContents;
-		    req.open('POST', 'api/relvals/next_status');
-			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		    req.send(prepids.toString());
+    function nextStatus(prepids) {
+      req = new XMLHttpRequest();
+      $('body').addClass('loading');
+      req.onreadystatechange = alertContents;
+      req.open('POST', 'api/relvals/next_status');
+      req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      req.send(prepids.toString());
 
-		  function alertContents() {
-		    if (req.readyState === XMLHttpRequest.DONE) {
-		      if (req.status === 200) {
-		      	var resp = JSON.parse(req.responseText);
-				window.location.reload(false)
-				window.onload = function() { $('body').removeClass('loading');}
-		      } else {
-			    $('body').removeClass('loading');
-			    const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-		        alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-		      }
-		    }
-		  }
-		}
+      function alertContents() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          if (req.status === 200) {
+            var resp = JSON.parse(req.responseText);
+            window.location.reload(false)
+            window.onload = function() { $('body').removeClass('loading');}
+          } else {
+            $('body').removeClass('loading');
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
+      }
+    }
 
-		function toggle_footer_actions(){
-		  var allboxes=document.getElementsByName('table-checkbox');  
-		  var allcheck=document.getElementById('select-all-id');
-		  var footer_action_ele1 = document.getElementById('id_footer_actions1');
-		  var footer_action_ele2 = document.getElementById('id_footer_actions2');
-		  allcheck.indeterminate = false;
-		  footer_action_ele1.hidden = false;
-		  footer_action_ele2.hidden = true;
-		  var sEle = false;
-		  var checkedCounter = 0;
-		  allboxes.forEach(box => {
-		  	if (box.checked){
-		  		sEle = true;
-		  		checkedCounter += 1;
-				allcheck.indeterminate = true;
-		  	}
-		  });
-		  if (allcheck.checked){
-		  	sEle = true;
-			allcheck.indeterminate = true;
-		  }
-		  if (sEle){
-			  footer_action_ele1.hidden = true;
-			  footer_action_ele2.hidden = false;
-		  }
-		  if (allboxes.length > 0)
-		  	document.getElementById('selected_items_id').innerHTML = "Selected "+checkedCounter+" items:";
-       }
-	   // Checking indeterminate state
-       	$('[name="table-checkbox"]').on('click', function(){
-       		toggle_footer_actions();
-       	});
-       // Handle click on "Select all" control
-	   $('#select-all-id').on('click', function(){
-	      // Check/uncheck all checkboxes in the table
-		  var ele=document.getElementsByName('table-checkbox');  
-		  if (!ele.length)
-		  	return false;
-          for(var i=0; i<ele.length; i++){  
-          	if(ele[i].type=='checkbox')  
-            	ele[i].checked=true;  
-        	}
-		  ele.forEach(element => {
-			if(document.getElementById('select-all-id').checked)
-				element.checked = true;
-			else
-				element.checked = false;
-		  });
-		   	toggle_footer_actions();
-	   });
+    function toggle_footer_actions(){
+      var allboxes=document.getElementsByName('table-checkbox');  
+      var allcheck=document.getElementById('select-all-id');
+      var footer_action_ele1 = document.getElementById('id_footer_actions1');
+      var footer_action_ele2 = document.getElementById('id_footer_actions2');
+      allcheck.indeterminate = false;
+      footer_action_ele1.hidden = false;
+      footer_action_ele2.hidden = true;
+      var sEle = false;
+      var checkedCounter = 0;
+      allboxes.forEach(box => {
+        if (box.checked){
+          sEle = true;
+          checkedCounter += 1;
+          allcheck.indeterminate = true;
+        }
+      });
+      if (allcheck.checked){
+        sEle = true;
+        allcheck.indeterminate = true;
+      }
+      if (sEle){
+        footer_action_ele1.hidden = true;
+        footer_action_ele2.hidden = false;
+      }
+      if (checkedCounter === 0){
+        allcheck.indeterminate = false;
+        allcheck.checked = false;
+      }
+      if (checkedCounter === allboxes.length){
+        allcheck.indeterminate = false;
+        allcheck.checked = true;
+      }
+      if (checkedCounter > 0){document.getElementById('selected_items_id').innerHTML = "Selected "+checkedCounter+" items:";}
+    }
+    // Checking indeterminate state
+    $('[name="table-checkbox"]').on('click', function(){
+      toggle_footer_actions();
+    });
+     // Handle click on "Select all" control
+    $('#select-all-id').on('click', function(){
+      // Check/uncheck all checkboxes in the table
+      var ele=document.getElementsByName('table-checkbox');  
+      for(var i=0; i<ele.length; i++){  
+        if(ele[i].type=='checkbox')  
+          ele[i].checked=true;  
+      }
+      ele.forEach(element => {
+        if(document.getElementById('select-all-id').checked)
+          element.checked = true;
+        else
+          element.checked = false;
+      });
+      toggle_footer_actions();
+    });
 
-
-	</script>
+  </script>
 {% endblock %}

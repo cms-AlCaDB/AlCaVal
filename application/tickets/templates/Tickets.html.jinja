@@ -1,19 +1,23 @@
 {% extends 'Base.html.jinja' %}
 {% block headercontent %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.js"></script>
+  <link href="{{ url_for('static', filename='css/datatables_style_override.css') }}" rel="stylesheet" type="text/css">
 {% endblock %}
 
 {% block content %}
   <h2 style="text-align: center; margin-top: 10px;">Tickets</h2>
-  <div id="id_table1" style="padding: 5px; margin-top: 20px;">
+  <div id="id_table1" style="padding: 2px;">
     {{ table.__html__() }}
   </div>
 
-{% include 'ConditionModal.html' %}
+  {% include 'ConditionModal.html' %}
 
-    <footer class="footer fixed-bottom badge-light" style="padding-bottom: 5px; flex: right; background: ; box-shadow: -1px 0px 7px 1px gray;">
-    </footer>
+  <footer class="footer fixed-bottom badge-light" style="padding: 0 12px; display: inline-flex; justify-content: space-between; box-shadow: -1px 0px 7px 1px gray;">
+    <div id="new_ticket_link_at_footer_id" class="actions" style="display: flex;align-items: center;">
+       <a href="/tickets/edit" title="Create new ticket">New Ticket</a>
+    </div>
+  </footer>
 
   <script>
     (function(){
@@ -27,18 +31,6 @@
     })();
   </script>
 
-  <style type="text/css">
-    /*Makee rows compact*/
-    table.dataTable tbody td {
-      padding: 3px 10px;
-    }
-
-    .pagecounter{
-      margin-left: 10px;
-      float: right;
-    }
-  </style>
-
   <script type="text/javascript">
     var req = new XMLHttpRequest();
     var globalTicket;
@@ -47,10 +39,22 @@
       "scrollX": true,
       "pageLength": 50,
       "bStateSave": true,
-      "sDom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
+      fixedHeader: {
+        header: true,
+        headerOffset: 57
+      },
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search tickets from the following table...",
+        "info": "Showing _START_ - _END_ of _TOTAL_",
+        "lengthMenu":     "Page Size: _MENU_"  
+      },
+      "sDom": '<"top"f>rt<"pagecounter dataTables_wrapper no-footer"ilp><"clear">',
       initComplete: (settings, json)=>{
         $('.table_info').appendTo('footer');
         $('.pagecounter').appendTo('footer');
+        $('.top').appendTo('.mysearchbar');
+        $('select').removeClass('custom-select-sm');
       }
     });
 
@@ -149,7 +153,7 @@
       });
       $('#exampleModal').modal('show');
 
-      // Run Multi-Select plugin and regresh choices
+      // Run Multi-Select plugin and refresh choices
       var workflows = ['wf_hlt_gt', 'wf_prompt_gt', 'wf_express_gt']
       for (var i = 0; i < workflows.length; i++) {
         workflows[i]
