@@ -8,19 +8,22 @@ class ActionCol(Col):
 
     def td_format(self, content, item):
         divAction = "<div class='actions'>{mylinks}</div>"
-        edit = f"<a class='cls_edit_ticket' href='/tickets/edit?prepid={content}'>Edit</a>"
-        clone = f"<a class='cls_clone_ticket' href='/tickets/edit?clone={content}'>Clone</a>"
-        show_relvals = f"<a class='show_relvals_{content}' href='/relvals?ticket={content}'>Show RelVals</a>"
+        edit = f"<a class='cls_edit_ticket' href='/tickets/edit?prepid={content}' title='Edit this ticket: {content}'>Edit</a>"
+        clone = f"<a class='cls_clone_ticket' href='/tickets/edit?clone={content}' title='Clone this ticket to create new one'>Clone</a>"
+
+        show_relvals_title = "title='Show list of Relvals created for this ticket'"
+        show_relvals = f"<a class='show_relvals_{content}' href='/relvals?ticket={content}' {show_relvals_title}>Show RelVals</a>"
         show_relvals = show_relvals if len(item['created_relvals']) != 0 else ""
 
-        wf_list = f"<a class='cls_show_wf_list' href='api/tickets/relvals_workflows/{content}' title='Show list of workflows for a given ticket!'>Workflows</a>"
+        wf_list = f"<a class='cls_show_wf_list' href='api/tickets/relvals_workflows/{content}' title='Show list of workflows from Request Manager for a this ticket!'>Workflows</a>"
 
-        matrix = f"<a href='api/tickets/run_the_matrix/{content}'>runTheMatrix.py</a>"
-        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' title='Go to the Jira discussion'>Jira</a>"
-        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);">Create Jira Ticket</a> """
+        matrix = f"<a href='api/tickets/run_the_matrix/{content}' title='Show runTheMatrix.py command which generates cmsDriver workflows'>Matrix</a>"
+        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' title='Go to the Jira discussion {item['jira_ticket']}'>Jira</a>"
+        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);" title='Create new Jira ticket'>Create Jira Ticket</a> """
         jira = jira if item['jira_ticket'] != 'None' else create_jira
 
-        delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" href="javascript:void(0);">Delete</a> """
+        delete_title = f"title='Delete this ticket: {content}'"
+        delete = f"""<a class="delete_ticket delete_{content}" onclick="delete_ticket('{content}')" {delete_title} href="javascript:void(0);">Delete</a> """
         delete = delete if len(item['created_relvals']) == 0 else ""
         create_relval = f"""<a class="create_relval_id relval_{content}" onclick="create_alca_relval('{content}');" href="javascript:void(0);">Create Relval</a>"""
         create_relval = create_relval if item['status'] == 'new' else ""
@@ -40,7 +43,9 @@ class JiraCol(Col):
 class ItemTable(Table):
     prepid = LinkCol('Prep ID', endpoint='tickets.tickets', 
                     url_kwargs=dict(prepid='prepid'), 
-                    anchor_attrs={'class': 'myclass'}, attr='prepid')
+                    anchor_attrs={'class': 'myclass', 'title': 'Show this ticket'}, 
+                    attr='prepid', td_html_attrs={'style': 'white-space: nowrap'}
+                    )
 
     status = Col('Status')
 
@@ -48,17 +53,21 @@ class ItemTable(Table):
 
     cmssw_release = LinkCol('CMSSW Release', endpoint='tickets.tickets', 
                     url_kwargs=dict(cmssw_release='cmssw_release'), 
-                    anchor_attrs={}, attr='cmssw_release')
+                    anchor_attrs={'title': 'Show tickets having this CMSSW release'}, attr='cmssw_release', 
+                    td_html_attrs={'style': 'white-space: nowrap'}
+                    )
 
     # jira_ticket = JiraCol('Jira Ticket', td_html_attrs={'style': 'white-space: nowrap'})
 
     jira_ticket = LinkCol('Jira', endpoint='tickets.tickets', 
                     url_kwargs=dict(jira_ticket='jira_ticket'), 
-                    anchor_attrs={}, attr='jira_ticket')
+                    anchor_attrs={'title': 'Show tickets having this Jira ticket'}, 
+                    attr='jira_ticket', td_html_attrs={'style': 'white-space: nowrap'}
+                    )
 
     batch_name = LinkCol('Batch Name', endpoint='tickets.tickets', 
                     url_kwargs=dict(batch_name='batch_name'), 
-                    anchor_attrs={}, 
+                    anchor_attrs={'title': 'Show tickets having this batch name'}, 
                     attr='batch_name'
                 )
 
