@@ -86,10 +86,9 @@
         message += '<p style="text-align: left">Relvals will be created for following AlCa workflows:'+html_output+'</p>'
       }
       message += '<p style="text-align: left">You can NOT modify the ticket once relvals are created. You will need to create new ticket for further addition. Do you want to proceed?</p>';
-      console.log(message)
+      document.getElementById('goto_workflow_classifier_modal').style = "display: flex";
       activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
       $('#goahead_confirmationModal').on('click', function(){
-        $('#confirmationModal').modal('toggle');
         $('body').addClass('loading');
         req.onreadystatechange = alertContents;
         req.open('POST', 'api/tickets/create_relvals');
@@ -140,7 +139,6 @@
 
     function create_alca_relval(prepid) {
       $('#exampleModal').on('show.bs.modal', function (event) {
-        console.log('shown')
         var button = $(event.relatedTarget) // Button that triggered the modal
         var recipient = button.data('whatever') // Extract info from data-* attributes
         // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
@@ -224,6 +222,12 @@
         document.getElementById('wf_hlt_gt').innerHTML = workflow_options_hlt
         document.getElementById('wf_prompt_gt').innerHTML = workflow_options_prompt
         document.getElementById('wf_express_gt').innerHTML = workflow_options_express
+        if(items[prepid].hlt_gt ==='')
+          document.getElementById('hlt_row_id').remove();
+        if(items[prepid].prompt_gt ==='')
+          document.getElementById('prompt_row_id').remove();
+        if(items[prepid].express_gt ==='')
+          document.getElementById('express_row_id').remove();
       }
     }
 

@@ -120,9 +120,9 @@
       req = new XMLHttpRequest();
       var relvals_list = '';
       for (var i = 0; i < prepids.length; i++) {
-        relvals_list += '<p>'+prepids[i]+'</p>';
+        relvals_list += '<li>'+prepids[i]+'</li>';
       }
-      activateConfirmModal('Deleting <b>'+ prepids.length +'</b> relvals', 'Are you sure you want to delete following relvals?'+relvals_list);
+      activateConfirmModal('Deleting <b>'+ prepids.length +'</b> relvals', 'Are you sure you want to delete following relvals? <ul style="padding-top: 10px">'+relvals_list+'</ul>');
       $('#goahead_confirmationModal').on('click', function(){
         $('#confirmationModal').modal('toggle');
         $('body').addClass('loading');
