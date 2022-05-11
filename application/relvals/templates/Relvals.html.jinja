@@ -49,7 +49,11 @@
       "scrollX": true,
       "scrollY": true,
       "pageLength": 50,
-      "bStateSave": true,
+      "stateSave": true,
+      "stateSaveParams": function (settings, data) {
+        // Reset sorting and search state after refresh
+        data.order = [];
+      },
       fixedHeader: {
         header: false,
         headerOffset: 57
@@ -60,9 +64,10 @@
         "info": "Showing _START_ - _END_ of _TOTAL_",
         "lengthMenu":     "Page Size: _MENU_"  
       },
-      order: [],
-      "columnDefs": [ { orderable: false, targets: [0]}],
+      order: [], // Remove any default sorting order
+      "columnDefs": [ { orderable: false, targets: [0]}], // Do not sort checkbox column
       "sDom": '<"top"f>rt<"pagecounter dataTables_wrapper no-footer"ilp><"clear">',
+      // Appending Search bar to the top and pagination info to the bottom
       initComplete: (settings, json)=>{
         $('.table_info').appendTo('footer');
         $('.pagecounter').appendTo('footer');
