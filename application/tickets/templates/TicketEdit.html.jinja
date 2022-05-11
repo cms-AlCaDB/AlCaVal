@@ -22,21 +22,21 @@
         </div>
 
         <div class="row">
-    	{{ form.batch_name.label(class="col-sm-3 col-form-label-sm") }} 
+    	{{ form.batch_name.label(class="col-sm-3 col-form-label-sm required") }} 
     	<div class="col-sm-9">
     	 {{ form.batch_name(class="form-control form-control-sm", placeholder="Appropriate batch name") }} 
     	</div>
         </div>
 
         <div class="row">
-    	{{ form.cmssw_release.label(class="col-sm-3 col-form-label-sm") }} 
+    	{{ form.cmssw_release.label(class="col-sm-3 col-form-label-sm required") }} 
     	<div class="col-sm-9">
     	 {{ form.cmssw_release(class="form-control form-control-sm", placeholder="E.g CMSSW_12_3_...") }} 
     	</div>
         </div>
 
         <div class="row">
-        {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm") }} 
+        {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm required") }} 
         <div class="col-sm-9">
          {{ form.jira_ticket(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }}
         </div>
@@ -59,10 +59,24 @@
         <div class="row">
     	{{ form.hlt_gt.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
-		 {{ form.hlt_gt(class="form-control form-control-sm", placeholder="HLT Global Tag. Target or Reference") }} 
+		 {{ form.hlt_gt(class="form-control form-control-sm", id="hlt_gt", placeholder="HLT Global Tag. Target or Reference") }} 
         </div>
     	</div>
 
+        <div class="row" id="common_prompt_gt_row">
+        {{ form.common_prompt_gt.label(class="col-sm-3 col-form-label-sm required") }}
+        <div class="col-sm-9">
+         {{ form.common_prompt_gt(class="form-control form-control-sm") }} 
+        </div>
+        </div>
+            {% for error in form.common_prompt_gt.errors %}
+            <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-9" style=" padding-bottom: 15px; color: red;">
+            {{error}}
+            </div>
+            </div>
+            {% endfor %}
         <div class="row">
     	{{ form.prompt_gt.label(class="col-sm-3 col-form-label-sm") }}
     	<div class="col-sm-9">
@@ -76,13 +90,6 @@
     	 {{ form.express_gt(class="form-control form-control-sm", placeholder="Express Global Tag. Target or Reference") }} 
         </div>
     	</div>
-
-        <div class="row">
-        {{ form.common_prompt_gt.label(class="col-sm-3 col-form-label-sm") }}
-        <div class="col-sm-9">
-         {{ form.common_prompt_gt(class="form-control form-control-sm") }} 
-        </div>
-        </div>
 
         <div class="row">
     	{{ form.workflow_ids.label(class="col-sm-3 col-form-label-sm") }}
@@ -111,8 +118,28 @@
     function cancel(){
         window.location = '/tickets';
     }
+
+    // Show common_prompt_gt option only when `hlt_gt` is not empty
+    $(document).ready(function() {
+        if ($('#hlt_gt').val() === '') {
+            $('#common_prompt_gt_row').hide();
+        }
+        $('#hlt_gt').keyup(function(){
+            if (this.value !== ''){
+                $('#common_prompt_gt_row').show();
+            } else {
+                $('#common_prompt_gt_row').hide();
+            }
+        });
+    });
+
 </script>
 
-
+<style type="text/css">
+  .required:after {
+    content:" *";
+    color: red;
+  }
+</style>
 {% endblock %}
 
