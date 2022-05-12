@@ -2,9 +2,12 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, SelectField, StringField, FieldList, TextAreaField
 from wtforms.validators import DataRequired, InputRequired, ValidationError, StopValidation, Length
 from wtforms.widgets import TextArea
+from wtforms import widgets
 
 from markupsafe import Markup
 from wtforms.widgets.core import html_params
+from wtforms.fields.core import Label as BaseLabel
+
 class CustomSelect:
     """
     Borrowed from: https://stackoverflow.com/questions/44379016/disabling-one-of-the-options-in-wtforms-selectfield/61762617
@@ -39,7 +42,7 @@ class GTDataRequired(object):
         hltgt = bool(form.data['hlt_gt'].strip()=='')
         if field.data and (not isinstance(field.data, str) or field.data.strip()) and not hltgt:
             return
-        if not (field.data and (not isinstance(field.data, str) or field.data.strip())) and hltgt:
+        if hltgt:
             return
 
         if self.message is None:
@@ -50,40 +53,107 @@ class GTDataRequired(object):
         field.errors[:] = []
         raise StopValidation(message)
 
-def validate_jira_ticket(form, field):
-    print(form.data, "FOMR DATA")
-    if form.data['hlt_gt'].strip() == '':
-        message = field.gettext('This field is required.')
-        raise StopValidation(message)
+class Label(BaseLabel):
+    """
+    An HTML form label.
+    """
+    def __init__(self, field_id, text, label_rkw={}):
+        super().__init__(field_id, text)
+        self.label_rkw = label_rkw
+
+    def __call__(self, text=None, **kwargs):
+        kwargs.update(**self.label_rkw)
+        return super().__call__(text=None, **kwargs)
+
+def SetLabel(myid, label, name, label_rkw):
+    return Label(myid,
+                label if label is not None else self.gettext(name.replace("_", " ").title()),
+                label_rkw=label_rkw)
+
+class SSelectField(SelectField):
+    def __init__(self, label=None, label_rkw={}, **kw):
+        super().__init__(label=label, **kw)
+        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
+
+class SStringField(StringField):
+    def __init__(self, label=None, label_rkw={}, **kw):
+        super().__init__(label=label, **kw)
+        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
+
+class STextAreaField(TextAreaField):
+    def __init__(self, label=None, label_rkw={}, **kw):
+        super().__init__(label=label, **kw)
+        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
 
 class TicketForm(FlaskForm):
-    prepid = StringField('Prep ID')
-    batch_name = StringField('Batch Name', validators=[DataRequired()])
-    cmssw_release = StringField('CMSSW Release', validators=[DataRequired()])
-    jira_ticket = SelectField('Jira Ticket', choices=[["", "Select Jira ticket to associated with this"], ["None", "Create New Ticket"]],
-                               validators=[InputRequired()],
-                               widget=CustomSelect(),
-                               default=''
-                               )
-    label = StringField('Label (--label)')
+    label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
+    classDict = {'class': 'form-control form-control-sm'}
+    prepid = SStringField(
+                render_kw=classDict | {'disabled':''},
+                label="My Prep ID",
+                label_rkw = label_rkw
+                )
+    batch_name = SStringField('Batch Name',
+                validators=[DataRequired(message="Please provide appropreate batch name")],
+                render_kw = classDict | {"placeholder":"Appropriate batch name"},
+                label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                )
+    cmssw_release = SStringField('CMSSW Release',
+                validators=[DataRequired(message="Please provide correct CMSSW release")],
+                render_kw = classDict | {"placeholder":"E.g CMSSW_12_3_..."},
+                label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                )
+    jira_ticket = SSelectField('Jira Ticket', 
+                choices=[["", "Select Jira ticket to associated with this"], ["None", "Create New Ticket"]],
+                validators=[InputRequired(message="Please select Jira ticket out of given list. Or choose to create new")],
+                widget=CustomSelect(),
+                default='',
+                render_kw = classDict | {'option_attr': {"jira_ticket-0": {"disabled": "", "hidden": ""}} },
+                label_rkw = label_rkw
+                )
 
     matrix_choices = [
         ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
         ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
         ['extendedgen', 'extendedgen'], ['gpu', 'gpu']
     ]
-    matrix = SelectField('Matrix (--what)', choices=matrix_choices,
+    matrix = SSelectField('Matrix (--what)', choices=matrix_choices,
                            validators=[InputRequired()],
-                           default='alca'
+                           default='alca',
+                           render_kw = classDict,
+                           label_rkw = label_rkw
                         )
-    hlt_gt = StringField('HLT Global Tag', validators=[Length(min=5, max=100)])
-    prompt_gt = StringField('Prompt Global Tag')
-    express_gt = StringField('Express Global Tag')
-    common_prompt_gt = StringField('Common Prompt GT',
+
+    label = SStringField('Label (--label)',
+                render_kw = classDict | {'placeholder': 'E.g. AlCaTest'},
+                label_rkw = label_rkw
+                )
+
+    hlt_gt = SStringField('HLT Global Tag',
+                validators=[],
+                render_kw = classDict | {"id":"hlt_gt", "placeholder":"HLT Global Tag. Target or Reference"},
+                label_rkw = label_rkw
+                )
+    common_prompt_gt = SStringField('Common Prompt GT',
                         validators=[GTDataRequired(message="Since you have chosen to use HLT global tag, you are required to provide common prompt global tag, which is to be used in RECO step of workflow")],
-                        render_kw={'placeholder': 'Global tag to be used in RECO step of HLT workflow'}
+                        render_kw= classDict | {'placeholder': 'Global tag to be used in RECO step of HLT workflow'},
+                        label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
                         )
-    notes = TextAreaField('Notes',  render_kw={"rows": 10, 
-                          'placeholder': "Notes: e.g. Description of the request. "})
-    workflow_ids = StringField('Workflow IDs', validators=[DataRequired()])
+    prompt_gt = SStringField('Prompt Global Tag',
+                render_kw = classDict | {'placeholder': 'Prompt Global Tag. Target or Reference'},
+                label_rkw = label_rkw
+                )
+    express_gt = SStringField('Express Global Tag',
+                render_kw = classDict | {'placeholder': 'Express Global Tag. Target or Reference'},
+                label_rkw = label_rkw
+                )
+    workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
+                        render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
+                        label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                        )
+    notes = STextAreaField('Notes',  
+                          render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
+                          'placeholder': "Notes: e.g. Description of the request. "},
+                          label_rkw = label_rkw
+                          )
     submit = SubmitField('Submit')

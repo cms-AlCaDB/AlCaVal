@@ -57,6 +57,17 @@ def create_ticket():
     if clone:
         form._fields.get('prepid').data = ""
 
+    if creating_new:
+        """
+        Somehow sometimeselements are not redering/refreshing from local storage
+        so intentionally allowing fields to edit
+        """
+        for key in form._fields.keys():
+            if key in ['prepid', 'submit', 'csrf_token']:
+                continue
+            else:
+                form._fields.get(key).render_kw.update({'disabled': False})
+
     if form.validate_on_submit():
         data = form.data
         data.update({'workflow_ids': data['workflow_ids'].strip().split(',')})

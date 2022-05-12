@@ -10,103 +10,27 @@
 
 <form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white' >
     
-    {{ form.csrf_token }}
     {{ form.hidden_tag() }}
 
     <div class="form-group">
-        <div class="row">
-        {{ form.prepid.label(class="col-sm-3 col-form-label-sm") }} 
-        <div class="col-sm-9">
-         {{ form.prepid(class="form-control form-control-sm", disabled=True) }} 
-        </div>
-        </div>
-
-        <div class="row">
-    	{{ form.batch_name.label(class="col-sm-3 col-form-label-sm required") }} 
-    	<div class="col-sm-9">
-    	 {{ form.batch_name(class="form-control form-control-sm", placeholder="Appropriate batch name") }} 
-    	</div>
-        </div>
-
-        <div class="row">
-    	{{ form.cmssw_release.label(class="col-sm-3 col-form-label-sm required") }} 
-    	<div class="col-sm-9">
-    	 {{ form.cmssw_release(class="form-control form-control-sm", placeholder="E.g CMSSW_12_3_...") }} 
-    	</div>
-        </div>
-
-        <div class="row">
-        {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm required") }} 
-        <div class="col-sm-9">
-         {{ form.jira_ticket(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }}
-        </div>
-        </div>
-
-        <div class="row">
-        {{ form.matrix.label(class="col-sm-3 col-form-label-sm") }} 
-        <div class="col-sm-4">
-         {{ form.matrix(class="form-control form-control-sm") }}
-        </div>
-        </div>
-
-        <div class="row">
-    	{{ form.label.label(class="col-sm-3 col-form-label-sm") }}
-    	<div class="col-sm-9">
-    	 {{ form.label(class="form-control form-control-sm", placeholder="E.g. AlCaTest") }} 
-        </div>
-    	</div>
-
-        <div class="row">
-    	{{ form.hlt_gt.label(class="col-sm-3 col-form-label-sm") }}
-    	<div class="col-sm-9">
-		 {{ form.hlt_gt(class="form-control form-control-sm", id="hlt_gt", placeholder="HLT Global Tag. Target or Reference") }} 
-        </div>
-    	</div>
-
-        <div class="row" id="common_prompt_gt_row">
-        {{ form.common_prompt_gt.label(class="col-sm-3 col-form-label-sm required") }}
-        <div class="col-sm-9">
-         {{ form.common_prompt_gt(class="form-control form-control-sm") }} 
-        </div>
-        </div>
-            {% for error in form.common_prompt_gt.errors %}
-            <div class="row">
-            <div class="col-sm-3"></div>
-            <div class="col-sm-9" style=" padding-bottom: 15px; color: red;">
-            {{error}}
+        {% for item in form if not item.id in ['submit', 'csrf_token'] %}
+            <div class="row" id="{{ item.id }}_row">
+                {{ item.label() }} 
+            <div class="{{ 'col-sm-4' if item.id == 'matrix' else 'col-sm-9'}}">
+                {{ item() }}
             </div>
             </div>
+
+            {% for error in item.errors %}
+                <div class="row">
+                    <div class="col-sm-3"></div>
+                    <div class="col-sm-9" style=" padding-bottom: 15px; color: red;">
+                        {{error}}
+                    </div>
+                </div>
             {% endfor %}
-        <div class="row">
-    	{{ form.prompt_gt.label(class="col-sm-3 col-form-label-sm") }}
-    	<div class="col-sm-9">
-    	 {{ form.prompt_gt(class="form-control form-control-sm", placeholder="Prompt Global Tag. Target or Reference") }} 
-        </div>
-    	</div>
-
-        <div class="row">
-    	{{ form.express_gt.label(class="col-sm-3 col-form-label-sm") }}
-    	<div class="col-sm-9">
-    	 {{ form.express_gt(class="form-control form-control-sm", placeholder="Express Global Tag. Target or Reference") }} 
-        </div>
-    	</div>
-
-        <div class="row">
-    	{{ form.workflow_ids.label(class="col-sm-3 col-form-label-sm") }}
-    	<div class="col-sm-9">
-    	 {{ form.workflow_ids(class="form-control form-control-sm", placeholder="Workflow IDs separated by comma. E.g. 1.1,1.2") }} 
-        </div>
-    	</div>
-
-        <div class="row">
-        {{ form.notes.label(class="col-sm-3 col-form-label-sm") }}
-        <div class="col-sm-9">
-         {{ form.notes(class="form-control form-control-sm" ) }} 
-        </div>
-        </div>
-
+        {% endfor %}
     </div>
-
 
     <div style="text-align: center;">
 	    {{ form.submit(class_="btn btn-primary", value="Save Ticket") }}
@@ -125,7 +49,7 @@
             $('#common_prompt_gt_row').hide();
         }
         $('#hlt_gt').keyup(function(){
-            if (this.value !== ''){
+            if (this.value.trim() !== ''){
                 $('#common_prompt_gt_row').show();
             } else {
                 $('#common_prompt_gt_row').hide();
