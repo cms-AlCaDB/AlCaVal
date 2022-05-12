@@ -66,7 +66,6 @@
 
     function get_attached_wfs() {
       var attached_wfs = globalTicket.attached_wfs
-      console.log('get_attached_wfs', attached_wfs)
       var html_output = '';
       var keys = Object.keys(attached_wfs)
       for (var i = 0; i < keys.length; i++) {
@@ -177,7 +176,6 @@
         req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         $('body').addClass('loading');    
         req.send();
-        console.log('Print before response')
         function alertContents() {
           AlertException(req, prepid);
         }
@@ -187,7 +185,6 @@
         if (req.readyState === XMLHttpRequest.DONE) {
           $('body').removeClass('loading');
           if (req.status === 200) {
-            console.log(JSON.parse(req.responseText).response.results[0]);
             setWorkflowInForm(prepid, JSON.parse(req.responseText).response.results[0].attached_wfs)
             globalTicket = JSON.parse(req.responseText).response.results[0];
           } else {
@@ -223,11 +220,11 @@
         document.getElementById('wf_prompt_gt').innerHTML = workflow_options_prompt
         document.getElementById('wf_express_gt').innerHTML = workflow_options_express
         if(items[prepid].hlt_gt ==='')
-          document.getElementById('hlt_row_id').remove();
+          document.getElementById('hlt_row_id').style = "display: none";
         if(items[prepid].prompt_gt ==='')
-          document.getElementById('prompt_row_id').remove();
+          document.getElementById('prompt_row_id').style = "display: none";
         if(items[prepid].express_gt ==='')
-          document.getElementById('express_row_id').remove();
+          document.getElementById('express_row_id').style = "display: none";
       }
     }
 
