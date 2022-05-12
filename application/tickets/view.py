@@ -29,7 +29,9 @@ def create_ticket():
 
         # workflow IDs to string
         workflows = formdata.get('workflow_ids')
+        command_steps = formdata.get('command_steps')
         formdata.update({'workflow_ids': ", ".join([str(i) for i in workflows])})
+        formdata.update({'command_steps': ", ".join([str(i) for i in command_steps])})
 
         editing_info = res['response']['editing_info']
         session['ticket_data'] = formdata
@@ -71,6 +73,7 @@ def create_ticket():
     if form.validate_on_submit():
         data = form.data
         data.update({'workflow_ids': data['workflow_ids'].strip().split(',')})
+        data.update({'command_steps': data['command_steps'].strip().split(',')})
         if creating_new:
             res = askfor.put('api/tickets/create', data=str(json.dumps(data)), headers=request.headers).json()
             if res['success']: flash(u'Success! Ticket created!', 'success')

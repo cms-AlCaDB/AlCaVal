@@ -104,12 +104,20 @@ class TicketForm(FlaskForm):
                 label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
                 )
     jira_ticket = SSelectField('Jira Ticket', 
-                choices=[["", "Select Jira ticket to associated with this"], ["None", "Create New Ticket"]],
+                choices=[["", "Select Jira ticket to associated with this"], ["None", "Select nothing for a moment"]],
                 validators=[InputRequired(message="Please select Jira ticket out of given list. Or choose to create new")],
                 widget=CustomSelect(),
                 default='',
                 render_kw = classDict | {'option_attr': {"jira_ticket-0": {"disabled": "", "hidden": ""}} },
                 label_rkw = label_rkw
+                )
+    command = SStringField('Command (--command)',
+                render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
+                label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
+                )
+    command_steps = SStringField('Command Steps',
+                render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
+                label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
                 )
 
     matrix_choices = [
@@ -137,7 +145,7 @@ class TicketForm(FlaskForm):
     common_prompt_gt = SStringField('Common Prompt GT',
                         validators=[GTDataRequired(message="Since you have chosen to use HLT global tag, you are required to provide common prompt global tag, which is to be used in RECO step of workflow")],
                         render_kw= classDict | {'placeholder': 'Global tag to be used in RECO step of HLT workflow'},
-                        label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                        label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
                         )
     prompt_gt = SStringField('Prompt Global Tag',
                 render_kw = classDict | {'placeholder': 'Prompt Global Tag. Target or Reference'},

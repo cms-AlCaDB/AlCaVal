@@ -25,7 +25,7 @@
                 <div class="row">
                     <div class="col-sm-3"></div>
                     <div class="col-sm-9" style=" padding-bottom: 15px; color: red;">
-                        {{error}}
+                        <small>{{error}}</small>
                     </div>
                 </div>
             {% endfor %}
@@ -44,18 +44,18 @@
     }
 
     // Show common_prompt_gt option only when `hlt_gt` is not empty
-    $(document).ready(function() {
-        if ($('#hlt_gt').val() === '') {
-            $('#common_prompt_gt_row').hide();
-        }
-        $('#hlt_gt').keyup(function(){
-            if (this.value.trim() !== ''){
-                $('#common_prompt_gt_row').show();
-            } else {
-                $('#common_prompt_gt_row').hide();
-            }
-        });
-    });
+    // $(document).ready(function() {
+    //     if ($('#hlt_gt').val() === '') {
+    //         $('#common_prompt_gt_row').hide();
+    //     }
+    //     $('#hlt_gt').on('keyup', 'change', function(){
+    //         if (this.value.trim() !== ''){
+    //             $('#common_prompt_gt_row').show();
+    //         } else {
+    //             $('#common_prompt_gt_row').hide();
+    //         }
+    //     });
+    // });
 
 </script>
 
