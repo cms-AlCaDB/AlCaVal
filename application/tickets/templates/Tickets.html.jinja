@@ -136,22 +136,17 @@
     }
 
 
-    function create_alca_relval(prepid) {
+    function open_wf_classifier_modal(prepid, ticketData) {
       $('#exampleModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget) // Button that triggered the modal
-        var recipient = button.data('whatever') // Extract info from data-* attributes
-        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
         var modal = $(this)
         modal.find('#exampleModalLabel').text('Please classify workflows IDs for the given conditions by selecting below')
         modal.find('#cr_hlt_gt').val(items[prepid].hlt_gt)
         modal.find('#cr_prompt_gt').val(items[prepid].prompt_gt)
         modal.find('#cr_express_gt').val(items[prepid].express_gt)
-
         document.getElementById('cr_hlt_gt').disabled = true;
         document.getElementById('cr_prompt_gt').disabled = true;
         document.getElementById('cr_express_gt').disabled = true;
-        getTableItems(prepid)
+        setWorkflowInForm(prepid, ticketData.attached_wfs)
         $(this).off('show.bs.modal');
       });
       $('#exampleModal').modal('show');
@@ -168,30 +163,6 @@
           buttonWidth: '160px'
         });
         $('#'+workflows[i]).multiselect('refresh');
-      }
-
-      function getTableItems(prepid) {
-        req.onreadystatechange = alertContents;
-        req.open('GET', 'api/search?db_name=tickets&prepid='+prepid, false);
-        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $('body').addClass('loading');    
-        req.send();
-        function alertContents() {
-          AlertException(req, prepid);
-        }
-      }
-
-      function AlertException(req, prepid) {
-        if (req.readyState === XMLHttpRequest.DONE) {
-          $('body').removeClass('loading');
-          if (req.status === 200) {
-            setWorkflowInForm(prepid, JSON.parse(req.responseText).response.results[0].attached_wfs)
-            globalTicket = JSON.parse(req.responseText).response.results[0];
-          } else {
-            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
-            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
-          }
-        }
       }
 
       function setWorkflowInForm(prepid, attached_wfs) {
@@ -225,6 +196,26 @@
           document.getElementById('prompt_row_id').style = "display: none";
         if(items[prepid].express_gt ==='')
           document.getElementById('express_row_id').style = "display: none";
+      }
+    }
+
+    function create_alca_relval(prepid) {
+      req.onreadystatechange = alertContents;
+      req.open('GET', 'api/search?db_name=tickets&prepid='+prepid);
+      req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      $('body').addClass('loading');    
+      req.send();
+      function alertContents() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+          $('body').removeClass('loading');
+          if (req.status === 200) {
+            globalTicket = JSON.parse(req.responseText).response.results[0];
+            open_wf_classifier_modal(prepid, JSON.parse(req.responseText).response.results[0])
+          } else {
+            const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+            alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);
+          }
+        }
       }
     }
 
