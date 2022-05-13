@@ -66,3 +66,25 @@ body.loading .loadingAnim {
 footer.fixed-bottom {
     z-index: 1028;
 }
+
+/* Highlight navbar buttons on hover */
+.mynav-item {
+    padding-right: 5px;
+    padding-left: 5px;
+}
+.mynav-link {
+    display: flex;
+    /*padding: .5rem 1rem;*/
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 16px;
+    padding-left: 1rem; 
+    color:  black;
+}
+.mynav-link:hover{
+    color: black;
+    opacity: 1;
+    border-radius:5px;
+    /*font-weight: bold;*/
+    background: lavender;
+}
