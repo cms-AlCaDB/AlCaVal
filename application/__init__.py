@@ -4,6 +4,7 @@ import logging
 import logging.handlers
 from flask import Flask, request
 from flask_restful import Api
+from flask_cors import CORS
 from database.database import Database
 from core_lib.utils.global_config import Config
 from core_lib.utils.username_filter import UsernameFilter
@@ -124,7 +125,11 @@ def create_app():
 	app.register_blueprint(ticket_blueprint, url_prefix='/')
 	app.register_blueprint(dqm_blueprint, url_prefix='/')
 
-
+	CORS(app,
+     allow_headers=['Content-Type',
+                    'Authorization',
+                    'Access-Control-Allow-Credentials', 'Access-Control-Allow-Origin'],
+     supports_credentials=True)
 	# To avoid trailing slashes at the end of the url
 	app.url_map.strict_slashes = False
 	@app.before_request
