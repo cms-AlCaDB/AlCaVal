@@ -11,14 +11,16 @@
 <form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white' >
     
     {{ form.hidden_tag() }}
-
+    {% set shortItems = ['matrix', 'memory', 'cpu_cores', 'n_streams'] %}
     <div class="form-group">
         {% for item in form if not item.id in ['submit', 'csrf_token'] %}
             <div class="row" id="{{ item.id }}_row">
-                {{ item.label() }} 
-            <div class="{{ 'col-sm-4' if item.id == 'matrix' else 'col-sm-9'}}">
-                {{ item() }}
-            </div>
+                <div class="col-sm-3">
+                    {{ item.label() }}
+                </div>
+                <div class="{{ 'col-sm-4' if item.id in shortItems else 'col-sm-9'}}">
+                    {{ item() }}
+                </div>
             </div>
 
             {% for error in item.errors %}

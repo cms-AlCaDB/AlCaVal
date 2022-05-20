@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, SelectField, StringField, FieldList, TextAreaField
-from wtforms.validators import DataRequired, InputRequired, ValidationError, StopValidation, Length
+from wtforms import SubmitField, SelectField, StringField, FieldList, TextAreaField, IntegerField
+from wtforms.validators import DataRequired, InputRequired, ValidationError, StopValidation, Length, NumberRange
 from wtforms.widgets import TextArea
 from wtforms import widgets
 
@@ -85,8 +85,13 @@ class STextAreaField(TextAreaField):
         super().__init__(label=label, **kw)
         self.label = SetLabel(self.id, label, kw['name'], label_rkw)
 
+class SIntegerField(IntegerField):
+    def __init__(self, label=None, label_rkw={}, **kw):
+        super().__init__(label=label, **kw)
+        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
+
 class TicketForm(FlaskForm):
-    label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
+    label_rkw = {'class': 'col-form-label-sm'}
     classDict = {'class': 'form-control form-control-sm'}
     prepid = SStringField(
                 render_kw=classDict | {'disabled':''},
@@ -96,16 +101,16 @@ class TicketForm(FlaskForm):
     batch_name = SStringField('Batch Name',
                 validators=[DataRequired(message="Please provide appropreate batch name")],
                 render_kw = classDict | {"placeholder":"Appropriate batch name"},
-                label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                label_rkw = {'class': 'col-form-label-sm required'}
                 )
     cmssw_release = SStringField('CMSSW Release',
                 validators=[DataRequired(message="Please provide correct CMSSW release")],
                 render_kw = classDict | {"placeholder":"E.g CMSSW_12_3_..."},
-                label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                label_rkw = {'class': 'col-form-label-sm required'}
                 )
     jira_ticket = SSelectField('Jira Ticket', 
                 choices=[["", "Select Jira ticket to associated with this"], ["None", "Select nothing for a moment"]],
-                validators=[InputRequired(message="Please select Jira ticket out of given list. Or choose to create new")],
+                validators=[DataRequired(message="Please select Jira ticket out of given list. Or choose to create new")],
                 widget=CustomSelect(),
                 default='',
                 render_kw = classDict | {'option_attr': {"jira_ticket-0": {"disabled": "", "hidden": ""}} },
@@ -113,20 +118,32 @@ class TicketForm(FlaskForm):
                 )
     command = SStringField('Command (--command)',
                 render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
-                label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
+                label_rkw = {'class': 'col-form-label-sm'}
                 )
     command_steps = SStringField('Command Steps',
                 render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
-                label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
+                label_rkw = {'class': 'col-form-label-sm'}
+                )
+    cpu_cores = SIntegerField('CPU Cores (-t)', default=8, validators=[NumberRange(min=1, max=16)],
+                render_kw = classDict,
+                label_rkw = {'class': 'col-form-label-sm'}
                 )
 
+    memory = SIntegerField('Memory', default=16000, validators=[NumberRange(min=0, max=30000)],
+                render_kw = classDict | {'step': 1000},
+                label_rkw = {'class': 'col-form-label-sm'}
+                )
+    n_streams = SIntegerField('Streams (--nStreams)', default=2, validators=[NumberRange(min=0, max=16)],
+                render_kw = classDict,
+                label_rkw = {'class': 'col-form-label-sm'}
+                )
     matrix_choices = [
         ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
         ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
         ['extendedgen', 'extendedgen'], ['gpu', 'gpu']
     ]
     matrix = SSelectField('Matrix (--what)', choices=matrix_choices,
-                           validators=[InputRequired()],
+                           validators=[DataRequired()],
                            default='alca',
                            render_kw = classDict,
                            label_rkw = label_rkw
@@ -145,7 +162,7 @@ class TicketForm(FlaskForm):
     common_prompt_gt = SStringField('Common Prompt GT',
                         validators=[GTDataRequired(message="Since you have chosen to use HLT global tag, you are required to provide common prompt global tag, which is to be used in RECO step of workflow")],
                         render_kw= classDict | {'placeholder': 'Global tag to be used in RECO step of HLT workflow'},
-                        label_rkw = {'class': 'col-sm-3 col-form-label-sm'}
+                        label_rkw = {'class': 'col-form-label-sm'}
                         )
     prompt_gt = SStringField('Prompt Global Tag',
                 render_kw = classDict | {'placeholder': 'Prompt Global Tag. Target or Reference'},
@@ -157,7 +174,7 @@ class TicketForm(FlaskForm):
                 )
     workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
                         render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
-                        label_rkw = {'class': 'col-sm-3 col-form-label-sm required'}
+                        label_rkw = {'class': 'col-form-label-sm required'}
                         )
     notes = STextAreaField('Notes',  
                           render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
