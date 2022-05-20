@@ -326,13 +326,13 @@ class RelValController(ControllerBase):
         job_dict['SubRequestType'] = 'RelVal'
         job_dict['RequestString'] = relval.get_request_string()
         job_dict['Campaign'] = relval.get_campaign()
-        job_dict['RequestPriority'] = 500000
+        job_dict['RequestPriority'] = 900000
         job_dict['TimePerEvent'] = relval.get('time_per_event')
         job_dict['SizePerEvent'] = relval.get('size_per_event')
         job_dict['ProcessingVersion'] = 1
         # Harvesting should run on single core with 3GB memory,
         # and each task will have it's own core and memory setting
-        job_dict['Memory'] = 3000
+        job_dict['Memory'] = 4000
         job_dict['Multicore'] = 1
         job_dict['EnableHarvesting'] = False
         # Set DbsUrl differently for dev and prod versions
