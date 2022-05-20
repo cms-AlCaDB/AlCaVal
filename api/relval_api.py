@@ -27,8 +27,9 @@ class CreateRelValAPI(APIBase):
         """
         Create a relval with the provided JSON content
         """
-        data = flask.request.data
-        relval_json = json.loads(data.decode('utf-8'))
+        # data = flask.request.data
+        data = list(flask.request.form.keys())[0]
+        relval_json = json.loads(data)
         obj = relval_controller.create(relval_json)
         return self.output_text({'response': obj.get_json(), 'success': True, 'message': ''})
 
@@ -78,8 +79,10 @@ class UpdateRelValAPI(APIBase):
         """
         Update a with the provided JSON content
         """
-        data = flask.request.data
-        relval_json = json.loads(data.decode('utf-8'))
+        # data = flask.request.data
+        # relval_json = json.loads(data.decode('utf-8'))
+        data = list(flask.request.form.keys())[0]
+        relval_json = json.loads(data)
         if isinstance(relval_json, dict):
             results = relval_controller.update(relval_json)
         elif isinstance(relval_json, list):

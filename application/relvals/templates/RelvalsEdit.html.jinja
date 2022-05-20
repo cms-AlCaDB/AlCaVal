@@ -1,0 +1,288 @@
+{% extends 'Base.html.jinja' %}
+
+{% block content %}
+
+{% if createNew %}
+  <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Creating</span> <b>new relval</b></h2>
+{% else %}
+  <h2 class="page-title" style="text-align: center;"><span class="font-weight-light">Editing relval</span> <b>{{form.prepid.data}}</b></h2>
+{% endif %}
+
+<form method="POST" style='text-align: left; margin: 5px 19%; padding: 10px;' class='shadow bg-white' id='relval_form'>
+    
+  {{ form.hidden_tag() }}
+  {% set shortItems = ['matrix', 'workflow_id', 'size_per_event', 'time_per_event', 'cpu_cores', 'memory'] %}
+
+  <div class="form-group">
+    {% for item in form if not item.id in ['submit', 'step', 'add_step', 'csrf_token'] %}
+        <div class="row" id="{{ item.id }}_row" style="align-items: center;">
+          <div class='col-sm-2' style="padding-right: unset;">
+            {{ item.label() }}
+          </div>
+          <div class="{{ 'col-sm-4' if item.id in shortItems else 'col-sm-10'}}" style="margin-bottom: .5rem;">
+            {{ item() }}
+          </div>
+        </div>
+
+      {% for error in item.errors %}
+        <div class="row">
+          <div class="col-sm-2"></div>
+          <div class="col-sm-10" style=" padding-bottom: 15px; color: red;">
+            <small>{{error}}</small>
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    <div class="row" id="{{ form.step.id }}_row" style="align-items: center;">
+      <div class='col-sm-2'>
+        {{ form.step.label() }}
+      </div>
+      <div class="col-sm-10" style="margin-bottom: .5rem;" id="steps_column_id">
+        {{ form.step() }}
+        <button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addStep()" type="button" value="">Add Step 1</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align: center;">
+    {{ form.submit(class_="btn btn-primary", value="Save RelVal") }}
+    <button class="btn btn-danger" onclick="cancel(); return false;">Cancel</button>
+  </div>
+</form>
+
+<style type="text/css">
+  table {
+    width: 100%;
+  }
+  table tr td {
+    width: 80%;
+  }
+  th, td {
+    padding-top: 5px;
+  }
+  th {
+    padding-right: 10px;
+  }
+</style>
+
+<script type="text/javascript">
+  var stepNumber = 0;
+  var forminputdata = '';
+  var button = '<button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addStep()" type="button" value="">Add Step</button>'
+  function getCount(parent, getChildrensChildren){
+      var relevantChildren = 0;
+      var children = parent.childNodes.length;
+      for(var i=0; i < children; i++){
+          if(parent.childNodes[i].nodeType != 3){
+              if(getChildrensChildren)
+                  relevantChildren += getCount(parent.childNodes[i],true);
+              relevantChildren++;
+          }
+      }
+      return relevantChildren;
+  }
+  function cancel(){
+      window.location = '/relvals';
+  }
+
+  function delete_step(Id) {
+      var step_col = document.getElementById('steps_column_id')
+      let index = Id.split('step ')[1].split('-')[0]
+      var formarray = $('form').serializeArray();
+      var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
+      let options = {
+          method: "PUT", 
+          body: forminputdata, 
+          headers: {"Content-Type": "application/json;"}
+      }
+      let url = '/relvals/delete_step/'+index;
+      fetch(url, options).then(res => res.json()).then(d =>{
+          step_col.innerHTML = "";
+          step_col.insertAdjacentHTML('beforeend', d.response)
+          step_col.insertAdjacentHTML('beforeend', button)
+          forminputdata = d.inputdata
+          addStepNumbers()
+          toggleDriverOptionsOnStart()
+          // $("#step :input").prop("readonly", true);
+      })
+  }
+
+  function relvalFormToJSON(array) {
+      var d = {};
+      $(array).each(function() {
+          if (d[this.name] !== undefined){
+              if (!Array.isArray(d[this.name])) {
+                  d[this.name] = [d[this.name]];
+              }
+              d[this.name].push(this.value);
+          }else{
+              d[this.name] = this.value;
+          }
+      });
+      return d;
+  }
+
+  function addStep(){
+    var step_col = document.getElementById('steps_column_id')
+    var stepNumber = getCount(step_col, false)
+    var disabled = $('form').find(':input:disabled').removeAttr('disabled');
+    var formarray = $('form').serializeArray();
+    disabled.attr('disabled','disabled');
+    var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
+    console.log(forminputdata)
+    let options = {
+        method: "PUT", 
+        body: forminputdata,
+        headers: {"Content-Type": "application/json;"}
+    }
+    fetch('/relvals/add_step', options).then(res => {
+      if (res.status >= 200 && res.status <= 299) {
+        return res.json();
+      } else {
+        throw Error(res.statusText);
+      }
+    }).then(data =>{
+      step_col.innerHTML = "";
+      step_col.insertAdjacentHTML('beforeend', data.response)
+      step_col.insertAdjacentHTML('beforeend', button)
+      addStepNumbers()
+      toggleDriverOptionsOnStart()
+      validateJSON('step 1-input-lumisection')
+      validateRunNumbers('step 1-input-run')
+      toggleDataMCFastOnStart()
+      // makeStepsReadOnly()
+      // $("#step :input").prop("readonly", true);
+    }).catch(error => {
+      let message = ["Your session might have expired", "Please re-login by refreshing a page!"]
+      alertModal(error)
+    });
+  }
+
+  function addStepNumbers() {
+    var stepEl = document.getElementById('step')
+    var nsteps = getCount(stepEl, false)
+    var steplabel = $('label[for="step"]')
+    steplabel.html('Steps ('+nsteps+')')
+    $('#add_step').html('Add Step '+(nsteps+1))
+    if (nsteps == '0')
+      $('#step').css('margin-bottom', '0px')
+    return nsteps
+  }
+
+  function toggleDriverOptionsOnStart() {
+    $('input[value="input"]').each(function(index, value) {
+      toggleDriverOption(this.id)
+    })
+  }
+
+  function toggleDriverOption(id){
+    var inputEl = id.split('-')[0]+'-step_type-0'
+    var inputRow = '.'+id.split('-')[0].replace(' ', '_')+'-input-row'
+    var driverRow = '.'+id.split('-')[0].replace(' ', '_')+'-driver-row'
+    if (document.getElementById(inputEl).checked){
+      $(inputRow).attr("hidden",false);
+      $(driverRow).attr("hidden",true);
+    } else {
+      $(inputRow).attr("hidden",true);
+      $(driverRow).attr("hidden",false);   
+    }
+  }
+
+  function validateJSON(id) {
+    var lumiid = document.getElementById('lumisesion_error_id')
+    if (lumiid) lumiid.remove()
+    try{
+      var json = JSON.parse(document.getElementById(id).value);
+      prettyPrint(id)
+      var el = '<small id="lumisesion_error_id" style="color: green">Valid JSON</small>'
+      document.getElementById(id).insertAdjacentHTML('afterend', el)
+    }catch (e){
+      var el = '<small id="lumisesion_error_id" style="color: red">Invalid JSON: '+e+'</small>'
+      document.getElementById(id).insertAdjacentHTML('afterend', el)
+    }
+  }
+
+  function prettyPrint(id) {
+    var ugly = document.getElementById(id).value;
+    var obj = JSON.parse(ugly);
+    var pretty = JSON.stringify(obj, undefined, 4);
+    document.getElementById(id).value = pretty;
+  }
+
+  function validateRunNumbers(id) {
+    var lumiid = document.getElementById('nrun_error_id')
+    if (lumiid) lumiid.remove()
+    try{
+      var runs = document.getElementById(id).value.split(',')
+      if(runs.length == 1 && runs[0]=='') {
+        $('label[for="'+id+'"]').html('Runs (0)')  
+        return          
+      } else {
+        $('label[for="'+id+'"]').html('Runs ('+runs.length+')')            
+      }
+      for (let run in runs){
+        if (runs[run].trim() == '') 
+          throw new Error("Can not have empty spaces, remove extra comma!")
+        if (!Number(runs[run]))
+          throw new Error(runs[run] + " is not valid run")
+        if (runs[run].includes('.'))
+          throw new Error(runs[run] + " is not valid run")
+        if (Number(runs[run]) < 300000 || Number(runs[run]) > 400000)
+          throw new Error(runs[run] + " is not valid run")
+      }
+      var el = '<small id="nrun_error_id" style="color: green">Valid Run Number/s</small>'
+      document.getElementById(id).insertAdjacentHTML('afterend', el)
+    }catch (e){
+      var el = '<small id="nrun_error_id" style="color: red">'+e+'</small>'
+      document.getElementById(id).insertAdjacentHTML('afterend', el)
+    }
+  }
+
+  function toggleDataMCFast(id) {
+    let index = id.split('step ')[1].split('-')[0]
+    let mcChecked = document.getElementById('step '+index+'-driver-data_mc-1').checked
+    if(mcChecked){
+      document.getElementById('step '+index+'-driver-fast-row').hidden = false
+    } else {
+      document.getElementById('step '+index+'-driver-fast-row').hidden = true
+      document.getElementById('step '+index+'-driver-fast').checked = false
+    }
+  }
+
+  function toggleDataMCFastOnStart(nsteps){
+    if (nsteps==0) return false
+    $("[id$=-driver-data_mc-1]").each(function(index, value) {
+      toggleDataMCFast(this.id)
+    })
+  }
+
+  function validateJSONOnStart(nsteps){
+    if (nsteps != 0) {
+      validateJSON('step 1-input-lumisection')
+      validateRunNumbers('step 1-input-run')            
+    }
+  }
+
+  function makeStepsReadOnly(){
+    if(document.getElementById('step').getAttribute('readonly')==''){
+      $("#step :input").prop("readonly", true);
+    }
+  }
+  $(document).ready(function() {
+    var nsteps = addStepNumbers()
+    toggleDriverOptionsOnStart()
+    validateJSONOnStart(nsteps)
+    toggleDataMCFastOnStart(nsteps)
+    // makeStepsReadOnly()
+  })
+
+</script>
+
+<style type="text/css">
+  .required:after {
+    content:" *";
+    color: red;
+  }
+</style>
+{% endblock %}

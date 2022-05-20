@@ -20,14 +20,14 @@ class ActionCol(Col):
         prev_status = f"""<a class="cls_previous_status prevStatus_{content}" onclick="prevStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to previous status'>Previous</a>"""
         prev_status = "" if item['status'] != 'new' else ""
 
-        status_list = ['new', 'approved', 'submitted', 'done']
+        status_list = ['new', 'approved', 'submitting', 'submitted', 'done', 'archieved']
         new_status = status_list[status_list.index(item['status'])+1]
         next_status = f"""<a class="cls_next_status nextStatus_{content}" onclick="nextStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to next status: from "{item['status']}" to "{new_status}"'>Next</a>"""
         next_status = next_status if item['status'] != 'done' else ""
 
         ticket = f"<a href='tickets?created_relvals={content}' title='Show a ticket from which this relval was created'>Ticket</a>"
 
-        delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval(['{content}'])" href="javascript:void(0); title='Delete relval'">Delete</a>"""
+        delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval(['{content}'])" href="javascript:void(0);" title='Delete relval'>Delete</a>"""
         delete = delete if item['status'] == 'new' else ""
         
         links = "".join([edit, clone, delete, cmsDriver, job_dict, jira, ticket, prev_status, next_status])
