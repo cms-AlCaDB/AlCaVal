@@ -472,7 +472,7 @@ class RelvalForm(FlaskForm):
                         render_kw = {'style': 'padding-left:0px;'}
                         )
     workflow_id = SFloatField('Workflow ID', default=0, validators=[NumberRange(min=0, max=300000)],
-                        render_kw = {'class': 'form-control form-control-sm'},
+                        render_kw = {'class': 'form-control form-control-sm', 'readonly': ''},
                         label_rkw = {'class': 'col-form-label-sm'}
                         )
     workflow_name = SStringField('Workflow Name',

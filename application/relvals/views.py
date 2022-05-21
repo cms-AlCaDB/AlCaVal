@@ -152,7 +152,7 @@ def create_relval():
         so intentionally allowing fields to edit
         """
         for key in form._fields.keys():
-            if key in ['prepid', 'submit', 'csrf_token']:
+            if key in ['prepid', 'submit', 'csrf_token', 'workflow_id']:
                 continue
             else:
                 form._fields.get(key).render_kw.update({'readonly': False})
