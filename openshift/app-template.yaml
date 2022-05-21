@@ -1,0 +1,410 @@
+---
+kind: Template
+apiVersion: template.openshift.io/v1
+metadata:
+  name: alcaval
+  annotations:
+    openshift.io/display-name: AlCaVal Web App
+    description: Flask app/api, with MongoDB and Mongo Express. 
+    tags: quickstart,python,flask,mongodb
+    iconClass: icon-python
+    openshift.io/long-description: This template defines resources needed to deploy
+      a Flask based fitter web application, including a build configuration, application deployment
+      configuration, and database deployment configuration.
+    openshift.io/provider-display-name: Pritam Kalbhor
+    openshift.io/documentation-url: https://gitlab.cern.ch/pkalbhor/alcaval
+    openshift.io/support-url: https://github.com/pkalbhor
+    template.openshift.io/bindable: 'false'
+message: |-
+  The following service(s) have been created in your project: ${NAME}, ${DATABASE_SERVICE_NAME}.
+labels:
+  template: alcaval
+  app: alcaval
+objects:
+- kind: Secret
+  apiVersion: v1 
+  metadata: 
+    name: client-secret-file
+  type: Opaque
+  data:
+    client_secrets.json: "${FLASK_OIDC_CLIENT_SECRETS}"
+- kind: Secret
+  apiVersion: v1 
+  metadata: 
+    name: jira-credentials-file
+  type: Opaque
+  data:
+    jira_credentials.cfg: "${JIRA_CREDENTIALS}"
+- kind: Secret
+  apiVersion: v1 
+  metadata: 
+    name: ssh-credentials-file
+  type: Opaque
+  data:
+    ssh_credentials.cfg: "${SSH_CREDENTIALS}"
+- kind: Secret
+  apiVersion: v1 
+  metadata: 
+    name: grid-usercert-file
+  type: Opaque
+  data:
+    usercert.pem: "${GRID_USERCERT}"
+- kind: Secret
+  apiVersion: v1 
+  metadata: 
+    name: grid-userkey-file
+  type: Opaque
+  data:
+    userkey.pem: "${GRID_USERKEY}"
+- kind: Secret
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+  stringData:
+    database-user: "${DATABASE_USER}"
+    database-password: "${DATABASE_PASSWORD}"
+    flask-secret-key: "${FLASK_SECRET_KEY}"
+
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      description: Exposes and load balances the application pods
+      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}",
+        "kind": "Service"}]'
+  spec:
+    ports:
+    - name: web
+      port: 8080
+      targetPort: 8080
+    selector:
+      name: "${NAME}"
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      haproxy.router.openshift.io/ip_whitelist: ""
+  spec:
+    host: "${APPLICATION_DOMAIN}"
+    to:
+      kind: Service
+      name: "${NAME}"
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      description: Keeps track of changes in the application image
+- kind: BuildConfig
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      description: Defines how to build the application
+      template.alpha.openshift.io/wait-for-ready: 'true'
+  spec:
+    source:
+      type: Git
+      git:
+        uri: "${SOURCE_REPOSITORY_URL}"
+        ref: "${SOURCE_REPOSITORY_REF}"
+      contextDir: "${CONTEXT_DIR}"
+    strategy:
+      type: Docker
+      dockerStrategy:
+        dockerfilePath: docker/Dockerfile
+    output:
+      to:
+        kind: ImageStreamTag
+        name: "${NAME}:latest"
+    triggers:
+    - type: ImageChange
+    - type: ConfigChange
+    - type: GitLab
+      gitlab:
+        secret: "${GITLAB_WEBHOOK_SECRET}"
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+    storageClassName: eos                                                         
+    volumeMode: Filesystem
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      description: Defines how to deploy the application server
+      template.alpha.openshift.io/wait-for-ready: 'true'
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - alcaval
+        from:
+          kind: ImageStreamTag
+          name: "${NAME}:latest"
+    - type: ConfigChange
+    replicas: 1
+    selector:
+      name: "${NAME}"
+    template:
+      metadata:
+        name: "${NAME}"
+        labels:
+          name: "${NAME}"
+      spec:
+        volumes:
+        - name: "${NAME}"
+          emptyDir: {}
+        - name: client-secret
+          secret:   
+            secretName: client-secret-file
+        - name: jira-secret
+          secret:                                                               
+            secretName: jira-credentials-file
+        - name: ssh-secret
+          secret:                                                               
+            secretName: ssh-credentials-file
+        - name: grid-usercert
+          secret:                                                               
+            secretName: grid-usercert-file
+        - name: grid-userkey
+          secret:                                                               
+            secretName: grid-userkey-file
+        containers:
+        - name: alcaval
+          image: " "
+          ports:
+          - containerPort: 8080
+          volumeMounts:
+          - name: "${NAME}"
+            mountPath: "/home/pritam/database"
+          - name: client-secret
+            mountPath: /home/pritam/secrets
+          - name: jira-secret                                               
+            mountPath: /home/pritam/secrets
+          - name: ssh-secret
+            mountPath: /home/pritam/secrets
+          - name: grid-usercert
+            mountPath: /home/pritam/secrets
+          - name: grid-userkey
+            mountPath: /home/pritam/secrets
+          env:
+          - name: DB_HOST
+            value: "${DATABASE_SERVICE_NAME}"
+          - name: DB_PORT
+            value: 27017
+          - name: DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: "${NAME}"
+                key: database-user
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "${NAME}"
+                key: database-password
+          - name: APP_CONFIG
+            value: "${APP_CONFIG}"
+          - name: FLASK_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: "${NAME}"
+                key: flask-secret-key
+          resources:
+            limits:
+              memory: "${MEMORY_LIMIT}"
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: "${DATABASE_SERVICE_NAME}"
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: "${DATABASE_SERVICE_NAME}"
+    annotations:
+      description: Exposes the database server
+  spec:
+    ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+    selector:
+      name: "${DATABASE_SERVICE_NAME}"
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: "${DATABASE_SERVICE_NAME}"
+    annotations:
+      description: Defines how to deploy the database
+      template.alpha.openshift.io/wait-for-ready: 'true'
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ConfigChange
+    replicas: 1
+    selector:
+      name: "${DATABASE_SERVICE_NAME}"
+    template:
+      metadata:
+        name: "${DATABASE_SERVICE_NAME}"
+        labels:
+          name: "${DATABASE_SERVICE_NAME}"
+      spec:
+        volumes:
+        - name: "${DATABASE_SERVICE_NAME}-data"
+          persistentVolumeClaim:
+            claimName: "${DATABASE_SERVICE_NAME}"
+        containers:
+        - name: mongodb
+          image: docker.io/library/mongodb:latest
+          ports:
+          - containerPort: 27017
+          env:
+          - name: MONGO_INITDB_ROOT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: "${NAME}"
+                key: database-user
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "${NAME}"
+                key: database-password
+          volumeMounts:
+          - name: "${DATABASE_SERVICE_NAME}-data"
+            mountPath: "/data"
+          readinessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 5
+            exec:
+              command:
+              - "/usr/libexec/check-container"
+          livenessProbe:
+            timeoutSeconds: 10
+            initialDelaySeconds: 120
+            exec:
+              command:
+              - "/usr/libexec/check-container"
+              - "--live"
+          resources:
+            limits:
+              memory: "${MEMORY_MONGODB_LIMIT}"
+
+parameters:
+- name: NAME
+  displayName: Name
+  description: The name assigned to all of the frontend objects defined in this template.
+  required: true
+  value: alcaval
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  required: true
+  description: Maximum amount of memory the Flask container can use.
+  value: 1Gi
+- name: MEMORY_MONGODB_LIMIT
+  displayName: Memory Limit (MongoDB)
+  required: true
+  description: Maximum amount of memory the PostgreSQL container can use.
+  value: 1Gi
+- name: VOLUME_CAPACITY
+  displayName: Volume Capacity
+  description: Volume space available for data, e.g. 512Mi, 2Gi
+  value: 1Gi
+  required: true
+- name: SOURCE_REPOSITORY_URL
+  displayName: Git Repository URL
+  required: true
+  description: The URL of the repository with your application source code.
+  value: https://gitlab.cern.ch/pkalbhor/alcaval.git
+- name: SOURCE_REPOSITORY_REF
+  displayName: Git Reference
+  description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  value: dev
+- name: CONTEXT_DIR
+  displayName: Context Directory
+  description: Set this to the relative path to your project if it is not in the root
+    of your repository.
+  value: ./
+- name: APPLICATION_DOMAIN
+  displayName: Application Hostname
+  description: The exposed hostname that will route to the Flask service, if left
+    blank a value will be defaulted.
+  value: 'alcaval.web.cern.ch'
+- name: GITLAB_WEBHOOK_SECRET
+  displayName: GitLab Webhook Secret
+  description: GitLab trigger secret.  A difficult to guess string encoded as part
+    of the webhook URL.  Not encrypted.
+  generate: expression
+  from: "[a-zA-Z0-9]{40}"
+- name: DATABASE_SERVICE_NAME
+  displayName: Database Service Name
+  required: true
+  value: mongodb
+- name: DATABASE_USER
+  displayName: Database Username
+  required: true
+  value: flask
+- name: DATABASE_PASSWORD
+  displayName: Database User Password
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+- name: APP_CONFIG
+  displayName: Application Configuration File Path
+  description: Relative path to Gunicorn configuration file (optional).
+- name: FLASK_SECRET_KEY
+  displayName: Flask Secret Key
+  description: Set this to a long random string.
+  generate: expression
+  from: "[\\w]{50}"
+- name: FLASK_OIDC_CLIENT_SECRETS
+  displayName: Flask OIDC Client Secret in JSON Format
+  description: Put client secrets needed for using login functionality from CERN OIDC. Base-64 encoded is required
+  generate: expression
+  from: "[\\w]{50}"
+- name: JIRA_CREDENTIALS
+  displayName: Jira credentials in JSON Format
+  description: Put Jira username, password in JSON format. Base-64 encoded is required
+  generate: expression
+  from: "[\\w]{50}"
+- name: SSH_CREDENTIALS
+  displayName: SSH credentials in JSON Format
+  description: Put username, password of SSH node in JSON format. Base-64 encoded is required
+  generate: expression
+  from: "[\\w]{50}"
+
+- name: GRID_USERCERT
+  displayName: GRID user certificate
+  description: GRID user certificate. Base-64 encoded is required
+  generate: expression
+  from: "[\\w]{5000}"
+
+- name: GRID_USERKEY
+  displayName: GRID user key
+  description: GRID user key. Base-64 encoded is required
+  generate: expression
+  from: "[\\w]{5000}"
