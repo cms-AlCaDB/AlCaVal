@@ -12,6 +12,6 @@ OIDC_CLIENT_SECRETS = "secrets/client_secrets.json"
 OIDC_COOKIE_SECURE = True
 OIDC_CALLBACK_ROUTE = "/oidc/callback"
 OIDC_SCOPES = ["openid", "email", "profile"]
-SECRET_KEY = b'S\x9f\x92=\xf5\x1b\xa3\xc3o\x05\x11\x9a\xd1\x0cCb\x82?u+eN\xf8\xbf'
+SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'SomeVeryRandomString')
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = True

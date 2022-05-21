@@ -142,6 +142,7 @@ def create_app():
 	config = Config.load('config.cfg', 'prod')
 	# Init database connection
 	Database.set_database_name('relval')
+	Database.set_credentials(os.getenv('DATABASE_USER'), os.getenv('DATABASE_PASSWORD'))
 	Database.add_search_rename('tickets', 'created_on', 'history.0.time')
 	Database.add_search_rename('tickets', 'created_by', 'history.0.user')
 	Database.add_search_rename('tickets', 'workflows', 'workflow_ids<float>')

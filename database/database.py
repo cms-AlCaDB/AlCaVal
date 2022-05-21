@@ -18,8 +18,8 @@ class Database():
     DATABASE_PORT = 27017
     DATABASE_NAME = None
     SEARCH_RENAME = {}
-    USERNAME = 'root'
-    PASSWORD = 'example'
+    USERNAME = None
+    PASSWORD = None
 
     def __init__(self, collection_name=None):
         """
