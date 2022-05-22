@@ -32,8 +32,8 @@
 
   <script>
     (function(){
-      {% if userinfo.role_index < 1 %}
-        console.log({{ userinfo.role_index }});
+      {% if userinfo['role_index'] < 1 %}
+        console.log({{ userinfo['role_index'] }});
         document.querySelectorAll('.cls_edit_relval').forEach(element => {element.remove();});
         document.querySelectorAll('.cls_clone_relval').forEach(element => {element.remove();});
         document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});

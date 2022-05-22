@@ -13,10 +13,10 @@ oidc = OpenIDConnect()
 
 from resources.smart_tricks import askfor, DictObj
 def get_userinfo():
-    userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
-    user = DictObj(userinfo)
-    session['user'] = userinfo
-    return user
+	if not 'user' in session.keys():
+		userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
+		session['user'] = userinfo
+	return session['user']
 
 def setup_logging(debug):
     """

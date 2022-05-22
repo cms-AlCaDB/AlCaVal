@@ -21,7 +21,7 @@
 
   <script>
     (function(){
-      {% if userinfo.role_index < 1 %}
+      {% if userinfo['role_index'] < 1 %}
         document.querySelectorAll('.cls_edit_ticket').forEach(element => {element.remove();});
         document.querySelectorAll('.cls_clone_ticket').forEach(element => {element.remove();});
         document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});

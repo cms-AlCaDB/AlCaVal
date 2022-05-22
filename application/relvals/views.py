@@ -22,7 +22,7 @@ relval_blueprint = Blueprint('relvals', __name__, template_folder='templates')
 @relval_blueprint.route('/relvals', methods=['GET'])
 @oidc.check
 def get_relval():
-    user = session['user']
+    user = get_userinfo()
     response = askfor.get('api/search?db_name=relvals' +'&'+ request.query_string.decode()).json()
     items = response['response']['results']
     table = RelvalTable(items, classes=['table', 'table-hover'])
@@ -112,7 +112,7 @@ def applyEditingInfo(form):
 @relval_blueprint.route('/relvals/edit', methods=['GET', 'PUT', 'POST'])
 @oidc.check
 def create_relval():
-    user = session['user']
+    user = get_userinfo()
     edit = bool(request.args.get('prepid'))
     clone = bool(request.args.get('clone'))
     prepid = request.args.get('prepid') if edit else request.args.get('clone') if clone else None
@@ -157,7 +157,6 @@ def create_relval():
             else:
                 form._fields.get(key).render_kw.update({'readonly': False})
 
-    print(request.headers)
     if form.is_submitted():
         print(form.errors)
     if form.validate_on_submit():
@@ -226,6 +225,7 @@ def getValidJSON(jsonstep):
 @oidc.check
 def add_step():
     """Dynamically adding new steps to the relval form"""
+    user = get_userinfo()
     response = askfor.get('api/relvals/get_default_step').json()
     jsonstep = None
     if request.method == 'PUT':
@@ -244,6 +244,7 @@ def add_step():
 @oidc.check
 def delete_step(stepid):
     """Dynamically deleting new steps from the relval form"""
+    user = get_userinfo()
     if request.method == 'PUT':
         jsonstep = json.loads(request.data.decode('utf-8'))
     request.method = 'GET'

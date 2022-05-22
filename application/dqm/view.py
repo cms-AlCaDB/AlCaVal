@@ -9,7 +9,7 @@ dqm_blueprint = Blueprint('dqm', __name__, template_folder='templates', static_f
 @oidc.check
 def index():
     user = get_userinfo()
-    return render_template('DQMHome.html.jinja', user_name=user.response.fullname, user=user)
+    return render_template('DQMHome.html.jinja', user_name=user['response']['fullname'], user=user)
 
 from .ComparisonForm import ComparisonForm
 
@@ -26,7 +26,7 @@ def compare_dqm():
     form.reference_dataset.choices = form.reference_dataset.choices + ref_data
     if form.validate_on_submit():
         return redirect(url_for('dqm.dqm_plots'))
-    return render_template('SubmitForComparison.html.jinja', user_name=user.response.fullname, form=form, userinfo=user.response)
+    return render_template('SubmitForComparison.html.jinja', user_name=user['response']['fullname'], form=form, userinfo=user['response'])
 
 # Tickets table
 from .DQMTable import DQMTable
@@ -47,4 +47,4 @@ def dqm_plots():
                 'relval': 'CMSSW_12_3_0__TestBatch-RunZeroBias2017C-00001'}
             ]
     table = DQMTable(items, classes=['table', 'table-hover'])
-    return render_template('DQMPlots.html.jinja', user_name=user.response.fullname, table=table, userinfo=user.response)
+    return render_template('DQMPlots.html.jinja', user_name=user['response']['fullname'], table=table, userinfo=user['response'])
