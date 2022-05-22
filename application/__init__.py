@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import logging.handlers
-from flask import Flask, request
+from flask import Flask, request, session
 from flask_restful import Api
 from flask_cors import CORS
 from database.database import Database
@@ -15,6 +15,7 @@ from resources.smart_tricks import askfor, DictObj
 def get_userinfo():
     userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
     user = DictObj(userinfo)
+    session['user'] = userinfo
     return user
 
 def setup_logging(debug):

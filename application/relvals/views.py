@@ -22,15 +22,15 @@ relval_blueprint = Blueprint('relvals', __name__, template_folder='templates')
 @relval_blueprint.route('/relvals', methods=['GET'])
 @oidc.check
 def get_relval():
-    user = get_userinfo()
+    user = session['user']
     response = askfor.get('api/search?db_name=relvals' +'&'+ request.query_string.decode()).json()
     items = response['response']['results']
     table = RelvalTable(items, classes=['table', 'table-hover'])
 
     ticket = request.args.get('ticket')
     prepid = request.args.get('prepid')
-    return render_template('Relvals.html.jinja', user_name=user.response.fullname, 
-                            table=table, userinfo=user.response, 
+    return render_template('Relvals.html.jinja', user_name=user['response']['fullname'], 
+                            table=table, userinfo=user['response'], 
                             ticket=ticket, prepid=prepid
                           )
 
@@ -112,7 +112,7 @@ def applyEditingInfo(form):
 @relval_blueprint.route('/relvals/edit', methods=['GET', 'PUT', 'POST'])
 @oidc.check
 def create_relval():
-    user = get_userinfo()
+    user = session['user']
     edit = bool(request.args.get('prepid'))
     clone = bool(request.args.get('clone'))
     prepid = request.args.get('prepid') if edit else request.args.get('clone') if clone else None
@@ -157,6 +157,7 @@ def create_relval():
             else:
                 form._fields.get(key).render_kw.update({'readonly': False})
 
+    print(request.headers)
     if form.is_submitted():
         print(form.errors)
     if form.validate_on_submit():
@@ -182,7 +183,7 @@ def create_relval():
 
     newform = RelvalForm()
     return render_template('RelvalsEdit.html.jinja', 
-                            user_name=user.response.fullname, 
+                            user_name=user['response']['fullname'], 
                             form=form,
                             createNew=creating_new)
 
