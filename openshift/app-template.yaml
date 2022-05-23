@@ -28,33 +28,9 @@ objects:
   type: Opaque
   data:
     client_secrets.json: "${FLASK_OIDC_CLIENT_SECRETS}"
-- kind: Secret
-  apiVersion: v1 
-  metadata: 
-    name: jira-credentials-file
-  type: Opaque
-  data:
-    jira_credentials.cfg: "${JIRA_CREDENTIALS}"
-- kind: Secret
-  apiVersion: v1 
-  metadata: 
-    name: ssh-credentials-file
-  type: Opaque
-  data:
+    jira_credentials.cfg: "${SSH_CREDENTIALS}"
     ssh_credentials.cfg: "${SSH_CREDENTIALS}"
-- kind: Secret
-  apiVersion: v1 
-  metadata: 
-    name: grid-usercert-file
-  type: Opaque
-  data:
     usercert.pem: "${GRID_USERCERT}"
-- kind: Secret
-  apiVersion: v1 
-  metadata: 
-    name: grid-userkey-file
-  type: Opaque
-  data:
     userkey.pem: "${GRID_USERKEY}"
 - kind: Secret
   apiVersion: v1
@@ -64,36 +40,6 @@ objects:
     database-user: "${DATABASE_USER}"
     database-password: "${DATABASE_PASSWORD}"
     flask-secret-key: "${FLASK_SECRET_KEY}"
-
-- kind: Service
-  apiVersion: v1
-  metadata:
-    name: "${NAME}"
-    annotations:
-      description: Exposes and load balances the application pods
-      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}",
-        "kind": "Service"}]'
-  spec:
-    ports:
-    - name: web
-      port: 8080
-      targetPort: 8080
-    selector:
-      name: "${NAME}"
-- kind: Route
-  apiVersion: v1
-  metadata:
-    name: "${NAME}"
-    annotations:
-      haproxy.router.openshift.io/ip_whitelist: ""
-  spec:
-    host: "${APPLICATION_DOMAIN}"
-    to:
-      kind: Service
-      name: "${NAME}"
-    tls:
-      termination: edge
-      insecureEdgeTerminationPolicy: Redirect
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -128,18 +74,6 @@ objects:
     - type: GitLab
       gitlab:
         secret: "${GITLAB_WEBHOOK_SECRET}"
-- kind: PersistentVolumeClaim
-  apiVersion: v1
-  metadata:
-    name: "${NAME}"
-  spec:
-    accessModes:
-    - ReadWriteMany
-    resources:
-      requests:
-        storage: "${VOLUME_CAPACITY}"
-    storageClassName: eos                                                         
-    volumeMode: Filesystem
 - kind: DeploymentConfig
   apiVersion: v1
   metadata:
@@ -170,46 +104,23 @@ objects:
           name: "${NAME}"
       spec:
         volumes:
-        - name: "${NAME}"
-          emptyDir: {}
         - name: client-secret
           secret:   
             secretName: client-secret-file
-        - name: jira-secret
-          secret:                                                               
-            secretName: jira-credentials-file
-        - name: ssh-secret
-          secret:                                                               
-            secretName: ssh-credentials-file
-        - name: grid-usercert
-          secret:                                                               
-            secretName: grid-usercert-file
-        - name: grid-userkey
-          secret:                                                               
-            secretName: grid-userkey-file
         containers:
         - name: alcaval
           image: " "
           ports:
           - containerPort: 8080
           volumeMounts:
-          - name: "${NAME}"
-            mountPath: "/home/pritam/database"
           - name: client-secret
             mountPath: /home/pritam/secrets
-          - name: jira-secret                                               
-            mountPath: /home/pritam/secrets
-          - name: ssh-secret
-            mountPath: /home/pritam/secrets
-          - name: grid-usercert
-            mountPath: /home/pritam/secrets
-          - name: grid-userkey
-            mountPath: /home/pritam/secrets
+
           env:
+          - name: INSTANCE
+            value: "${INSTANCE}"
           - name: DB_HOST
             value: "${DATABASE_SERVICE_NAME}"
-          - name: DB_PORT
-            value: 27017
           - name: DATABASE_USER
             valueFrom:
               secretKeyRef:
@@ -220,16 +131,44 @@ objects:
               secretKeyRef:
                 name: "${NAME}"
                 key: database-password
-          - name: APP_CONFIG
-            value: "${APP_CONFIG}"
           - name: FLASK_SECRET_KEY
             valueFrom:
               secretKeyRef:
                 name: "${NAME}"
                 key: flask-secret-key
-          resources:
-            limits:
-              memory: "${MEMORY_LIMIT}"
+          # resources:
+          #   limits:
+          #     memory: "${MEMORY_LIMIT}"
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      description: Exposes and load balances the application pods
+      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}",
+        "kind": "Service"}]'
+  spec:
+    ports:
+    - name: web
+      port: 8080
+      targetPort: 8080
+    selector:
+      name: "${NAME}"
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: "${NAME}"
+    annotations:
+      haproxy.router.openshift.io/ip_whitelist: ""
+  spec:
+    host: "${APPLICATION_DOMAIN}"
+    to:
+      kind: Service
+      name: "${NAME}"
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
@@ -280,7 +219,7 @@ objects:
             claimName: "${DATABASE_SERVICE_NAME}"
         containers:
         - name: mongodb
-          image: docker.io/library/mongodb:latest
+          image: docker.io/library/mongo:latest
           ports:
           - containerPort: 27017
           env:
@@ -296,23 +235,10 @@ objects:
                 key: database-password
           volumeMounts:
           - name: "${DATABASE_SERVICE_NAME}-data"
-            mountPath: "/data"
-          readinessProbe:
-            timeoutSeconds: 1
-            initialDelaySeconds: 5
-            exec:
-              command:
-              - "/usr/libexec/check-container"
-          livenessProbe:
-            timeoutSeconds: 10
-            initialDelaySeconds: 120
-            exec:
-              command:
-              - "/usr/libexec/check-container"
-              - "--live"
-          resources:
-            limits:
-              memory: "${MEMORY_MONGODB_LIMIT}"
+            mountPath: "/data/db"
+          # resources:
+          #   limits:
+          #     memory: "${MONGODB_MEMORY_LIMIT}"
 
 parameters:
 - name: NAME
@@ -324,16 +250,16 @@ parameters:
   displayName: Memory Limit
   required: true
   description: Maximum amount of memory the Flask container can use.
-  value: 1Gi
-- name: MEMORY_MONGODB_LIMIT
+  value: 2Gi
+- name: MONGODB_MEMORY_LIMIT
   displayName: Memory Limit (MongoDB)
   required: true
-  description: Maximum amount of memory the PostgreSQL container can use.
+  description: Maximum amount of memory the MongoDB container can use.
   value: 1Gi
 - name: VOLUME_CAPACITY
   displayName: Volume Capacity
-  description: Volume space available for data, e.g. 512Mi, 2Gi
-  value: 1Gi
+  description: Volume size for MongoDB database persistent storage, e.g. 512Mi, 2Gi
+  value: 5Gi
   required: true
 - name: SOURCE_REPOSITORY_URL
   displayName: Git Repository URL
@@ -344,7 +270,7 @@ parameters:
   displayName: Git Reference
   description: Set this to a branch name, tag or other ref of your repository if you
     are not using the default branch.
-  value: dev
+  value: main
 - name: CONTEXT_DIR
   displayName: Context Directory
   description: Set this to the relative path to your project if it is not in the root
@@ -361,6 +287,10 @@ parameters:
     of the webhook URL.  Not encrypted.
   generate: expression
   from: "[a-zA-Z0-9]{40}"
+- name: INSTANCE 
+  displayName: Instance type, prod/dev
+  required: true
+  value: prod
 - name: DATABASE_SERVICE_NAME
   displayName: Database Service Name
   required: true
@@ -368,7 +298,7 @@ parameters:
 - name: DATABASE_USER
   displayName: Database Username
   required: true
-  value: flask
+  value: MyMongoDBUser
 - name: DATABASE_PASSWORD
   displayName: Database User Password
   generate: expression
@@ -386,23 +316,16 @@ parameters:
   description: Put client secrets needed for using login functionality from CERN OIDC. Base-64 encoded is required
   generate: expression
   from: "[\\w]{50}"
-- name: JIRA_CREDENTIALS
-  displayName: Jira credentials in JSON Format
-  description: Put Jira username, password in JSON format. Base-64 encoded is required
-  generate: expression
-  from: "[\\w]{50}"
 - name: SSH_CREDENTIALS
   displayName: SSH credentials in JSON Format
   description: Put username, password of SSH node in JSON format. Base-64 encoded is required
   generate: expression
   from: "[\\w]{50}"
-
 - name: GRID_USERCERT
   displayName: GRID user certificate
   description: GRID user certificate. Base-64 encoded is required
   generate: expression
   from: "[\\w]{5000}"
-
 - name: GRID_USERKEY
   displayName: GRID user key
   description: GRID user key. Base-64 encoded is required
