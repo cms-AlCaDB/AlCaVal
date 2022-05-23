@@ -342,8 +342,9 @@ class RelValController(ControllerBase):
             job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader'
         else:
             # Using production instance even in development instance for
-            # not having access to https://cmsweb-testbed.cern.ch
-            job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/int/global/DBSReader'
+            # not having access to the
+            # https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader
+            job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader'
 
         task_number = 0
         input_step = None
