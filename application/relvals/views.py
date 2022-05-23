@@ -29,7 +29,7 @@ def get_relval():
 
     ticket = request.args.get('ticket')
     prepid = request.args.get('prepid')
-    return render_template('Relvals.html.jinja', user_name=user['response']['fullname'], 
+    return render_template('Relvals.html.jinja', user_name=user['response']['fullname'], user=user,
                             table=table, userinfo=user['response'], 
                             ticket=ticket, prepid=prepid
                           )
@@ -182,7 +182,8 @@ def create_relval():
 
     newform = RelvalForm()
     return render_template('RelvalsEdit.html.jinja', 
-                            user_name=user['response']['fullname'], 
+                            user_name=user['response']['fullname'],
+                            user=user,
                             form=form,
                             createNew=creating_new)
 

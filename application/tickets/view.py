@@ -86,7 +86,7 @@ def create_ticket():
             return redirect(url_for('tickets.tickets', prepid=res['response'].get('prepid')))
         else:
             flash(res['message'], 'danger')
-    return render_template('TicketEdit.html.jinja', user_name=user['response']['fullname'], form=form, createNew=creating_new)
+    return render_template('TicketEdit.html.jinja', user_name=user['response']['fullname'], user=user, form=form, createNew=creating_new)
 
 
 
@@ -102,4 +102,4 @@ def tickets():
     table = ItemTable(items, classes=['table', 'table-hover'])
     itemdict = DictObj({value['_id']: value for value in items})
     itemdict = {value['_id']: value for value in items}
-    return render_template('Tickets.html.jinja', user_name=user['response']['fullname'], table=table, userinfo=user['response'], items = json.dumps(itemdict))
+    return render_template('Tickets.html.jinja', user_name=user['response']['fullname'], user=user, table=table, userinfo=user['response'], items = json.dumps(itemdict))

@@ -1,3 +1,4 @@
+import os
 from core_lib.utils.global_config import Config 
 from requests import Session
 from urllib.parse import urljoin
@@ -12,7 +13,7 @@ class LiveServerSession(Session):
     def request(self, method, url, *args, **kwargs):
         url = urljoin(self.prefix_url, url)
         return super(LiveServerSession, self).request(method, url, *args, **kwargs)
-config = Config.load('config.cfg', 'prod')
+config = Config.load('config.cfg', os.getenv('INSTANCE', 'prod'))
 askfor = LiveServerSession('http://{}:{}'.format(config.get('host'), config.get('port')))
 
 # Use dictionary as object 

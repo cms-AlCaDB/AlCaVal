@@ -140,7 +140,7 @@ def create_app():
 	    if rp != '/' and rp.endswith('/'):
 	        return redirect(rp[:-1])
 
-	config = Config.load('config.cfg', 'prod')
+	config = Config.load('config.cfg', os.getenv('INSTANCE', 'prod'))
 	# Init database connection
 	Database.set_database_name('relval')
 	Database.set_credentials(os.getenv('DATABASE_USER'), os.getenv('DATABASE_PASSWORD'))

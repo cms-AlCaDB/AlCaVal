@@ -11,7 +11,7 @@ class Emailer(BaseEmailer):
     """
 
     def send(self, subject, body, recipients):
-        body = body.strip()  + '\n\nSincerely,\nRelVal Machine'
+        body = body.strip()  + '\n\nSincerely,\nRelVal Machine for AlCaDB'
         if Config.get('development'):
             subject = f'[RelVal-DEV] {subject}'
         else:
