@@ -15,6 +15,7 @@ from resources.smart_tricks import askfor, DictObj
 def get_userinfo():
 	if not 'user' in session.keys():
 		userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
+		userinfo['dev_instance'] = Config.get('development')
 		session['user'] = userinfo
 	return session['user']
 

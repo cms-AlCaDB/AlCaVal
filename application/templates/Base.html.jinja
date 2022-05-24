@@ -126,6 +126,9 @@
           {% if user['response']['role_index'] < 1 %}
             $('#starfill-icon').removeClass('bi-star-fill');
           {% endif %}
+          {% if user['dev_instance'] %}
+            $('body').addClass('dev-ribbon')
+          {% endif %}
         </script>
         {% block content %}
         {% endblock %}
