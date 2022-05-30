@@ -442,7 +442,7 @@ class RelvalForm(FlaskForm):
                         label_rkw = {'class': 'col-form-label-sm'}
                         )
     label       = SStringField('Label (--label)',
-                        render_kw = {'class': 'form-control form-control-sm', 'placeholder': 'E.g. AlCaTest'},
+                        render_kw = {'class': 'form-control form-control-sm', 'placeholder': 'This label will be included in ReqMgr2 workflow name'},
                         label_rkw = {'class': 'col-form-label-sm'}
                         )
 
@@ -457,7 +457,7 @@ class RelvalForm(FlaskForm):
                         render_kw = {
                                 'class': 'form-control form-control-sm',
                                 "rows": 5,
-                                'placeholder': "Notes: e.g. Description of the request. "
+                                'placeholder': "Description of the request. TWiki links etc.."
                                 },
                         label_rkw = {'class': 'col-form-label-sm'}
                         )

@@ -124,7 +124,7 @@ def create_app():
 
 	app.register_blueprint(relval_blueprint, url_prefix='/')
 	app.register_blueprint(home_blueprint, url_prefix='/')
-	app.register_blueprint(ticket_blueprint, url_prefix='/')
+	app.register_blueprint(ticket_blueprint, url_prefix='/tickets')
 	app.register_blueprint(dqm_blueprint, url_prefix='/')
 
 	CORS(app,

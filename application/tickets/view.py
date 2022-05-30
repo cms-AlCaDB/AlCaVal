@@ -9,7 +9,7 @@ from resources.smart_tricks import askfor, DictObj
 
 ticket_blueprint = Blueprint('tickets', __name__, template_folder='templates', static_folder='static')
 
-@ticket_blueprint.route('/tickets/edit', methods=['GET', 'PUT', 'POST'])
+@ticket_blueprint.route('/edit', methods=['GET', 'PUT', 'POST'])
 @oidc.check
 def create_ticket():
     user = get_userinfo()
@@ -29,9 +29,9 @@ def create_ticket():
 
         # workflow IDs to string
         workflows = formdata.get('workflow_ids')
-        command_steps = formdata.get('command_steps')
+        # command_steps = formdata.get('command_steps')
         formdata.update({'workflow_ids': ", ".join([str(i) for i in workflows])})
-        formdata.update({'command_steps': ", ".join([str(i) for i in command_steps])})
+        # formdata.update({'command_steps': ", ".join([str(i) for i in command_steps])})
 
         editing_info = res['response']['editing_info']
         session['ticket_data'] = formdata
@@ -73,7 +73,7 @@ def create_ticket():
     if form.validate_on_submit():
         data = form.data
         data.update({'workflow_ids': data['workflow_ids'].strip().split(',')})
-        data.update({'command_steps': data['command_steps'].strip().split(',')})
+        # data.update({'command_steps': data['command_steps'].strip().split(',')})
         if creating_new:
             res = askfor.put('api/tickets/create', data=str(json.dumps(data)), headers=request.headers).json()
             if res['success']: flash(u'Success! Ticket created!', 'success')
@@ -93,7 +93,7 @@ def create_ticket():
 # Tickets table
 from .Table import ItemTable
 
-@ticket_blueprint.route('/tickets', methods=['GET'])
+@ticket_blueprint.route('/', strict_slashes=False, methods=['GET'])
 @oidc.check
 def tickets():
     user = get_userinfo()
