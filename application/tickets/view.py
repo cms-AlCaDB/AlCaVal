@@ -7,7 +7,7 @@ from .. import oidc, get_userinfo
 
 from resources.smart_tricks import askfor, DictObj
 
-ticket_blueprint = Blueprint('tickets', __name__, template_folder='templates', static_folder='static')
+ticket_blueprint = Blueprint('tickets', __name__, url_prefix='/tickets', template_folder='templates', static_folder='static')
 
 @ticket_blueprint.route('/edit', methods=['GET', 'PUT', 'POST'])
 @oidc.check
@@ -93,7 +93,7 @@ def create_ticket():
 # Tickets table
 from .Table import ItemTable
 
-@ticket_blueprint.route('/', strict_slashes=False, methods=['GET'])
+@ticket_blueprint.route('', strict_slashes=False, methods=['GET'])
 @oidc.check
 def tickets():
     user = get_userinfo()

@@ -16,10 +16,10 @@ from resources.smart_tricks import askfor
 from .Table import RelvalTable
 from .relval_forms import RelvalForm, StepsForm
 
-relval_blueprint = Blueprint('relvals', __name__, template_folder='templates')
+relval_blueprint = Blueprint('relvals', __name__, url_prefix='/relvals', template_folder='templates', static_folder='static')
 
 
-@relval_blueprint.route('/relvals', methods=['GET'])
+@relval_blueprint.route('', strict_slashes=False, methods=['GET'])
 @oidc.check
 def get_relval():
     user = get_userinfo()
@@ -109,7 +109,7 @@ def applyEditingInfo(form):
     #                 disable_fields(step, fieldname)
     return form
 
-@relval_blueprint.route('/relvals/edit', methods=['GET', 'PUT', 'POST'])
+@relval_blueprint.route('/edit', methods=['GET', 'PUT', 'POST'])
 @oidc.check
 def create_relval():
     user = get_userinfo()
@@ -187,14 +187,14 @@ def create_relval():
                             form=form,
                             createNew=creating_new)
 
-@relval_blueprint.route('/relvals/get_default_step', methods=['GET'])
+@relval_blueprint.route('/get_default_step', methods=['GET'])
 def get_default_step():
     response = askfor.get('api/relvals/get_default_step').json()
     form = StepsForm(data=response['response'])
     return jsonify({'response': str(form.step()), 'message': ""})
 
 def getValidJSON(jsonstep):
-    # Convert input json to valid json for reinput
+    """Convert input json to valid json for reinput to the form"""
     copiedjson = copy(jsonstep)
     copiedjson['step'] = []
     label = 'step ' # Step label to recognize that it is step form
@@ -222,7 +222,7 @@ def getValidJSON(jsonstep):
             copiedjson['step'][int(index)-1].update({newkey: value})
     return copiedjson
 
-@relval_blueprint.route('/relvals/add_step', methods=['GET', 'PUT'])
+@relval_blueprint.route('/add_step', methods=['GET', 'PUT'])
 @oidc.check
 def add_step():
     """Dynamically adding new steps to the relval form"""
@@ -241,13 +241,14 @@ def add_step():
         Can be use for dynamically adding new steps"})
 
 
-@relval_blueprint.route('/relvals/delete_step/<int:stepid>', methods=['PUT'])
+@relval_blueprint.route('/delete_step/<int:stepid>', methods=['PUT'])
 @oidc.check
 def delete_step(stepid):
     """Dynamically deleting new steps from the relval form"""
     user = get_userinfo()
     if request.method == 'PUT':
         jsonstep = json.loads(request.data.decode('utf-8'))
+    # Required to render form fields
     request.method = 'GET'
     copiedjson = getValidJSON(jsonstep)
     copiedjson['step'].pop(stepid-1)
