@@ -53,7 +53,7 @@ class TableWidget:
             elif 'step_type' in subfield.name:
                 is_hidden = "hidden" if index !='1' else ""
                 html.append(
-                    "<tr %s><th>%s</th><td>%s%s</td></tr>"
+                    "<tr %s><td class='first-column'>%s</td><td>%s%s</td></tr>"
                     % (is_hidden, str(subfield.label), hidden, str(subfield))
                 )
                 hidden = ""                
@@ -68,7 +68,7 @@ class TableWidget:
                 else:
                     className = ''
                 html.append(
-                    "<tr %s><th>%s</th><td>%s%s</td></tr>"
+                    "<tr %s><td class='first-column'>%s</td><td class='second-column'>%s%s</td></tr>"
                     % (className, str(subfield.label), hidden, str(subfield))
                 )
                 hidden = ""
@@ -385,7 +385,7 @@ class cmsDriverStepForm(Form):
                     render_kw = {'style': 'padding-left:0px; display:inline-flex;'},
                     default='driver'
                     )
-    input       = FormField(InputDataStepForm)
+    input       = SFormField(InputDataStepForm)
     driver      = SFormField(DriverOptionsForm)
     delete_step = ButtonField('Delete Step',
                     render_kw={'class': 'btn btn-sm btn-danger', 
@@ -469,7 +469,7 @@ class RelvalForm(FlaskForm):
                         label='Steps', 
                         min_entries=0, 
                         max_entries=50,
-                        render_kw = {'style': 'padding-left:0px;'}
+                        render_kw = {'style': 'padding-left:0px; width: 100%'}
                         )
     workflow_id = SFloatField('Workflow ID', default=0, validators=[NumberRange(min=0, max=300000)],
                         render_kw = {'class': 'form-control form-control-sm', 'readonly': ''},
@@ -494,5 +494,5 @@ class StepsForm(FlaskForm):
                         label='Steps', 
                         min_entries=0, 
                         max_entries=50,
-                        render_kw = {'style': 'padding-left:0px;'}
+                        render_kw = {'style': 'padding-left:0px; width:100%'}
                         )

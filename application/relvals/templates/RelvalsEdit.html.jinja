@@ -13,37 +13,36 @@
   {{ form.hidden_tag() }}
   {% set shortItems = ['matrix', 'workflow_id', 'size_per_event', 'time_per_event', 'cpu_cores', 'memory'] %}
 
-  <div class="form-group">
+  <table>
     {% for item in form if not item.id in ['submit', 'step', 'add_step', 'csrf_token'] %}
-        <div class="row" id="{{ item.id }}_row" style="align-items: center;">
-          <div class='col-sm-2' style="padding-right: unset;">
-            {{ item.label() }}
-          </div>
-          <div class="{{ 'col-sm-4' if item.id in shortItems else 'col-sm-10'}}" style="margin-bottom: .5rem;">
-            {{ item() }}
-          </div>
-        </div>
+      <tr id="{{ item.id }}_row">
+        <td style="width: 20%;">
+          {{ item.label() }}
+        </td>
+        <td class="second-column">
+          {{ item() }}
+        </td>
+      </tr>
 
       {% for error in item.errors %}
-        <div class="row">
-          <div class="col-sm-2"></div>
-          <div class="col-sm-10" style=" padding-bottom: 15px; color: red;">
-            <small>{{error}}</small>
-          </div>
-        </div>
+        <tr class="small-footers">
+          <td class="col-sm-2"></td>
+          <td>
+            <small style="color: red"><i class="bi bi-arrow-up-circle"></i> {{error}}</small>
+          </td>
+        </tr>
       {% endfor %}
-    {% endfor %}
+    {% endfor %} 
 
-    <div class="row" id="{{ form.step.id }}_row" style="align-items: center;">
-      <div class='col-sm-2'>
+    <tr id="{{ form.step.id }}_row">
+      <td style="width: 20%;">
         {{ form.step.label() }}
-      </div>
-      <div class="col-sm-10" style="margin-bottom: .5rem;" id="steps_column_id">
+      </td>
+      <td id="steps_column_id" class="second-column">
         {{ form.step() }}
-        <button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addStep()" type="button" value="">Add Step 1</button>
-      </div>
-    </div>
-  </div>
+      </td>
+    </tr>
+  </table>
 
   <div style="text-align: center;">
     {{ form.submit(class_="btn btn-primary", value="Save RelVal") }}
@@ -55,21 +54,48 @@
   table {
     width: 100%;
   }
-  table tr td {
-    width: 80%;
+  input[type="checkbox"]{
+    /*Changing height to re-align checkbox, ratio. 
+    matching with the label height*/
+    height: 31px;
   }
-  th, td {
-    padding-top: 5px;
+  input[name="workflow_id"] {
+    width: 45%;
   }
-  th {
-    padding-right: 10px;
+  select[name$="scenario"] {
+    width: 45%;
+  }
+  input[type="number"] {
+    width: 45%;
+    text-align: right;
+    margin-right: 4px;
+  }
+  select[name="matrix"] {
+    width: 45%;
+  }
+  table label{
+    margin-bottom: 0px;
+  }
+  td {
+    padding-top: 10px;
+  }
+ .first-column {
+    width: 20%;
+  }
+  .second-column {
+    display: flex;
+    align-items: center;
+  }
+  .small-footers td {
+    padding-top:0px!important;
   }
 </style>
 
 <script type="text/javascript">
   var stepNumber = 0;
   var forminputdata = '';
-  var button = '<button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addStep()" type="button" value="">Add Step</button>'
+  var query_string = '{{ query_string }}';
+  var button = '<tr id="addstep_newrow"><td style="width: 20%;"></td><td><button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addStep()" type="button" value="">Add Step</button></td></tr>'
   function getCount(parent, getChildrensChildren){
       var relevantChildren = 0;
       var children = parent.childNodes.length;
@@ -96,15 +122,13 @@
           body: forminputdata, 
           headers: {"Content-Type": "application/json;"}
       }
-      let url = '/relvals/delete_step/'+index;
+      let url = '/relvals/delete_step/'+index+'?'+query_string;
       fetch(url, options).then(res => res.json()).then(d =>{
           step_col.innerHTML = "";
           step_col.insertAdjacentHTML('beforeend', d.response)
-          step_col.insertAdjacentHTML('beforeend', button)
           forminputdata = d.inputdata
           addStepNumbers()
           toggleDriverOptionsOnStart()
-          // $("#step :input").prop("readonly", true);
       })
   }
 
@@ -130,13 +154,12 @@
     var formarray = $('form').serializeArray();
     disabled.attr('disabled','disabled');
     var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
-    console.log(forminputdata)
     let options = {
         method: "PUT", 
         body: forminputdata,
         headers: {"Content-Type": "application/json;"}
     }
-    fetch('/relvals/add_step', options).then(res => {
+    fetch('/relvals/add_step?'+query_string, options).then(res => {
       if (res.status >= 200 && res.status <= 299) {
         return res.json();
       } else {
@@ -145,14 +168,11 @@
     }).then(data =>{
       step_col.innerHTML = "";
       step_col.insertAdjacentHTML('beforeend', data.response)
-      step_col.insertAdjacentHTML('beforeend', button)
       addStepNumbers()
       toggleDriverOptionsOnStart()
       validateJSON('step 1-input-lumisection')
       validateRunNumbers('step 1-input-run')
       toggleDataMCFastOnStart()
-      // makeStepsReadOnly()
-      // $("#step :input").prop("readonly", true);
     }).catch(error => {
       let message = ["Your session might have expired", "Please re-login by refreshing a page!"]
       alertModal(error)
@@ -164,9 +184,15 @@
     var nsteps = getCount(stepEl, false)
     var steplabel = $('label[for="step"]')
     steplabel.html('Steps ('+nsteps+')')
+    if (nsteps == '0'){
+      $('#step').remove()
+      var bbutton = '<button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addStep()" type="button" value="">Add Step</button>'
+      document.getElementById('steps_column_id').insertAdjacentHTML('beforeend', button)
+      if ($('#addstep_newrow').length) $('#addstep_newrow').remove()
+    } else{
+      if (!$('#addstep_newrow').length)document.getElementById('steps_column_id').parentNode.insertAdjacentHTML('afterend', button)
+    }
     $('#add_step').html('Add Step '+(nsteps+1))
-    if (nsteps == '0')
-      $('#step').css('margin-bottom', '0px')
     return nsteps
   }
 
@@ -191,15 +217,15 @@
 
   function validateJSON(id) {
     var lumiid = document.getElementById('lumisesion_error_id')
-    if (lumiid) lumiid.remove()
+    if (lumiid) lumiid.parentNode.parentNode.remove()
     try{
       var json = JSON.parse(document.getElementById(id).value);
       prettyPrint(id)
-      var el = '<small id="lumisesion_error_id" style="color: green">Valid JSON</small>'
-      document.getElementById(id).insertAdjacentHTML('afterend', el)
+      var el = '<td></td><td style="padding-top: unset;"><small id="lumisesion_error_id" style="color: green">Valid JSON</small></td>'
+      document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
     }catch (e){
-      var el = '<small id="lumisesion_error_id" style="color: red">Invalid JSON: '+e+'</small>'
-      document.getElementById(id).insertAdjacentHTML('afterend', el)
+      var el = '<td></td><td style="padding-top: unset;"><small id="lumisesion_error_id" style="color:red">Invalid JSON: '+e+'</small></td>'
+      document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
     }
   }
 
@@ -212,7 +238,7 @@
 
   function validateRunNumbers(id) {
     var lumiid = document.getElementById('nrun_error_id')
-    if (lumiid) lumiid.remove()
+    if (lumiid) lumiid.parentNode.parentNode.remove()
     try{
       var runs = document.getElementById(id).value.split(',')
       if(runs.length == 1 && runs[0]=='') {
@@ -228,14 +254,14 @@
           throw new Error(runs[run] + " is not valid run")
         if (runs[run].includes('.'))
           throw new Error(runs[run] + " is not valid run")
-        if (Number(runs[run]) < 300000 || Number(runs[run]) > 400000)
+        if (Number(runs[run]) < 200000 || Number(runs[run]) > 400000)
           throw new Error(runs[run] + " is not valid run")
       }
-      var el = '<small id="nrun_error_id" style="color: green">Valid Run Number/s</small>'
-      document.getElementById(id).insertAdjacentHTML('afterend', el)
+      var el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color: green">Valid Run Number/s</small></td>'
+      document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
     }catch (e){
-      var el = '<small id="nrun_error_id" style="color: red">'+e+'</small>'
-      document.getElementById(id).insertAdjacentHTML('afterend', el)
+      var el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color: red">'+e+'</small></td>'
+      document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
     }
   }
 
@@ -274,7 +300,6 @@
     toggleDriverOptionsOnStart()
     validateJSONOnStart(nsteps)
     toggleDataMCFastOnStart(nsteps)
-    // makeStepsReadOnly()
   })
 
   $('title').html('AlCaVal | RelVal Edit')
