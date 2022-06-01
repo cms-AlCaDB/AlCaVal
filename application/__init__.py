@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import logging.handlers
-from flask import Flask, request, session
+from flask import Flask, request, session, g
 from flask_restful import Api
 from flask_cors import CORS
 from database.database import Database
@@ -13,7 +13,7 @@ oidc = OpenIDConnect()
 
 from resources.smart_tricks import askfor, DictObj
 def get_userinfo():
-	if not 'user' in session.keys():
+	if not g.oidc_id_token:
 		userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
 		userinfo['dev_instance'] = Config.get('development')
 		session['user'] = userinfo
