@@ -75,7 +75,16 @@ def create_app():
                             RelValNextStatus,
                             RelValPreviousStatus,
                             UpdateRelValWorkflowsAPI)
-	from api.system_api import UserInfoAPI
+	from api.system_api import (LockerStatusAPI,
+	                            UserInfoAPI,
+	                            SubmissionWorkerStatusAPI,
+	                            SubmissionQueueAPI,
+	                            ObjectsInfoAPI,
+	                            BuildInfoAPI,
+	                            UptimeInfoAPI
+	                            )
+	from api.settings_api import SettingsAPI
+
 	from api.search_api import SearchAPI, SuggestionsAPI, WildSearchAPI
 
 	from api.jira_api import GetJiraTicketsAPI
@@ -109,7 +118,17 @@ def create_app():
 	api.add_resource(UpdateRelValWorkflowsAPI, '/api/relvals/update_workflows')
 
 
+	api.add_resource(LockerStatusAPI, '/api/system/locks')
 	api.add_resource(UserInfoAPI, '/api/system/user_info')
+	api.add_resource(SubmissionWorkerStatusAPI, '/api/system/workers')
+	api.add_resource(SubmissionQueueAPI, '/api/system/queue')
+	api.add_resource(ObjectsInfoAPI, '/api/system/objects_info')
+	api.add_resource(BuildInfoAPI, '/api/system/build_info')
+	api.add_resource(UptimeInfoAPI, '/api/system/uptime')
+	api.add_resource(SettingsAPI,
+	                 '/api/settings/get',
+	                 '/api/settings/get/<string:name>')
+
 	api.add_resource(SearchAPI, '/api/search')
 	api.add_resource(SuggestionsAPI, '/api/suggestions')
 	api.add_resource(WildSearchAPI, '/api/wild_search')
@@ -121,11 +140,13 @@ def create_app():
 	from .home_view import home_blueprint
 	from .tickets.view import ticket_blueprint
 	from .dqm.view import dqm_blueprint
+	from .dashboard.dashboard_view import dashboard_blueprint
 
 	app.register_blueprint(relval_blueprint)
 	app.register_blueprint(home_blueprint, url_prefix='/')
 	app.register_blueprint(ticket_blueprint)
 	app.register_blueprint(dqm_blueprint, url_prefix='/')
+	app.register_blueprint(dashboard_blueprint)
 
 	CORS(app,
      allow_headers=['Content-Type',
