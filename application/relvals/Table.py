@@ -7,20 +7,28 @@ class ActionCol(Col):
         return self.td_format(self.from_attr_list(item, attr_list), item)
 
     def td_format(self, content, item):
+        status_list = ['new', 'approved', 'submitting', 'submitted', 'done', 'archived', 'nothing']
+        newtab = 'target="_blank" rel="noopener noreferrer"'
         divAction = "<div class='actions'>{mylinks}</div>"
 
         edit = f"<a class='cls_edit_relval' href='/relvals/edit?prepid={content}' title='Edit this relval'>Edit</a>"
         clone = f"<a class='cls_clone_relval' href='/relvals/edit?clone={content}' title='Clone this relval'>Clone</a>"
         cmsDriver = f"<a href='api/relvals/get_cmsdriver/{content}' title='Show cmsDriver.py commands for this relval'>cmsDriver</a>"
         job_dict = f"<a href='api/relvals/get_dict/{content}' title='Show job dict of ReqMgr2 workflow'>Job dict</a>"
-        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' title='Go to the Jira discussion {item['jira_ticket']}'>Jira</a>"
-        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);" title='Create new Jira ticket'>Create Jira Ticket</a>"""
+
+        title = "title='Check the status of the submision'"
+        stats2 = f"<a href='https://cms-pdmv.cern.ch/stats/?prepid={content}' {newtab} {title}>Stats2</a>"
+        stats2 = stats2 if status_list.index(item['status']) >= 3 else ""
+
+        title = "title='Go to the Jira discussion {}'".format(item["jira_ticket"])
+        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' {title} {newtab}>Jira</a>"
+        title='Create new Jira ticket'
+        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);" {title}>Create Jira Ticket</a>"""
         jira = jira if item['jira_ticket'] != 'None' else create_jira
 
         prev_status = f"""<a class="cls_previous_status prevStatus_{content}" onclick="prevStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to previous status'>Previous</a>"""
         prev_status = "" if item['status'] != 'new' else ""
 
-        status_list = ['new', 'approved', 'submitting', 'submitted', 'done', 'archieved']
         new_status = status_list[status_list.index(item['status'])+1]
         next_status = f"""<a class="cls_next_status nextStatus_{content}" onclick="nextStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to next status: from "{item['status']}" to "{new_status}"'>Next</a>"""
         next_status = next_status if item['status'] != 'done' else ""
@@ -30,7 +38,7 @@ class ActionCol(Col):
         delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval(['{content}'])" href="javascript:void(0);" title='Delete relval'>Delete</a>"""
         delete = delete if item['status'] == 'new' else ""
         
-        links = "".join([edit, clone, delete, cmsDriver, job_dict, jira, ticket, prev_status, next_status])
+        links = "".join([edit, clone, delete, cmsDriver, job_dict, stats2, jira, ticket, prev_status, next_status])
         return divAction.format(mylinks=links)
 
 ### Custom checkbox column class 

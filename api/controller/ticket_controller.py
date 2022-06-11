@@ -54,7 +54,7 @@ class TicketController(ControllerBase):
         editing_info['prepid'] = False
         editing_info['batch_name'] = creating_new
         editing_info['cmssw_release'] = creating_new
-        editing_info['jira_ticket'] = not_done
+        editing_info['jira_ticket'] = True
         editing_info['command'] = not_done
         editing_info['command_steps'] = not_done
         editing_info['cpu_cores'] = not_done
@@ -386,6 +386,7 @@ class TicketController(ControllerBase):
                        'workflow_id': workflow_id,
                        'workflow_name': workflow_dict['workflow_name']}
 
+        step_length = len(workflow_dict['steps'])
         for step_index, step_dict in enumerate(workflow_dict['steps']):
             new_step = self.make_relval_step(step_dict)
             new_step['cmssw_release'] = ''
@@ -405,6 +406,9 @@ class TicketController(ControllerBase):
                 new_step['driver']['conditions'] = ticket.get('prompt_gt')
             if cond_tag == 'Express' and step_index != 0:
                 new_step['driver']['conditions'] = ticket.get('express_gt')
+
+            # Keep only DQMIO output
+            if step_index == step_length-1: new_step['keep_output'] = True
 
             self.rewrite_gt_string_if_needed(workflow_id, new_step, rewrite_gt_string)
             relval_json['steps'].append(new_step)
