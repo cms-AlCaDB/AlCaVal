@@ -49,12 +49,15 @@
               <li class="nav-item active mynav-item">
                 <a class="mynav-link" href="/dqm">DQM</a>
               </li>
+              <li class="nav-item active mynav-item">
+                <a class="mynav-link" href="/dashboard">DASHBOARD</a>
+              </li>
             </ul>
             <ul class="navbar-nav navbar-right mysearchbar">
             </ul>
             <ul class="navbar-nav navbar-right">
               {% block nav_buttons %}
-                <li class="nav-item active"><a class="nav-link"><font face="Courier"><small>Logged in as</small> {{user_name}}&nbsp;</font><i class="bi bi-star-fill" id="starfill-icon" style="color: sandybrown;"></i></a></li>
+                <li class="nav-item active"><a class="nav-link"><font face="Courier"><small>Logged in as</small> {{session['user']['response']['fullname']}}&nbsp;</font><i class="bi bi-star-fill" id="starfill-icon" style="color: sandybrown;"></i></a></li>
               {% endblock %}
             </ul>
           </div>
@@ -123,8 +126,13 @@
           </div>
         </div>
         <script type="text/javascript">
-          {% if user['response']['role_index'] < 1 %}
-            $('#starfill-icon').removeClass('bi-star-fill');
+          {% if session['user']['response']['role_index'] < 1 %}
+            $('#starfill-icon').remove();
+          {% elif session['user']['response']['role_index'] > 1 %}
+            $('#starfill-icon').css({'color': 'blue'});
+          {% endif %}
+          {% if session['user']['dev_instance'] %}
+            $('body').addClass('dev-ribbon')
           {% endif %}
         </script>
         {% block content %}

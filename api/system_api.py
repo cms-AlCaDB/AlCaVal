@@ -183,7 +183,7 @@ class BuildInfoAPI(APIBase):
         """
         Get build version if release_timestamp file exists
         """
-        build_version = '<unavailable>'
+        build_version = 'unavailable'
         if os.path.isfile('release_timestamp'):
             with open('release_timestamp') as timestamp_file:
                 build_version = timestamp_file.read()

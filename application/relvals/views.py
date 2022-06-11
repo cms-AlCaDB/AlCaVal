@@ -16,10 +16,10 @@ from resources.smart_tricks import askfor
 from .Table import RelvalTable
 from .relval_forms import RelvalForm, StepsForm
 
-relval_blueprint = Blueprint('relvals', __name__, template_folder='templates')
+relval_blueprint = Blueprint('relvals', __name__, url_prefix='/relvals', template_folder='templates', static_folder='static')
 
 
-@relval_blueprint.route('/relvals', methods=['GET'])
+@relval_blueprint.route('', strict_slashes=False, methods=['GET'])
 @oidc.check
 def get_relval():
     user = get_userinfo()
@@ -73,43 +73,48 @@ def prepareDataFromForm(data):
     data['steps'] = data.pop('step')
     return data
 
-def applyEditingInfo(form):
+def applyEditingInfo(form, edit_all = False):
+    def toggle_readonly(field, readonly = False):
+        rkw_value = field.render_kw
+        if rkw_value:
+            field.render_kw.update({'readonly': readonly})
+        else:
+            field.render_kw = {'readonly': readonly}
+    if edit_all:
+        # Make all fields either readonly or editable
+        for fieldname in form._fields.keys():
+            toggle_readonly(form._fields.get(fieldname))
+        for stepindex, step in enumerate(form.step.entries):
+            for fieldname in step._fields:
+                if (fieldname == 'input' or  fieldname == 'driver'):
+                    for inputfield in step._fields.get(fieldname):
+                        toggle_readonly(inputfield)
+                    continue
+                toggle_readonly(step._fields.get(fieldname))
+        return form
+
     editInfo = session['relval_editingInfo']
     olddata = session['relval_data_for_form']
     fieldkeys = set(form._fields.keys())
-    # fieldkeys.remove('step')
     common_keys = fieldkeys.intersection(set(editInfo.keys()))
-    def disable_fields(form, fieldname):
-        field = form._fields.get(fieldname)
-        rkw_value = field.render_kw
-        if rkw_value:
-            field.render_kw.update({'readonly': not editInfo.get(fieldname)})
-        else:
-            field.render_kw = {'readonly': not editInfo.get(fieldname)}
-    for field in common_keys:
-        disable_fields(form, field)
-    # if not editInfo['step']:
-    #     for stepindex, step in enumerate(form.step.entries):
-    #         for fieldname in step._fields:
-    #             if fieldname == 'input' and stepindex == 0:
-    #                 for inputfield in step._fields.get(fieldname):
-    #                     if inputfield.render_kw:
-    #                         inputfield.render_kw.update({'readonly': not editInfo.get(fieldname)})
-    #                     else:
-    #                         inputfield.render_kw = {'readonly': not editInfo.get(fieldname)}
-    #                 continue
-    #             if fieldname == 'driver':
-    #                 for driverfield in step._fields.get(fieldname):
-    #                     if driverfield.render_kw:
-    #                         driverfield.render_kw.update({'readonly': "true"})
-    #                     else:
-    #                         driverfield.render_kw = {'readonly': "true"}
-    #                 continue
-    #             if not fieldname == 'delete_step':
-    #                 disable_fields(step, fieldname)
+    for fieldname in common_keys:
+        toggle_readonly(form._fields.get(fieldname), 
+                        readonly = not editInfo.get(fieldname)
+                        )
+    for stepindex, step in enumerate(form.step.entries):
+        for fieldname in step._fields:
+            if (fieldname == 'input' or fieldname == 'driver'):
+                for inputfield in step._fields.get(fieldname):
+                    toggle_readonly(inputfield, 
+                                    readonly= not editInfo['step']
+                                    )
+                continue
+            toggle_readonly(step._fields.get(fieldname),
+                            readonly= not editInfo['step']
+                            )
     return form
 
-@relval_blueprint.route('/relvals/edit', methods=['GET', 'PUT', 'POST'])
+@relval_blueprint.route('/edit', methods=['GET', 'PUT', 'POST'])
 @oidc.check
 def create_relval():
     user = get_userinfo()
@@ -144,6 +149,8 @@ def create_relval():
     if edit:
         form = applyEditingInfo(form)
     if clone:
+        session['relval_editingInfo']['step'] = True
+        form = applyEditingInfo(form)
         form._fields.get('prepid').data = ""
 
     if creating_new:
@@ -151,11 +158,8 @@ def create_relval():
         Somehow sometimeselements are not redering/refreshing from local storage
         so intentionally allowing fields to edit
         """
-        for key in form._fields.keys():
-            if key in ['prepid', 'submit', 'csrf_token', 'workflow_id']:
-                continue
-            else:
-                form._fields.get(key).render_kw.update({'readonly': False})
+        form  = applyEditingInfo(form, edit_all=True)
+        form._fields.get('workflow_id').render_kw.update({'readonly': True})
 
     if form.is_submitted():
         print(form.errors)
@@ -185,16 +189,17 @@ def create_relval():
                             user_name=user['response']['fullname'],
                             user=user,
                             form=form,
-                            createNew=creating_new)
+                            createNew=creating_new,
+                            query_string = request.query_string.decode())
 
-@relval_blueprint.route('/relvals/get_default_step', methods=['GET'])
+@relval_blueprint.route('/get_default_step', methods=['GET'])
 def get_default_step():
     response = askfor.get('api/relvals/get_default_step').json()
     form = StepsForm(data=response['response'])
     return jsonify({'response': str(form.step()), 'message': ""})
 
 def getValidJSON(jsonstep):
-    # Convert input json to valid json for reinput
+    """Convert input json to valid json for reinput to the form"""
     copiedjson = copy(jsonstep)
     copiedjson['step'] = []
     label = 'step ' # Step label to recognize that it is step form
@@ -222,7 +227,7 @@ def getValidJSON(jsonstep):
             copiedjson['step'][int(index)-1].update({newkey: value})
     return copiedjson
 
-@relval_blueprint.route('/relvals/add_step', methods=['GET', 'PUT'])
+@relval_blueprint.route('/add_step', methods=['GET', 'PUT'])
 @oidc.check
 def add_step():
     """Dynamically adding new steps to the relval form"""
@@ -236,23 +241,32 @@ def add_step():
     copiedjson['step'].append(prepareStepForForm(response['response']))
 
     form = StepsForm(data=copiedjson)
+    print(request.args)
+    edit = bool(request.args.get('prepid'))
+    if not edit:
+        form = applyEditingInfo(form, edit_all=True)
+
     return jsonify({'response': str(form.step()), 
         'message': "These are the steps in the relval form. \
         Can be use for dynamically adding new steps"})
 
 
-@relval_blueprint.route('/relvals/delete_step/<int:stepid>', methods=['PUT'])
+@relval_blueprint.route('/delete_step/<int:stepid>', methods=['PUT'])
 @oidc.check
 def delete_step(stepid):
     """Dynamically deleting new steps from the relval form"""
     user = get_userinfo()
     if request.method == 'PUT':
         jsonstep = json.loads(request.data.decode('utf-8'))
+    # Required to render form fields
     request.method = 'GET'
     copiedjson = getValidJSON(jsonstep)
     copiedjson['step'].pop(stepid-1)
     form = StepsForm(data=copiedjson)
 
+    edit = bool(request.args.get('prepid'))
+    if not edit:
+        form = applyEditingInfo(form, edit_all=True)
     return jsonify({'response': str(form.step()),
         'inputdata': jsonstep,
         'message': "These are the steps in the relval form. \

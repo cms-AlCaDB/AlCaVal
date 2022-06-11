@@ -113,17 +113,22 @@ class TicketForm(FlaskForm):
                 validators=[DataRequired(message="Please select Jira ticket out of given list. Or choose to create new")],
                 widget=CustomSelect(),
                 default='',
-                render_kw = classDict | {'option_attr': {"jira_ticket-0": {"disabled": "", "hidden": ""}} },
+                render_kw = classDict | {'option_attr': {"jira_ticket-0": {"disabled": True, "hidden": True}} },
                 label_rkw = label_rkw
                 )
-    command = SStringField('Command (--command)',
-                render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
-                label_rkw = {'class': 'col-form-label-sm'}
+    label = SStringField('Label (--label)',
+                render_kw = classDict | {'placeholder': 'This label will be included in ReqMgr2 workflow name'},
+                label_rkw = label_rkw
                 )
-    command_steps = SStringField('Command Steps',
-                render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
-                label_rkw = {'class': 'col-form-label-sm'}
-                )
+
+    # command = SStringField('Command (--command)',
+    #             render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
+    #             label_rkw = {'class': 'col-form-label-sm'}
+    #             )
+    # command_steps = SStringField('Command Steps',
+    #             render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
+    #             label_rkw = {'class': 'col-form-label-sm'}
+    #             )
     cpu_cores = SIntegerField('CPU Cores (-t)', default=8, validators=[NumberRange(min=1, max=16)],
                 render_kw = classDict,
                 label_rkw = {'class': 'col-form-label-sm'}
@@ -149,11 +154,6 @@ class TicketForm(FlaskForm):
                            label_rkw = label_rkw
                         )
 
-    label = SStringField('Label (--label)',
-                render_kw = classDict | {'placeholder': 'E.g. AlCaTest'},
-                label_rkw = label_rkw
-                )
-
     hlt_gt = SStringField('HLT Global Tag',
                 validators=[],
                 render_kw = classDict | {"id":"hlt_gt", "placeholder":"HLT Global Tag. Target or Reference"},
@@ -178,7 +178,7 @@ class TicketForm(FlaskForm):
                         )
     notes = STextAreaField('Notes',  
                           render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
-                          'placeholder': "Notes: e.g. Description of the request. "},
+                          'placeholder': "Description of the request. TWiki links etc.."},
                           label_rkw = label_rkw
                           )
     submit = SubmitField('Submit')

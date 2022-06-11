@@ -88,3 +88,26 @@ footer.fixed-bottom {
     /*font-weight: bold;*/
     background: lavender;
 }
+
+/*Dev Ribbon*/
+body.dev-ribbon:after {
+  content: "Development";
+  position: fixed;
+  width: 400px;
+  height: 50px;
+  background: darkkhaki;
+  top: 50px;
+  right: -120px;
+  text-align: center;
+  font-size: 22px;
+  text-transform: uppercase;
+  font-weight: 300;
+  color: #fff;
+  line-height: 50px;
+  opacity: .7;
+  -ms-transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
+  z-index: 9999;
+  font-family: "Calisto MT", sans-serif;
+}

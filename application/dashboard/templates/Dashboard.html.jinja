@@ -1,0 +1,55 @@
+{% extends 'Base.html.jinja' %}
+
+{% block headercontent %}
+  <script src="{{ url_for('dashboard.static', filename='js/dashboard.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+  <h2 class='card-title' style="text-align: center; margin-top: 10px;"><strong>Dashboard</strong></h2>
+
+  <div style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white'>
+    <h5 class="mt-3" id="threads">Submission threads (0)</h5>
+    <ul id="threads-list"></ul>
+    <h5 class="mt-3" id="queue">Submission queue (0)</h5>
+    <ul id="queue-list"></ul>
+    {% if session['user']['response']['role_index'] > 1 %}
+      <h5 class="mt-3" id="build-info">Build info</h5>
+      <ul id="build-info-list"></ul>
+      <h5 class="mt-3" id="system-uptime">System uptime</h5>
+      <ul id="system-uptime-list"></ul>
+      {#<h5 class="mt-3" id="settings">Settings (0)</h5>
+      <small>
+        <ul id="settings-list"></ul>      
+      </small>#}
+      <h5 class="mt-3" id="locks">Locked objects (0)</h5>
+      <small>
+        <ul id="locks-list"></ul>      
+      </small>
+    {% endif %}
+  </div>
+<script type="text/javascript">
+  let submissionWorkers= [];
+  let submissionQueue= [];
+  let locks= [];
+  let settings= [];
+  let uptime= {};
+  let buildInfo= undefined;
+  let refreshInterval= 60000;
+
+  fetchWorkerInfo()
+  setInterval(fetchWorkerInfo, refreshInterval);
+  fetchQueueInfo()
+  setInterval(fetchQueueInfo, refreshInterval);
+  {% if session['user']['response']['role_index'] > 1 %}
+    fetchLocksInfo()
+    setInterval(fetchLocksInfo, refreshInterval);
+    // fetchSettings()
+    // setInterval(fetchSettings, refreshInterval);
+    fetchUptime()
+    setInterval(fetchUptime, refreshInterval);
+    fetchBuildInfo()
+    setInterval(fetchBuildInfo, refreshInterval);
+  {% endif %}
+  $('title').html('AlCaVal | Dashboard')
+</script>
+{% endblock %}

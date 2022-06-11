@@ -4,7 +4,7 @@ class UserInfo():
 	"""User info class"""
 	def __init__(self):
 		self.__user = None
-		self.__roles = ['user', 'manager', 'admin']
+		self.__roles = ['user', 'manager', 'administrator']
 
 	def get_user_info(self):
 		"""Get user info"""
