@@ -408,7 +408,7 @@ class TicketController(ControllerBase):
                 new_step['driver']['conditions'] = ticket.get('express_gt')
 
             # Keep only DQMIO output
-            if step_index == step_length-1: new_step['keep_output'] = True
+            if step_index >= step_length-2: new_step['keep_output'] = True
 
             self.rewrite_gt_string_if_needed(workflow_id, new_step, rewrite_gt_string)
             relval_json['steps'].append(new_step)
