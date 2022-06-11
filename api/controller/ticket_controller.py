@@ -54,7 +54,7 @@ class TicketController(ControllerBase):
         editing_info['prepid'] = False
         editing_info['batch_name'] = creating_new
         editing_info['cmssw_release'] = creating_new
-        editing_info['jira_ticket'] = not_done
+        editing_info['jira_ticket'] = True
         editing_info['command'] = not_done
         editing_info['command_steps'] = not_done
         editing_info['cpu_cores'] = not_done
