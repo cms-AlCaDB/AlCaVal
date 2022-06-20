@@ -20,7 +20,7 @@ dqm_blueprint = Blueprint('dqm', __name__, template_folder='templates', static_f
 @oidc.check
 def index():
     user = get_userinfo()
-    return render_template('DQMHome.html.jinja', user_name=user['response']['fullname'], user=user)
+    return render_template('DQMHome.html.jinja')
 
 def get_dataset_choices(relvals):
     """Return list of dataset from relvals"""
@@ -68,17 +68,16 @@ def compare_dqm():
         Set = [i for n, i in enumerate(Set) if i not in Set[n + 1:]]
         data['Set'] = Set
         for dqm_set in data['Set']:
-            res = askfor.get('api/wild_search?q='+ dqm_set['target_dataset']).json()
-            dqm_set['target_prepid'] = res['response'][0]['document']['prepid']
-            res = askfor.get('api/wild_search?q='+ dqm_set['reference_dataset']).json()
-            dqm_set['reference_prepid'] = res['response'][0]['document']['prepid']
-        # print(data)
+            res = askfor.get('api/search?db_name=relvals&output_datasets='+ dqm_set['target_dataset']).json()
+            dqm_set['target_prepid'] = res['response']['results'][0]['prepid']
+            res = askfor.get('api/search?db_name=relvals&output_datasets='+ dqm_set['reference_dataset']).json()
+            dqm_set['reference_prepid'] = res['response']['results'][0]['prepid']
         response = askfor.post('api/relvals/compare_dqm_plots',
                                 data=json.dumps(data),
                                 headers=request.headers
                               ).json()
-        return redirect(url_for('dqm.dqm_plots'))
-    return render_template('SubmitForComparison.html.jinja', user_name=user['response']['fullname'], user=user, form=form, userinfo=user['response'])
+        return redirect(url_for('dqm.dqm_plots', jira_ticket=f'{data["jira_ticket"]}'))
+    return render_template('SubmitForComparison.html.jinja', form=form)
 
 # Tickets table
 from .DQMTable import DQMTable
@@ -87,9 +86,7 @@ from .DQMTable import DQMTable
 @oidc.check
 def dqm_plots():
     user = get_userinfo()
-    # response = askfor.get('api/search?db_name=relvals' +'&'+ request.query_string.decode()).json()
-    response = askfor.get('api/search?db_name=relvals&status=submitted').json()
-    print(response['success'], len(response['response']['results']))
+    response = askfor.get('api/search?db_name=relvals&status=submitted'+'&'+ request.query_string.decode()).json()
     mdata = response['response']['results']
     data = copy(mdata)
     for item in mdata:
@@ -103,7 +100,7 @@ def dqm_plots():
         for dqms in obj['dqm_comparison']:
             item = {'dataset': dqms['target'],
                     'dqmlink': 'None',
-                    'run_number': obj.get('run_number'),
+                    'run_number': dqms.get('run_number'),
                     'jira_ticket': obj['jira_ticket'],
                     'relval': obj['prepid'],
                     'status': dqms['status']
@@ -111,7 +108,7 @@ def dqm_plots():
             items.append(item)
 
     table = DQMTable(items, classes=['table', 'table-hover'])
-    return render_template('DQMPlots.html.jinja', user_name=user['response']['fullname'], user=user, table=table, userinfo=user['response'])
+    return render_template('DQMPlots.html.jinja', table=table)
 
 def update_workflows(relvals):
     relval_list = []
@@ -149,7 +146,6 @@ def refresh_set():
         jsonset = json.loads(request.data.decode('utf-8'))
     request.method = 'GET'
     copiedjson = getValidJSON(jsonset)
-    print(copiedjson)
 
     form = SetForm(data=copiedjson) 
     query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted'
@@ -197,7 +193,6 @@ def add_set():
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
     choices = get_dataset_choices(relvals)
-    print(choices)
     for myset in form.Set:
         myset.form.target_dataset.choices += choices
         myset.form.reference_dataset.choices += choices

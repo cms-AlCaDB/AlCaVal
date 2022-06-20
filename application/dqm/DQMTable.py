@@ -12,11 +12,17 @@ class DQMLinkCol(Col):
         s1 = 'https://cmsweb.cern.ch/dqm/dev/start?runnr=%s;' % item['run_number']
         s3 = 'workspace=Everything'
         s4 = 'referencepos=ratiooverlay;referenceshow=all;referencenorm=True;'
+        s3 = 'sampletype=offline_data;filter=all;referencepos=overlay;referenceshow=customise;referencenorm=True;referenceobj1=refobj;referenceobj2=none;referenceobj3=none;referenceobj4=none;search=;striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;size=M;root=;focus=;zoom=no;'
         s2 = 'dataset=%s;' % item['dataset']
         link = s1 + s2 + s3
         return f"<a target='_blank' rel='noopener noreferrer' href='{link}'>Link</a>"
 
 class DQMTable(Table):
+    relval = LinkCol('Relval', endpoint='relvals.get_relval',
+                    url_kwargs=dict(prepid='relval'),
+                    anchor_attrs={}, attr='relval',
+                    td_html_attrs={'style': 'white-space: nowrap'}
+                    )
     dataset = DatasetCol("Dataset", td_html_attrs={'style': 'white-space: nowrap'})
 
     # prepid = LinkCol('Prep ID', endpoint='relvals.get_relval', 
@@ -40,13 +46,6 @@ class DQMTable(Table):
     #                 anchor_attrs={}, attr='ticket',
     #                 td_html_attrs={'style': 'white-space: nowrap'}
     #                 )
-
-
-    relval = LinkCol('Relval', endpoint='relvals.get_relval', 
-                    url_kwargs=dict(prepid='relval'), 
-                    anchor_attrs={}, attr='relval',
-                    td_html_attrs={'style': 'white-space: nowrap'}
-                    )
 
     allow_sort = False
     table_id = 'dqmplot_list'
