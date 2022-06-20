@@ -178,6 +178,7 @@ def create_app():
 	Database.add_search_rename('relvals', 'workflow', 'workflows.name')
 	Database.add_search_rename('relvals', 'output_dataset', 'output_datasets')
 
-	logger = setup_logging(True)
+	debug = config.get('development', False)
+	logger = setup_logging(debug)
 	logger.info('Starting... Debug: ')
 	return app
