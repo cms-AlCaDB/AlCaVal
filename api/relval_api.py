@@ -333,3 +333,32 @@ class UpdateRelValWorkflowsAPI(APIBase):
             raise Exception('Expected a single RelVal dict or a list of RelVal dicts')
 
         return self.output_text({'response': results, 'success': True, 'message': ''})
+
+class CreateDQMComparisonPlotsAPI(APIBase):
+    """
+    Endpoint for comparing dqm comparison plots.
+    This does not require to pass relval json.
+    """
+
+    def __init__(self):
+        APIBase.__init__(self)
+
+    @APIBase.ensure_request_data
+    @APIBase.exceptions_to_errors
+    @APIBase.ensure_role('manager')
+    def post(self):
+        """
+        Create DQM comparison plots
+        """
+        data = list(flask.request.form.keys())[0]
+        dqm_json = json.loads(data)
+        if isinstance(dqm_json['Set'], list):
+            results = []
+            for dqm_pair in dqm_json['Set']:
+                relvalT = relval_controller.get(dqm_pair.get('target_prepid'))
+                relvalR = relval_controller.get(dqm_pair.get('reference_prepid'))
+                result = relval_controller.compare_dqm_datasets(relvalT, relvalR, dqm_pair)
+                results.append(result)
+        else:
+            raise Exception('Expected a single list of pair of dataset dicts')                
+        return self.output_text({'response': results, 'success': True, 'message': ''})

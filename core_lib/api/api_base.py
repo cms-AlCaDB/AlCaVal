@@ -53,7 +53,7 @@ class APIBase(Resource):
             """
             Wrapper around actual function
             """
-            data = request.form
+            data = request.form or request.data
             logging.getLogger().info('Ensuring request data for %s', request.path)
             if not data:
                 logging.getLogger().error('No data was found in request')

@@ -62,19 +62,22 @@ def create_app():
 	                            GetEditableTicketAPI,
 	                            CreateRelValsForTicketAPI,
 	                            GetWorkflowsOfCreatedRelValsAPI,
-	                            GetRunTheMatrixOfTicketAPI)
+	                            GetRunTheMatrixOfTicketAPI
+	                            )
 	from api.relval_api import (CreateRelValAPI,
-                            DeleteRelValAPI,
-                            UpdateRelValAPI,
-                            GetRelValAPI,
-                            GetEditableRelValAPI,
-                            GetCMSDriverAPI,
-                            GetConfigUploadAPI,
-                            GetRelValJobDictAPI,
-                            GetDefaultRelValStepAPI,
-                            RelValNextStatus,
-                            RelValPreviousStatus,
-                            UpdateRelValWorkflowsAPI)
+	                            DeleteRelValAPI,
+	                            UpdateRelValAPI,
+	                            GetRelValAPI,
+	                            GetEditableRelValAPI,
+	                            GetCMSDriverAPI,
+	                            GetConfigUploadAPI,
+	                            GetRelValJobDictAPI,
+	                            GetDefaultRelValStepAPI,
+	                            RelValNextStatus,
+	                            RelValPreviousStatus,
+	                            UpdateRelValWorkflowsAPI,
+	                            CreateDQMComparisonPlotsAPI
+	                            )
 	from api.system_api import (LockerStatusAPI,
 	                            UserInfoAPI,
 	                            SubmissionWorkerStatusAPI,
@@ -116,7 +119,7 @@ def create_app():
 	api.add_resource(RelValNextStatus, '/api/relvals/next_status')
 	api.add_resource(RelValPreviousStatus, '/api/relvals/previous_status')
 	api.add_resource(UpdateRelValWorkflowsAPI, '/api/relvals/update_workflows')
-
+	api.add_resource(CreateDQMComparisonPlotsAPI, '/api/relvals/compare_dqm_plots')
 
 	api.add_resource(LockerStatusAPI, '/api/system/locks')
 	api.add_resource(UserInfoAPI, '/api/system/user_info')

@@ -193,7 +193,8 @@ class WildSearchAPI(APIBase):
                         used_values.add(key)
                         results.append({'value': value,
                                         'attribute': attr,
-                                        'database': db_name})
+                                        'database': db_name,
+                                        'document': result})
 
             # Limit results to 20 to save DB some queries
             if len(results) >= 20:

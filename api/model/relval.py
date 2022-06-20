@@ -69,6 +69,8 @@ class RelVal(ModelBase):
         'workflow_name': '',
         # ReqMgr2 names
         'workflows': [],
+        # DQM comparison dataset
+        'dqm_comparison': [],
     }
 
     lambda_checks = {
