@@ -68,9 +68,9 @@ class RequestSubmitter(BaseSubmitter):
         body += (f'You can find this relval at '
                  f'{service_url}/relvals?prepid={prepid}\n')
         body += f'Workflow in ReqMgr2 {cmsweb_url}/reqmgr2/fetch?rid={last_workflow}'
-        # if Config.get('development'):
-        #     body += '\nNOTE: This was submitted from a development instance of RelVal machine '
-        #     body += 'and this job will never start running in computing!\n'
+        if Config.get('development'):
+            body += '\nNOTE: This was submitted from a development instance of RelVal machine '
+            body += 'and this job will never start running in computing!\n'
 
         recipients = emailer.get_recipients(relval)
         self.__send_email(repr(subject), repr(body), recipients)

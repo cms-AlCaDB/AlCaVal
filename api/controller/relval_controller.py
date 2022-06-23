@@ -325,7 +325,7 @@ class RelValController(ControllerBase):
         self.logger.debug('Getting job dict for %s', prepid)
         job_dict = {}
         job_dict['Group'] = 'PPD'
-        job_dict['Requestor'] = 'pdmvserv'
+        job_dict['Requestor'] = 'alcadb.user'
         job_dict['CouchURL'] = Config.get('cmsweb_url') + '/couchdb'
         job_dict['ConfigCacheUrl'] = job_dict['CouchURL']
         job_dict['PrepID'] = prepid
@@ -346,8 +346,6 @@ class RelValController(ControllerBase):
         if not Config.get('development'):
             job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader'
         else:
-            # Using production instance even in development instance for
-            # not having access to the
             # https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader
             job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader'
 
@@ -374,10 +372,7 @@ class RelValController(ControllerBase):
                     job_dict['DQMUploadUrl'] = 'https://cmsweb.cern.ch/dqm/relval'
                 else:
                     # Upload to some dev DQM GUI
-                    # >> Using production instance even in development instace 
-                    # for not having access to https://cmsweb-testbed.cern.ch
-                    # Replaced from https://cmsweb-testbed.cern.ch/dqm/dev
-                    job_dict['DQMUploadUrl'] = 'https://cmsweb.cern.ch/dqm/relval'
+                    job_dict['DQMUploadUrl'] = 'https://cmsweb-testbed.cern.ch/dqm/dev'
 
                 continue
 
