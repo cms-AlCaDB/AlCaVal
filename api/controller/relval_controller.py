@@ -51,7 +51,7 @@ class RelValController(ControllerBase):
             workflow_name = first_step.get_short_name()
             json_data['workflow_name'] = workflow_name
 
-        condition_name = f'{condition_name}-'
+        condition_name = f'{condition_name}-' if condition_name else ''
         prepid_part = f'{cmssw_release}__{batch_name}-{condition_name}{workflow_name}'.strip('-_')
         json_data['prepid'] = f'{prepid_part}-00000'
         relval_db = Database('relvals')
@@ -124,6 +124,7 @@ class RelValController(ControllerBase):
         editing_info['workflow_id'] = False
         editing_info['workflow_name'] = is_new
         editing_info['steps'] = is_new
+        editing_info['dqm_comparison'] = True
 
         return editing_info
 

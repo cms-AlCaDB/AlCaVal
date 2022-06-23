@@ -21,6 +21,10 @@ class Ticket(ModelBase):
         'cmssw_release': '',
         # Jira ticket 
         'jira_ticket': '',
+        # Title/Purpose of the validation
+        'title': '',
+        # CMS-Talk link 
+        'cms_talk_link': '',
         # HLT GT
         'hlt_gt': '',
         # Prompt GT
@@ -29,6 +33,12 @@ class Ticket(ModelBase):
         'express_gt': '',
         # Common Prompt GT
         'common_prompt_gt': '',
+        # HLT reference GT
+        'hlt_gt_ref': '',
+        # Prompt reference GT
+        'prompt_gt_ref': '',
+        # Express reference GT
+        'express_gt_ref': '',
         # Attached workflows to HLT, Prompt, Express
         'attached_wfs': {'HLT': [], 'Prompt': [], 'Express': []},
         # Additional command to add to all cmsDrivers

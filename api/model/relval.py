@@ -45,14 +45,6 @@ class RelVal(ModelBase):
         'output_datasets': [],
         # Tag for grouping of RelVals
         'sample_tag': '',
-        # HLT GT
-        'hlt_gt': '',
-        # Prompt GT
-        'prompt_gt': '',
-        # Express GT
-        'express_gt': '',
-        # Common Prompt GT
-        'common_prompt_gt': '',
         # Overwrite default CMSSW scram arch
         'scram_arch': '',
         # Size per event in kilobytes
@@ -84,10 +76,6 @@ class RelVal(ModelBase):
         'memory': ModelBase.lambda_check('memory'),
         '__output_datasets': ModelBase.lambda_check('dataset'),
         'sample_tag': ModelBase.lambda_check('sample_tag'),
-        'hlt_gt': ModelBase.lambda_check('sample_tag'),
-        'prompt_gt': ModelBase.lambda_check('sample_tag'),
-        'express_gt': ModelBase.lambda_check('sample_tag'),
-        'common_prompt_gt': ModelBase.lambda_check('sample_tag'),
         'scram_arch': lambda s: not s or ModelBase.lambda_check('scram_arch')(s),
         'size_per_event': lambda spe: spe > 0.0,
         'status': lambda status: status in ('new', 'approved', 'submitting',
