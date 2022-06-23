@@ -1,5 +1,5 @@
 <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg" style="display: flex; width: fit-content; min-width: 800px;">
+  <div class="modal-dialog modal-dialog-centered modal-xl" style="display: flex; width: fit-content;">
     <div class="modal-content">
       <div class="modal-header" style="border-bottom: unset;">
         <h5 class="modal-title" id="exampleModalLabel">New message</h5>
@@ -9,60 +9,72 @@
       </div>
       <div class="modal-body" style="padding-bottom:unset;">
 	      <form id="testform">
-	        <div class="form-group">
-		        <div class="row">
-		        	<div class="col-sm-2">
-		            <span><b>Condition</b></span>
-							</div>
-				    	<div class="col-sm-7">
-		            <span><b>Global Tag</b></span>
-		          </div>
-				    	<div class="col-sm-3">
-				    		<span><b>Workflow IDs</b></span>
-		          </div>	        
-		        </div>
-		      </div>
+					<table style="width: 100%">
+						<thead>
+							<tr>
+			        	<th class="mycol">
+			            Condition
+								</th>
+					    	<th class="mycol">
+			            Target global tag
+			          </th>
+					    	<th class="mycol">
+			            Reference global tag
+			          </th>
+					    	<th class="mycol">
+					    		Workflow IDs
+			          </th>
+			        </tr>
+						</thead>
 
-	        <div class="form-group">
-		        <div class="row" id="hlt_row_id">
-		        	<div class="col-sm-2 col-form-label">
+		        <tr id="hlt_row_id">
+		        	<td class="mycol">
 		            <label for="recipient-name" >HLT</label>
-							</div>
-				    	<div class="col-sm-7">
+							</td>
+				    	<td class="mycol">
 		            <input type="text" class="form-control " id="cr_hlt_gt" name="hlt_gt">
-	            </div>
-				    	<div class="col-sm-3">
+	            </td>
+				    	<td class="mycol">
+		            <input type="text" class="form-control " id="cr_hlt_gt_ref" name="hlt_gt_ref">
+	            </td>
+				    	<td class="mycol">
 					    	<select name="HLT" id="wf_hlt_gt" multiple>
 								</select>
-		          </div>
-		        </div>
+		          </td>
+		        </tr>
 
-		        <div class="row" id="prompt_row_id">
-		        	<div class="col-sm-2 col-form-label">
+		        <tr id="prompt_row_id">
+		        	<td class="mycol">
 			            <label for="message-text" >Prompt</label>
-			        </div>
-				    	<div class="col-sm-7">
+			        </td>
+				    	<td class="mycol">
 		            <input type="text" class="form-control " id="cr_prompt_gt" name="prompt_gt">
-	            </div>
-				    	<div class="col-sm-3">
+	            </td>
+				    	<td class="mycol">
+		            <input type="text" class="form-control " id="cr_prompt_gt_ref" name="prompt_gt_ref">
+	            </td>
+				    	<td class="mycol">
 					    	<select name="Prompt" id="wf_prompt_gt" multiple>
 								</select>
-		          </div>
-		        </div>
+		          </td>
+		        </tr>
 
-		        <div class="row" id="express_row_id">
-		        	<div class="col-sm-2 col-form-label">
+		        <tr id="express_row_id">
+		        	<td class="mycol">
 			            <label for="recipient-name" >Express</label>
-							</div>
-				    	<div class="col-sm-7">
+							</td>
+				    	<td class="mycol">
 		            <input type="text" class="form-control " id="cr_express_gt" name="express_gt">
-	            </div>
-				    	<div class="col-sm-3">
+	            </td>
+				    	<td class="mycol">
+		            <input type="text" class="form-control " id="cr_express_gt_ref" name="express_gt_ref">
+	            </td>
+				    	<td class="mycol">
 					    	<select name="Express" id="wf_express_gt" multiple>
 								</select>
-		          </div>
-		        </div>
-		      </div>
+		          </td>
+		        </tr>
+					</table>
 	      </form>
       </div>
 	    <div class="modal-footer" style="border-top: unset;">
