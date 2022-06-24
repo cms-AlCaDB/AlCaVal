@@ -176,6 +176,12 @@ def update_workflows_for_jira(jira):
     updated_relvals = update_workflows(relvals)
     return jsonify({'updated_relvals': updated_relvals})
 
+@dqm_blueprint.route('/just/update_workflows/<prepid>')
+@oidc.check
+def update_workflows_temp(prepid):
+    response = askfor.post('api/relvals/update_workflows', data=json.dumps({'prepid': prepid}), headers=request.headers).json()
+    return jsonify(response)
+
 @dqm_blueprint.route('/dqm/add_set', methods=['GET', 'PUT'])
 @oidc.check
 def add_set():

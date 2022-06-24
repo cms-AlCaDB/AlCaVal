@@ -254,8 +254,6 @@ class RequestSubmitter(BaseSubmitter):
                 time.sleep(3)
                 self.approve_workflow(workflow_name, connection)
                 connection.close()
-                # if not Config.get('development'):
-                #     refresh_workflows_in_stats([workflow_name])
 
             except Exception as ex:
                 self.__handle_error(relval, str(ex))
@@ -263,7 +261,6 @@ class RequestSubmitter(BaseSubmitter):
 
             self.__handle_success(relval)
 
-        if not Config.get('development'):
-            controller.update_workflows(relval)
+        controller.update_workflows(relval)
 
         self.logger.info('Successfully finished %s submission', prepid)

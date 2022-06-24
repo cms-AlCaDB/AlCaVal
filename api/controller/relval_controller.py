@@ -14,7 +14,9 @@ from core_lib.utils.common_utils import (clean_split,
                                          config_cache_lite_setup,
                                          dbs_datasetlist,
                                          get_workflows_from_stats,
+                                         get_workflows_from_reqmgr2,
                                          get_workflows_from_stats_for_prepid,
+                                         get_workflows_from_reqmgr2_for_prepid,
                                          refresh_workflows_in_stats,
                                          run_commands_in_singularity,
                                          dbs_dataset_runs)
@@ -818,14 +820,15 @@ class RelValController(ControllerBase):
         """
         Try to move RelVal back to approved
         """
+        relval = self.update_workflows(relval)
         active_workflows = self.pick_active_workflows(relval)
-        refresh_workflows_in_stats([x['name'] for x in active_workflows])
+        # refresh_workflows_in_stats([x['name'] for x in active_workflows])
         # Take active workflows again in case any of them changed during Stats refresh
-        active_workflows = self.pick_active_workflows(relval)
+        # active_workflows = self.pick_active_workflows(relval)
         if active_workflows:
             self.reject_workflows(active_workflows)
             # Refresh after rejecting
-            refresh_workflows_in_stats([x['name'] for x in active_workflows])
+            # refresh_workflows_in_stats([x['name'] for x in active_workflows])
             relval = self.update_workflows(relval)
 
         for step in relval.get('steps'):
@@ -847,7 +850,7 @@ class RelValController(ControllerBase):
         for _, workflow in all_workflows.items():
             new_workflow = {'name': workflow['RequestName'],
                             'type': workflow['RequestType'],
-                            'total_events': workflow['TotalEvents'],
+                            # 'total_events': workflow['TotalEvents'],
                             'output_datasets': [],
                             'status_history': []}
             for output_dataset in output_datasets:
@@ -913,12 +916,12 @@ class RelValController(ControllerBase):
         with self.locker.get_lock(prepid):
             relval = self.get(prepid)
             workflow_names = {w['name'] for w in relval.get('workflows')}
-            stats_workflows = get_workflows_from_stats_for_prepid(prepid)
+            stats_workflows = get_workflows_from_reqmgr2_for_prepid(prepid)
             workflow_names -= {w['RequestName'] for w in stats_workflows}
             self.logger.info('%s workflows that are not in stats: %s',
                              len(workflow_names),
                              workflow_names)
-            stats_workflows += get_workflows_from_stats(list(workflow_names))
+            stats_workflows += get_workflows_from_reqmgr2(list(workflow_names))
             all_workflows = {}
             for workflow in stats_workflows:
                 if not workflow or not workflow.get('RequestName'):
