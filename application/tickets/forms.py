@@ -95,12 +95,12 @@ class TicketForm(FlaskForm):
     classDict = {'class': 'form-control form-control-sm'}
     prepid = SStringField(
                 render_kw=classDict | {'disabled':''},
-                label="My Prep ID",
+                label="Prep ID",
                 label_rkw = label_rkw
                 )
     batch_name = SStringField('Batch Name',
                 validators=[DataRequired(message="Please provide appropreate batch name")],
-                render_kw = classDict | {"placeholder":"Appropriate batch name"},
+                render_kw = classDict | {"placeholder":"Subsystem name or DPG/POG. e.g. Tracker"},
                 label_rkw = {'class': 'col-form-label-sm required'}
                 )
     cmssw_release = SStringField('CMSSW Release',
@@ -153,10 +153,24 @@ class TicketForm(FlaskForm):
                            render_kw = classDict,
                            label_rkw = label_rkw
                         )
-
-    hlt_gt = SStringField('HLT Global Tag',
+    workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
+                        default='6.13, 6.14',
+                        render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
+                        label_rkw = {'class': 'col-form-label-sm required'}
+                        )
+    title = SStringField('Title',
                 validators=[],
-                render_kw = classDict | {"id":"hlt_gt", "placeholder":"HLT Global Tag. Target or Reference"},
+                render_kw = classDict | {"placeholder":"Title/purpose of the validation"},
+                label_rkw = label_rkw
+                )
+    cms_talk_link = SStringField('CMS-Talk link',
+                validators=[],
+                render_kw = classDict | {"placeholder":"Put a link from where this validation was requested"},
+                label_rkw = label_rkw
+                )
+    hlt_gt = SStringField('Target HLT GT',
+                validators=[],
+                render_kw = classDict | {"id":"hlt_gt", "placeholder":"HLT target global tag"},
                 label_rkw = label_rkw
                 )
     common_prompt_gt = SStringField('Common Prompt GT',
@@ -164,21 +178,30 @@ class TicketForm(FlaskForm):
                         render_kw= classDict | {'placeholder': 'Global tag to be used in RECO step of HLT workflow'},
                         label_rkw = {'class': 'col-form-label-sm'}
                         )
-    prompt_gt = SStringField('Prompt Global Tag',
-                render_kw = classDict | {'placeholder': 'Prompt Global Tag. Target or Reference'},
+    hlt_gt_ref = SStringField('Reference HLT GT',
+                validators=[],
+                render_kw = classDict | {"id":"hlt_gt_ref", "placeholder":"HLT reference global tag"},
                 label_rkw = label_rkw
                 )
-    express_gt = SStringField('Express Global Tag',
-                render_kw = classDict | {'placeholder': 'Express Global Tag. Target or Reference'},
+    prompt_gt = SStringField('Target Prompt GT',
+                render_kw = classDict | {'placeholder': 'Prompt target global tag'},
                 label_rkw = label_rkw
                 )
-    workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
-                        render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
-                        label_rkw = {'class': 'col-form-label-sm required'}
-                        )
+    prompt_gt_ref = SStringField('Reference Prompt GT',
+                render_kw = classDict | {'placeholder': 'Prompt reference global tag'},
+                label_rkw = label_rkw
+                )
+    express_gt = SStringField('Target Express GT',
+                render_kw = classDict | {'placeholder': 'Express target global tag'},
+                label_rkw = label_rkw
+                )
+    express_gt_ref = SStringField('Reference Express GT',
+                render_kw = classDict | {'placeholder': 'Express reference global tag'},
+                label_rkw = label_rkw
+                )
     notes = STextAreaField('Notes',  
                           render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
                           'placeholder': "Description of the request. TWiki links etc.."},
                           label_rkw = label_rkw
                           )
-    submit = SubmitField('Submit')
+    submit = SubmitField('Save Ticket')

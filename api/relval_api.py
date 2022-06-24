@@ -287,7 +287,8 @@ class RelValPreviousStatus(APIBase):
             results = results.get_json()
         elif isinstance(relval_json, list):
             results = []
-            for single_relval_json in relval_json:
+            for single_prepid in relval_json:
+                single_relval_json = {'prepid': single_prepid}
                 prepid = single_relval_json.get('prepid')
                 relval = relval_controller.get(prepid)
                 results.append(relval_controller.previous_status(relval))
@@ -332,4 +333,33 @@ class UpdateRelValWorkflowsAPI(APIBase):
         else:
             raise Exception('Expected a single RelVal dict or a list of RelVal dicts')
 
+        return self.output_text({'response': results, 'success': True, 'message': ''})
+
+class CreateDQMComparisonPlotsAPI(APIBase):
+    """
+    Endpoint for comparing dqm comparison plots.
+    This does not require to pass relval json.
+    """
+
+    def __init__(self):
+        APIBase.__init__(self)
+
+    @APIBase.ensure_request_data
+    @APIBase.exceptions_to_errors
+    @APIBase.ensure_role('manager')
+    def post(self):
+        """
+        Create DQM comparison plots
+        """
+        data = list(flask.request.form.keys())[0]
+        dqm_json = json.loads(data)
+        if isinstance(dqm_json['Set'], list):
+            results = []
+            for dqm_pair in dqm_json['Set']:
+                relvalT = relval_controller.get(dqm_pair.get('target_prepid'))
+                relvalR = relval_controller.get(dqm_pair.get('reference_prepid'))
+                result = relval_controller.compare_dqm_datasets(relvalT, relvalR, dqm_pair)
+                results.append(result)
+        else:
+            raise Exception('Expected a single list of pair of dataset dicts')                
         return self.output_text({'response': results, 'success': True, 'message': ''})

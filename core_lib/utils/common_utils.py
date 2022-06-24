@@ -240,6 +240,29 @@ def get_workflows_from_stats_for_prepid(prepid):
     workflows = sort_workflows_by_name(workflows, 'RequestName')
     return workflows
 
+def get_workflows_from_reqmgr2_for_prepid(prepid):
+    """Fetch workflows from given prepid"""
+    if not prepid:
+        return []
+
+    cmsweb_url = Config.get('cmsweb_url')
+    grid_cert = Config.get('grid_user_cert')
+    grid_key = Config.get('grid_user_key')
+    headers = {'Content-type': 'application/json',
+               'Accept': 'application/json'}
+    with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as cmsweb_connection:
+        response = cmsweb_connection.api(
+            'GET',
+            f'/reqmgr2/data/request?prep_id={prepid}',
+            headers=headers
+        )
+    response = json.loads(response.decode('utf-8'))
+    workflows = []
+    for res in response['result']:
+        for value in res.values():
+            workflows.append(value)
+    workflows = sort_workflows_by_name(workflows, 'RequestName')
+    return workflows
 
 def get_workflows_from_stats(workflow_names):
     """
@@ -260,6 +283,35 @@ def get_workflows_from_stats(workflow_names):
     workflows = sort_workflows_by_name(workflows, 'RequestName')
     return workflows
 
+def get_workflows_from_reqmgr2(workflow_names):
+    """
+    Fetch workflows from ReqMgr2 with given names
+    """
+    workflow_names = [w.strip() for w in workflow_names if w.strip()]
+    if not workflow_names:
+        return []
+
+    cmsweb_url = Config.get('cmsweb_url')
+    grid_cert = Config.get('grid_user_cert')
+    grid_key = Config.get('grid_user_key')
+    results = []
+    headers = {'Content-type': 'application/json',
+               'Accept': 'application/json'}
+    with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as cmsweb_connection:
+        for workflow_name in workflow_names:
+            response = cmsweb_connection.api(
+                'GET',
+                f'/reqmgr2/data/request?prep_id={prepid}',
+                headers=headers
+            )
+            response = json.loads(response.decode('utf-8'))
+            results += response['result']
+    workflows = []
+    for res in results:
+        for value in res.values():
+            workflows.append(value)
+    workflows = sort_workflows_by_name(workflows, 'RequestName')
+    return workflows
 
 def cmsweb_reject_workflows(workflow_status_pairs):
     """

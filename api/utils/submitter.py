@@ -68,9 +68,9 @@ class RequestSubmitter(BaseSubmitter):
         body += (f'You can find this relval at '
                  f'{service_url}/relvals?prepid={prepid}\n')
         body += f'Workflow in ReqMgr2 {cmsweb_url}/reqmgr2/fetch?rid={last_workflow}'
-        # if Config.get('development'):
-        #     body += '\nNOTE: This was submitted from a development instance of RelVal machine '
-        #     body += 'and this job will never start running in computing!\n'
+        if Config.get('development'):
+            body += '\nNOTE: This was submitted from a development instance of RelVal machine '
+            body += 'and this job will never start running in computing!\n'
 
         recipients = emailer.get_recipients(relval)
         self.__send_email(repr(subject), repr(body), recipients)
@@ -254,8 +254,6 @@ class RequestSubmitter(BaseSubmitter):
                 time.sleep(3)
                 self.approve_workflow(workflow_name, connection)
                 connection.close()
-                # if not Config.get('development'):
-                #     refresh_workflows_in_stats([workflow_name])
 
             except Exception as ex:
                 self.__handle_error(relval, str(ex))
@@ -263,7 +261,6 @@ class RequestSubmitter(BaseSubmitter):
 
             self.__handle_success(relval)
 
-        if not Config.get('development'):
-            controller.update_workflows(relval)
+        controller.update_workflows(relval)
 
         self.logger.info('Successfully finished %s submission', prepid)

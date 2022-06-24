@@ -19,6 +19,11 @@
     </div>
   </footer>
 
+  <style type="text/css">
+    .mycol {
+      padding-left: 5px;
+    }
+  </style>
   <script>
     (function(){
       {% if userinfo['role_index'] < 1 %}
@@ -64,26 +69,47 @@
       }
     });
 
-    function get_attached_wfs() {
+    function get_alca_wf_list(){
+      // Returning list of workflows which are classified for AlCa
       var attached_wfs = globalTicket.attached_wfs
+      let alca_wfs = []
+      Object.keys(attached_wfs).forEach(function(key) {
+        alca_wfs = alca_wfs.concat(attached_wfs[key])        
+      })
+      alca_wfs = new Set(alca_wfs)
+      alca_wfs = Array.from(alca_wfs)
+      return alca_wfs
+    }
+
+    function get_attached_wfs() {
+      // Returning list of AlCa workflows in html format
+      var alca_wfs = get_alca_wf_list()
+      var attached_wfs = globalTicket.attached_wfs
+      if (alca_wfs.length === 0)return '';
       var html_output = '';
-      var keys = Object.keys(attached_wfs)
-      for (var i = 0; i < keys.length; i++) {
-        if (attached_wfs[keys[i]].length !== 0) {html_output += '<p style="text-align: left"><b>'+keys[i]+' : </b>'+attached_wfs[keys[i]].join(', ')+'</p>'}
-      }
-      if (html_output == '')
-        html_output += '<p id="workflow_list_id"> Workflows: '+globalTicket.workflow_ids.join(', ')+'</p>'
+      Object.keys(attached_wfs).forEach(function(key) {
+        if (attached_wfs[key].length !== 0) {html_output += '<li style="text-align: left"><b>'+key+' : </b>'+attached_wfs[key].join(', ')+'</li>'}
+      })
+      html_output = '<p style="text-align: left">AlCa Specific:<ul>'+html_output+'</ul></p>'
+      return html_output
+    }
+
+    function get_normal_workflows() {
+      // Returning list of normal(Not AlCa specific) workflows in html format
+      var alca_wfs = get_alca_wf_list()
+      let wf_list = globalTicket.workflow_ids
+      let difference = wf_list.filter(x => !alca_wfs.includes(x));
+      let html_output = '<p style="text-align: left">Normal Workflows: <ul><li>'+difference.join(', ')+'</li></ul></p>'
+      if (difference.length == 0) return '';
       return html_output
     }
 
     function create_relval(prepid) {
       var html_output = get_attached_wfs()
       var message = ''
-      if(html_output.includes('workflow_list_id')){
-        message += '<p style="text-align: left">Relvals will be created for following workflows:'+html_output+'</p>'
-      } else {
-        message += '<p style="text-align: left">Relvals will be created for following AlCa workflows:'+html_output+'</p>'
-      }
+      message += '<p style="text-align: left">Relvals will be created for following categories</p>'
+      message += html_output
+      message += get_normal_workflows()
       message += '<p style="text-align: left">You can NOT modify the ticket once relvals are created. You will need to create new ticket for further addition. Do you want to proceed?</p>';
       document.getElementById('goto_workflow_classifier_modal').style = "display: flex";
       activateConfirmModal('Create Relvals for <b>'+ prepid+'</b>?', message);
@@ -143,9 +169,12 @@
         modal.find('#cr_hlt_gt').val(items[prepid].hlt_gt)
         modal.find('#cr_prompt_gt').val(items[prepid].prompt_gt)
         modal.find('#cr_express_gt').val(items[prepid].express_gt)
-        document.getElementById('cr_hlt_gt').disabled = true;
-        document.getElementById('cr_prompt_gt').disabled = true;
-        document.getElementById('cr_express_gt').disabled = true;
+        modal.find('#cr_hlt_gt_ref').val(items[prepid].hlt_gt_ref)
+        modal.find('#cr_prompt_gt_ref').val(items[prepid].prompt_gt_ref)
+        modal.find('#cr_express_gt_ref').val(items[prepid].express_gt_ref)
+        $('input[id^="cr_"]').each(function(){
+          this.disabled = true;
+        })
         setWorkflowInForm(prepid, ticketData.attached_wfs)
         $(this).off('show.bs.modal');
       });
@@ -158,7 +187,7 @@
         $('#'+workflows[i]).multiselect({
           numberDisplayed: 1,
           includeSelectAllOption: true,
-          maxHeight: 200,
+          // maxHeight: 200,
           dropDown: true,
           buttonWidth: '160px'
         });
@@ -190,11 +219,11 @@
         document.getElementById('wf_hlt_gt').innerHTML = workflow_options_hlt
         document.getElementById('wf_prompt_gt').innerHTML = workflow_options_prompt
         document.getElementById('wf_express_gt').innerHTML = workflow_options_express
-        if(items[prepid].hlt_gt ==='')
+        if(items[prepid].hlt_gt ==='' && items[prepid].hlt_gt_ref ==='')
           document.getElementById('hlt_row_id').style = "display: none";
-        if(items[prepid].prompt_gt ==='')
+        if(items[prepid].prompt_gt ==='' && items[prepid].prompt_gt_ref ==='')
           document.getElementById('prompt_row_id').style = "display: none";
-        if(items[prepid].express_gt ==='')
+        if(items[prepid].express_gt ==='' && items[prepid].express_gt_ref ==='')
           document.getElementById('express_row_id').style = "display: none";
       }
     }
@@ -238,7 +267,7 @@
         if (req.readyState === XMLHttpRequest.DONE) {
           $('body').removeClass('loading');
           if (req.status === 200) {
-            console.log(JSON.parse(req.responseText));
+            console.log('Classified workflows are saved to the DB');
           } else {
             const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
             alertModal(AlertIcon +' There was a problem with the request', JSON.parse(req.responseText).message);

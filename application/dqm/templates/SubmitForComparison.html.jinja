@@ -1,43 +1,242 @@
 {% extends 'Base.html.jinja' %}
 
+{% block headercontent %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/select2.min.js"></script>
+{% endblock %}
+
 {% block content %}
 
-<form method="POST" style='text-align: left; margin: 5px 20%; padding: 10px;' class='shadow bg-white' >
+<form method="POST" style='text-align: left; margin: 5px 15%; padding: 10px;' class='shadow bg-white' >
     
     {{ form.csrf_token }}
     {{ form.hidden_tag() }}
 
-    <div class="form-group row">
-        {{ form.jira_ticket.label(class="col-sm-3 col-form-label-sm") }} 
-        <div class="col-sm-9">
-         {{ form.jira_ticket(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }} 
-        </div>
+  <table>
+    {% for item in form if not item.id in ['submit', 'Set', 'add_step', 'csrf_token'] %}
+      <tr id="{{ item.id }}_row">
+        <td style="width: 15%;">
+          {{ item.label() }}
+        </td>
+        <td class="second-column">
+          {{ item() }}
+        </td>
+      </tr>
 
-    	{{ form.target_dataset.label(class="col-sm-3 col-form-label-sm") }} 
-    	<div class="col-sm-9">
-    	 {{ form.target_dataset(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }} 
-    	</div>
+      {% for error in item.errors %}
+        <tr class="small-footers">
+          <td></td>
+          <td>
+            <small style="color: red"><i class="bi bi-arrow-up-circle"></i> {{error}}</small>
+          </td>
+        </tr>
+      {% endfor %}
+    {% endfor %} 
 
-    	{{ form.reference_dataset.label(class="col-sm-3 col-form-label-sm") }} 
-    	<div class="col-sm-9">
-    	 {{ form.reference_dataset(class="form-control form-control-sm", option_attr={"jira_ticket-0": {"disabled": "", "hidden": ""} }) }} 
-    	</div>
+    <tr id="{{ form.Set.id }}_row">
+      <td style="width: 15%;">
+        {{ form.Set.label() }}
+      </td>
+      <td id="set_column_id" class="second-column">
+        {{ form.Set() }}
+      </td>
+    </tr>
+  </table>
 
-    </div>
 
-
-    <div style="text-align: center;">
+    <div style="text-align: center; padding-top: 10px">
 	    {{ form.submit(class_="btn btn-primary") }}
         <button class="btn btn-danger" onclick="cancel(); return false;">Cancel</button>
 	</div>
 </form>
 
-<script type="text/javascript">
-    function cancel(){
-        window.location = '/dqm';
-    }
 
-    $('title').html('AlCaVal | Compare DQM')
+<style type="text/css">
+  table {
+    width: 100%;
+  }
+  table label{
+    margin-bottom: 0px;
+  }
+  td, th{
+    padding-top: 10px;
+  }
+  th {
+    width: 15%;
+  }
+  .second-column {
+    display: flex;
+    align-items: center;
+  }
+  .small-footers td {
+    padding-top:0px!important;
+  }
+</style>
+<script type="text/javascript">
+  var button = '<tr id="addset_newrow"><td style="width: 15%;"></td><td><button class="btn btn-sm btn-primary" id="add_step" name="add_step" onclick="addSet()" type="button" value="">Add Set</button></td></tr>'
+
+  function getCount(parent, getChildrensChildren){
+      var relevantChildren = 0;
+      var children = parent.childNodes.length;
+      for(var i=0; i < children; i++){
+          if(parent.childNodes[i].nodeType != 3){
+              if(getChildrensChildren)
+                  relevantChildren += getCount(parent.childNodes[i],true);
+              relevantChildren++;
+          }
+      }
+      return relevantChildren;
+  }
+
+  function addSetNumbers() {
+    var stepEl = document.getElementById('Set')
+    var nsteps = getCount(stepEl, false)
+    var steplabel = $('label[for="Set"]')
+    steplabel.html('Set ('+nsteps+')')
+    if (nsteps == '0'){
+      $('#Set').remove()
+      document.getElementById('set_column_id').insertAdjacentHTML('beforeend', button)
+      if ($('#addset_newrow').length) $('#addset_newrow').remove()
+    } else{
+      if (!$('#addset_newrow').length)document.getElementById('set_column_id').parentNode.insertAdjacentHTML('afterend', button)
+    }
+    $('#add_step').html('Add Set '+(nsteps+1))
+    return nsteps
+  }
+
+  function relvalFormToJSON(array) {
+      var d = {};
+      $(array).each(function() {
+          if (d[this.name] !== undefined){
+              if (!Array.isArray(d[this.name])) {
+                  d[this.name] = [d[this.name]];
+              }
+              d[this.name].push(this.value);
+          }else{
+              d[this.name] = this.value;
+          }
+      });
+      return d;
+  }
+  function refresh_set(){
+    var set_col = document.getElementById('set_column_id')
+    var setNumber = getCount(set_col, false)
+    var disabled = $('form').find(':input:disabled').removeAttr('disabled');
+    var formarray = $('form').serializeArray();
+    disabled.attr('disabled','disabled');
+    var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
+    let options = {
+        method: "PUT", 
+        body: forminputdata,
+        headers: {"Content-Type": "application/json;"}
+    }
+    fetch('/dqm/refresh_set', options).then(res => {
+      if (res.status >= 200 && res.status <= 299) {
+        return res.json();
+      } else {
+        throw Error(res.statusText);
+      }
+    }).then(data =>{
+      set_col.innerHTML = "";
+      set_col.insertAdjacentHTML('beforeend', data.response)
+      addSetNumbers()
+    }).catch(error => {
+      let message = ["Your session might have expired", "Please re-login by refreshing a page!"]
+      alertModal(error)
+    });
+  }
+
+  function addSet(){
+    $('body').addClass('loading');  
+    var set_col = document.getElementById('set_column_id')
+    var setNumber = getCount(set_col, false)
+    var disabled = $('form').find(':input:disabled').removeAttr('disabled');
+    var formarray = $('form').serializeArray();
+    disabled.attr('disabled','disabled');
+    var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
+    let options = {
+        method: "PUT", 
+        body: forminputdata,
+        headers: {"Content-Type": "application/json;"}
+    }
+    fetch('/dqm/add_set', options).then(res => {
+      if (res.status >= 200 && res.status <= 299) {
+        return res.json();
+      } else {
+        throw Error(res.statusText);
+      }
+    }).then(data =>{
+      set_col.innerHTML = "";
+      set_col.insertAdjacentHTML('beforeend', data.response)
+      addSetNumbers()
+      $('body').removeClass('loading');    
+    }).catch(error => {
+      let message = ["Your session might have expired", "Please re-login by refreshing a page!"]
+      $('body').removeClass('loading');    
+      alertModal(error)
+    });
+  }
+
+  function delete_set(Id) {
+    $('body').addClass('loading');  
+    var set_col = document.getElementById('set_column_id')
+    let index = Id.split('Set ')[1].split('-')[0]
+    var formarray = $('form').serializeArray();
+    var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
+    let options = {
+        method: "PUT", 
+        body: forminputdata, 
+        headers: {"Content-Type": "application/json;"}
+    }
+    let url = '/dqm/delete_set/'+index;
+    fetch(url, options).then(res => res.json()).then(d =>{
+        set_col.innerHTML = "";
+        set_col.insertAdjacentHTML('beforeend', d.response)
+        forminputdata = d.inputdata
+        addSetNumbers()
+        $('body').removeClass('loading');    
+    })
+  }
+
+  function refreshWorkflows(jira) {
+    $('body').addClass('loading');  
+    fetch('/dqm/update_workflows/'+jira).then(res => res.json()).then(d =>{
+      console.log('Workflows for '+jira+' are updated')
+      show_available_datasets($('#jira_ticket')[0], jira)
+      $('body').removeClass('loading');  
+    })
+  }
+
+  function show_available_datasets(obj, jira){
+    fetch('/dqm/get_submitted_dataset/'+jira).then(res => res.json()).then(d =>{
+      choices = []
+      for (var i = 0; i < d.datasets.length; i++) {
+        choices.push('<li style="color: brown">'+d.datasets[i][1]+'</li><span>'+d.datasets[i][0]+'</span>')
+      }
+      $('.av_ds').remove()
+      choices_str = '<button type="button" class="btn btn-sm btn-secondary" style="margin-top: 10px; margin-bottom: 10px" onclick=refreshWorkflows("'+jira+'")>Refresh workflows</button>'
+      choices_str += '<h6>Available datasets: </h6>'
+      choices_str += '<ul>'+choices.join('')+'</ul>'
+      obj.parentNode.parentNode.insertAdjacentHTML('afterend', '<tr class="small-footers av_ds"><td></td><td><small>'+choices_str+'</small></td></tr>')
+    })
+  }
+
+  $(document).ready(function() {
+    var nsteps = addSetNumbers()
+    if ($('#jira_ticket')[0].value) {
+      show_available_datasets($('#jira_ticket')[0], $('#jira_ticket')[0].value)
+    }
+    $('#jira_ticket').on( "change", function( event ) {
+      show_available_datasets(this, this.value)
+      refresh_set()
+    })
+  })
+
+
+  function cancel(){
+      window.location = '/dqm/plots';
+  }
+  $('title').html('AlCaVal | Compare DQM')
 </script>
 
 

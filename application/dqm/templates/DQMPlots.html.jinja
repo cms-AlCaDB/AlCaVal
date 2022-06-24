@@ -1,55 +1,52 @@
 {% extends 'Base.html.jinja' %}
 {% block headercontent %}
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.js"></script>
+  <link href="{{ url_for('static', filename='css/datatables_style_override.css') }}" rel="stylesheet" type="text/css">
 {% endblock %}
 
 {% block content %}
-	<h2 style="text-align: center; margin-top: 10px;">DQM plots</h2>
-
-	<div style="padding: 5px; margin-top: 20px;">
+	<h2 style="text-align: center; margin-top: 10px;"><strong>DQM plots</strong> (at cmsweb dev)</h2>
+	<div style="padding: 5px; margin-top: 2px;">
 		{{ table.__html__() }}
 	</div>
 
-    <footer class="footer fixed-bottom badge-light" style="padding-bottom: 2px; display: inline-block; background: ; box-shadow: -1px 0px 7px 1px gray;">
-	    {#<div id="id_footer_actions1" class="actions" style="display: inline-flex; padding: 12.08px;">
-		   <a id="multiple_relval_actions_edit" href="/relvals/edit">New Relval</a>
-		</div> #}
-		<div id="id_footer_actions2" class="actions" style="display: inline-flex; padding: 12.08px;" hidden>
-	       <span id="selected_items_id">Selected items: </span>
-		   <a id="multiple_relval_actions_edit" onclick="delete_selected_relvals()" href="javascript:void(0);">Edit</a>
-		   <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);">Delete</a>
-		</div>		
+    <footer class="footer fixed-bottom badge-light" style="padding: 0 12px; display: inline-flex; justify-content: space-between; box-shadow: -1px 0px 7px 1px gray;">
+    <div id="dqm_footer_links_id" class="actions" style="display: flex;align-items: center;">
+       <a href="/dqm/compare" title="Compare new set of DQM dataset">Compare new set</a>
+    </div>
     </footer>
 
 
-	<style type="text/css">
-		/*Makee rows compact*/
-		table.dataTable tbody td {
-		  padding: 3px 10px;
-		}
-
-		.pagecounter {
-			margin-left: 10px;
-			float: right;
-		}
-	</style>
-
 	<script type="text/javascript">
-		$(document).ready( function () {
-		    $('#dqmplot_list').DataTable({
-					"scrollX": true,
-					"pageLength": 50,
-					"bStateSave": true,
-					"order": [],
-					// "columnDefs": [ { orderable: false, targets: [0]}],
-	                "dom": '<"top"lf>rt<"pagecounter dataTables_wrapper no-footer"ip><"clear">',
-				    initComplete: (settings, json)=>{
-				        $('.table_info').appendTo('footer');
-				        $('.pagecounter').appendTo('footer');
-				    },
-			});
-		} );
+    var datatable = $('#dqmplot_list').DataTable({
+      "scrollX": true,
+      "pageLength": 50,
+      "stateSave": true,
+      "stateSaveParams": function (settings, data) {
+        // Reset sorting and search state after refresh
+        data.order = [];
+      },
+      fixedHeader: {
+        header: true,
+        headerOffset: 57
+      },
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Filter from the following table...",
+        "info": "Showing _START_ - _END_ of _TOTAL_",
+        "lengthMenu":     "Page Size: _MENU_"  
+      },
+      "order": [], // Remove any default sorting order
+      "sDom": '<"top"f>rt<"pagecounter dataTables_wrapper no-footer"ilp><"clear">',
+      // Appending Search bar to the top and pagination info to the bottom
+      initComplete: (settings, json)=>{ 
+        $('.table_info').appendTo('footer');
+        $('.pagecounter').appendTo('footer');
+        $('.top').appendTo('.mysearchbar');
+        $('select').removeClass('custom-select-sm');
+      }
+    });
 
 	    $('title').html('AlCaVal | DQM Plots')
 	</script>

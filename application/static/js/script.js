@@ -41,3 +41,22 @@ $(document).ready(function() {
         $('#exampleModal').modal('toggle');
     });
 });
+
+//------------------------------------------------------------------------------
+// Change border color on select for the form inputs
+function toggle_border_color(obj) {
+    if (obj.value != '') {
+        obj.style = "border-color: black"
+    } else {
+        obj.style = ""
+    }
+}
+$( document ).ready(function() {
+    $("select:not(select[name$=list_length]), textarea, input:not('#submit')").each(function() {
+        toggle_border_color(this)
+    })
+    $("select:not(select[name$=list_length]), textarea, input:not('#submit')").on("change", function() {
+        toggle_border_color(this)
+    })
+})
+//------------------------------------------------------------------------------

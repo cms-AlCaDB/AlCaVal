@@ -3,6 +3,7 @@ Module that contains RelValController class
 """
 import json
 import time
+import requests
 from database.database import Database
 from core_lib.controller.controller_base import ControllerBase
 from core_lib.utils.ssh_executor import SSHExecutor
@@ -13,10 +14,15 @@ from core_lib.utils.common_utils import (clean_split,
                                          config_cache_lite_setup,
                                          dbs_datasetlist,
                                          get_workflows_from_stats,
+                                         get_workflows_from_reqmgr2,
                                          get_workflows_from_stats_for_prepid,
+                                         get_workflows_from_reqmgr2_for_prepid,
                                          refresh_workflows_in_stats,
-                                         run_commands_in_singularity)
+                                         run_commands_in_singularity,
+                                         dbs_dataset_runs)
+from core_lib.utils.connection_wrapper import ConnectionWrapper
 from ..utils.submitter import RequestSubmitter
+from ..utils.dqm_submitter import DQMRequestSubmitter
 from ..model.ticket import Ticket
 from ..model.relval import RelVal
 from ..model.relval_step import RelValStep
@@ -47,7 +53,7 @@ class RelValController(ControllerBase):
             workflow_name = first_step.get_short_name()
             json_data['workflow_name'] = workflow_name
 
-        condition_name = f'{condition_name}-'
+        condition_name = f'{condition_name}-' if condition_name else ''
         prepid_part = f'{cmssw_release}__{batch_name}-{condition_name}{workflow_name}'.strip('-_')
         json_data['prepid'] = f'{prepid_part}-00000'
         relval_db = Database('relvals')
@@ -120,6 +126,7 @@ class RelValController(ControllerBase):
         editing_info['workflow_id'] = False
         editing_info['workflow_name'] = is_new
         editing_info['steps'] = is_new
+        editing_info['dqm_comparison'] = True
 
         return editing_info
 
@@ -320,7 +327,7 @@ class RelValController(ControllerBase):
         self.logger.debug('Getting job dict for %s', prepid)
         job_dict = {}
         job_dict['Group'] = 'PPD'
-        job_dict['Requestor'] = 'pdmvserv'
+        job_dict['Requestor'] = 'alcadb.user'
         job_dict['CouchURL'] = Config.get('cmsweb_url') + '/couchdb'
         job_dict['ConfigCacheUrl'] = job_dict['CouchURL']
         job_dict['PrepID'] = prepid
@@ -341,8 +348,6 @@ class RelValController(ControllerBase):
         if not Config.get('development'):
             job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader'
         else:
-            # Using production instance even in development instance for
-            # not having access to the
             # https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader
             job_dict['DbsUrl'] = 'https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader'
 
@@ -369,10 +374,7 @@ class RelValController(ControllerBase):
                     job_dict['DQMUploadUrl'] = 'https://cmsweb.cern.ch/dqm/relval'
                 else:
                     # Upload to some dev DQM GUI
-                    # >> Using production instance even in development instace 
-                    # for not having access to https://cmsweb-testbed.cern.ch
-                    # Replaced from https://cmsweb-testbed.cern.ch/dqm/dev
-                    job_dict['DQMUploadUrl'] = 'https://cmsweb.cern.ch/dqm/relval'
+                    job_dict['DQMUploadUrl'] = 'https://cmsweb-testbed.cern.ch/dqm/dev'
 
                 continue
 
@@ -818,14 +820,15 @@ class RelValController(ControllerBase):
         """
         Try to move RelVal back to approved
         """
+        relval = self.update_workflows(relval)
         active_workflows = self.pick_active_workflows(relval)
-        refresh_workflows_in_stats([x['name'] for x in active_workflows])
+        # refresh_workflows_in_stats([x['name'] for x in active_workflows])
         # Take active workflows again in case any of them changed during Stats refresh
-        active_workflows = self.pick_active_workflows(relval)
+        # active_workflows = self.pick_active_workflows(relval)
         if active_workflows:
             self.reject_workflows(active_workflows)
             # Refresh after rejecting
-            refresh_workflows_in_stats([x['name'] for x in active_workflows])
+            # refresh_workflows_in_stats([x['name'] for x in active_workflows])
             relval = self.update_workflows(relval)
 
         for step in relval.get('steps'):
@@ -847,7 +850,7 @@ class RelValController(ControllerBase):
         for _, workflow in all_workflows.items():
             new_workflow = {'name': workflow['RequestName'],
                             'type': workflow['RequestType'],
-                            'total_events': workflow['TotalEvents'],
+                            # 'total_events': workflow['TotalEvents'],
                             'output_datasets': [],
                             'status_history': []}
             for output_dataset in output_datasets:
@@ -913,12 +916,12 @@ class RelValController(ControllerBase):
         with self.locker.get_lock(prepid):
             relval = self.get(prepid)
             workflow_names = {w['name'] for w in relval.get('workflows')}
-            stats_workflows = get_workflows_from_stats_for_prepid(prepid)
+            stats_workflows = get_workflows_from_reqmgr2_for_prepid(prepid)
             workflow_names -= {w['RequestName'] for w in stats_workflows}
             self.logger.info('%s workflows that are not in stats: %s',
                              len(workflow_names),
                              workflow_names)
-            stats_workflows += get_workflows_from_stats(list(workflow_names))
+            stats_workflows += get_workflows_from_reqmgr2(list(workflow_names))
             all_workflows = {}
             for workflow in stats_workflows:
                 if not workflow or not workflow.get('RequestName'):
@@ -992,3 +995,78 @@ class RelValController(ControllerBase):
                                      indent=2,
                                      sort_keys=True))
         return output_datasets
+
+    def check_if_dataset_exists(self, urlpart):
+        """Verify if dataset file exists in cmsweb dev instance"""
+        grid_cert = Config.get('grid_user_cert')
+        grid_key = Config.get('grid_user_key')
+        url = 'https://cmsweb.cern.ch/dqm/dev/data/browse/ROOT/RelValData/'
+        url += urlpart
+        ret = requests.head(url, cert=(grid_cert, grid_key), verify=False)
+        if ret.status_code != 200:
+            return False
+        else:
+            return True
+
+    def get_new_dataset_version(self, dataset):
+        version = int(dataset.split("/")[-2].split("-")[-1].strip('v'))
+        cmssw_version = dataset.split('/')[2].split('-')[0]
+        stript_cmssw = '_'.join(cmssw_version.split('_')[:3]+['x/'])
+        run = dbs_dataset_runs(dataset)[0]
+        dataset_name = dataset.replace('/', '__')
+
+        while True:
+            file = f'DQM_V0001_R000{run}{dataset_name}.root'
+            urlpart = stript_cmssw + file
+            data_exists = self.check_if_dataset_exists(urlpart)
+            if data_exists:
+                dataset_name = dataset_name.replace(f'-v{version}__', f'-v{version+1}__')
+                version = version + 1 
+            else:
+                return version, run
+
+    def compare_dqm_datasets(self, relvalT, relvalR, dqm_pair):
+        """Compare"""
+        results = []
+        lock_key = '+'.join([relvalR.get_prepid(), relvalT.get_prepid()])
+        with self.locker.get_nonblocking_lock(lock_key):
+            relval_db = Database('relvals')
+            target_pair = []
+            for dqmtype, relval in zip(['target', 'reference'], [relvalT, relvalR]):
+                a, b = (dqmtype, 'reference') if dqmtype == 'target' else (dqmtype, 'target')
+                batch_name = relval.get('batch_name')
+                cmssw_release = relval.get('cmssw_release')
+                locker_key = f'compare-dqm-plots-bin-by-bin-{cmssw_release}__{batch_name}'
+
+                with self.locker.get_lock(locker_key):
+                    dqm = relval.get_json().get('dqm_comparison')
+                    if not isinstance(dqm, list): dqm = []
+                    for item in dqm:
+                        source = bool(item['source'] == dqm_pair[f'{a}_dataset'])
+                        compared_with = bool(item['compared_with'] == dqm_pair[f'{b}_dataset'])
+                        if source and compared_with:
+                            return []
+
+                    old_ver = dqm_pair[f'{a}_dataset'].split("/")[-2].split("-")[-1].strip('v')
+                    version, run_number = self.get_new_dataset_version(dqm_pair[f'{a}_dataset'])
+                    target_data = dqm_pair[f'{a}_dataset'].replace(f'-v{old_ver}/', f'-v{version}/').replace('/', '__')
+                    target_pair.append(target_data)
+
+                    info = {'source': dqm_pair[f'{a}_dataset'],
+                            'compared_with': dqm_pair[f'{b}_dataset'],
+                            'target': target_data.replace('__', '/'),
+                            'status': 'comparing',
+                            'run_number': run_number
+                            }
+                    relval.set('dqm_comparison', dqm+[info])
+                    relval_db.save(relval.get_json())
+            DQMRequestSubmitter().add(relvalT, relvalR, dqm_pair, self, target_pair)
+        return results
+
+# auth-get-sso-cookie -u https://cmsweb.cern.ch -o cookies.txt
+# --certificate-type=PEM
+# --private-key=/afs/cern.ch/user/a/alcauser/.globus/userkey.pem
+# --private-key-type=PEM
+
+
+# wget -nd -P __MinimumBias__CMSSW_12_3_2_patch1-123X_dataRun3_Prompt_EGMReg_w16_2022_v1_EGMnew_RelVal-v1__DQMIO --certificate=${HOME}/.globus/usercert.pem --certificate-type=PEM --private-key=${HOME}/.globus/userkey.pem --private-key-type=PEM https://cmsweb.cern.ch:443/dqm/relval/data/browse/ROOT/RelValData/CMSSW_12_3_x/DQM_V0001_R000346512__MinimumBias__CMSSW_12_3_2_patch1-123X_dataRun3_Prompt_EGMReg_w16_2022_v1_EGMnew_RelVal-v1__DQMIO.root

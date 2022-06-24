@@ -1,6 +1,7 @@
 """
 Module that handles all email notifications
 """
+import os
 import logging
 import smtplib
 from email.message import EmailMessage
@@ -32,7 +33,7 @@ class Emailer():
 
         return list(recipients)
 
-    def send(self, subject, body, recipients):
+    def send(self, subject, body, recipients, attach=None):
         """
         Send email
         """
@@ -40,6 +41,13 @@ class Emailer():
         message = EmailMessage()
         body = body.strip()
         message.set_content(body)
+        if attach:
+            with open('attachment.txt', 'rb') as fb:
+                message.add_attachment(fb.read(),
+                               maintype='application',
+                               subtype='text',
+                               filename='attachment.txt')
+            os.remove('attachment.txt')
         message['Subject'] = subject
         message['From'] = 'AlCa Service Account <alcauser@cern.ch>'
         message['To'] = ', '.join(recipients)
