@@ -287,7 +287,8 @@ class RelValPreviousStatus(APIBase):
             results = results.get_json()
         elif isinstance(relval_json, list):
             results = []
-            for single_relval_json in relval_json:
+            for single_prepid in relval_json:
+                single_relval_json = {'prepid': single_prepid}
                 prepid = single_relval_json.get('prepid')
                 relval = relval_controller.get(prepid)
                 results.append(relval_controller.previous_status(relval))

@@ -24,10 +24,10 @@ class ActionCol(Col):
         jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' {title} {newtab}>Jira</a>"
         title='Create new Jira ticket'
         create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);" {title}>Create Jira Ticket</a>"""
-        jira = jira if item['jira_ticket'] != 'None' else create_jira
+        jira = jira if item['jira_ticket'] != 'None' else ''
 
-        prev_status = f"""<a class="cls_previous_status prevStatus_{content}" onclick="prevStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to previous status'>Previous</a>"""
-        prev_status = "" if item['status'] != 'new' else ""
+        prev_status = f"""<a id="prev_status_{content}" onclick="prevStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to previous status'>Previous</a>"""
+        prev_status = prev_status if item['status'] != 'new' else ""
 
         new_status = status_list[status_list.index(item['status'])+1]
         next_status = f"""<a class="cls_next_status nextStatus_{content}" onclick="nextStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to next status: from "{item['status']}" to "{new_status}"'>Next</a>"""

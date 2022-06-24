@@ -26,6 +26,7 @@
        <span id="selected_items_id">Selected items: </span>
        {#<a id="multiple_relval_actions_edit" onclick="create_new_relval()" href="javascript:void(0);" title="Edit selected relvals">Edit</a>#}
        <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);" title="Delete selected relvals">Delete</a>
+       <a id="multiple_relval_previous_status" onclick="prevStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to previous status">Previous</a>
        <a id="multiple_relval_next_status" onclick="nextStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to next status">Next</a>
     </div>    
   </footer>
@@ -103,7 +104,7 @@
       }
     }
 
-    function delete_selected_relvals(){
+    function get_prepids_for_selected_checkboxes() {
       var selected = document.getElementsByName('table-checkbox');
       var prepids=[];
       selected.forEach(element =>{
@@ -112,6 +113,11 @@
           prepids.push(id.replace("id_", ""));
         }
       });
+      return prepids
+    }
+
+    function delete_selected_relvals(){
+      prepids = get_prepids_for_selected_checkboxes()
       delete_relval(prepids);
     }
 
@@ -146,16 +152,44 @@
       }
     }
 
+    function prevStatus_selected_relvals(){
+      prepids = get_prepids_for_selected_checkboxes()
+      prevStatus(prepids);
+    }
+
+    function prevStatus(prepids) {
+      const options = {
+        method: 'POST',
+        body: JSON.stringify(prepids),
+        headers: {'Content-Type': 'application/json'}
+      }
+      var relvals_list = '';
+      for (var i = 0; i < prepids.length; i++) {
+        relvals_list += '<li>'+prepids[i]+'</li>';
+      }
+      activateConfirmModal('Moving <b>'+ prepids.length +'</b> relvals previous status', '<ul style="padding-top: 10px">'+relvals_list+'</ul>'+ 'Any computing workflows submitted to the ReqMgr2 will be rejected. Do you want to proceed?');
+      $('#goahead_confirmationModal').on('click', function(){
+        $('#confirmationModal').modal('toggle');
+        $('body').addClass('loading');
+        fetch('api/relvals/previous_status', options).then(res => {
+          if (res.status >= 200 && res.status <= 299) {
+            return res.json();
+          } else {
+            throw Error(res.statusText);
+          }
+        }).then(data =>{
+          window.location.reload(false)
+          window.onload = function() { $('body').removeClass('loading');}
+        }).catch(error => {
+          $('body').removeClass('loading');
+          const AlertIcon = '<i class="bi bi-exclamation-triangle" style="color:red"></i>';
+          alertModal(AlertIcon +' There was a problem with the request', JSON.parse(error).message);
+        })
+      })
+    }
 
     function nextStatus_selected_relvals(){
-      var selected = document.getElementsByName('table-checkbox');
-      var prepids=[];
-      selected.forEach(element =>{
-        if (element.checked){
-          var id = element.id;
-          prepids.push(id.replace("id_", ""));
-        }
-      });
+      prepids = get_prepids_for_selected_checkboxes()
       nextStatus(prepids);
     }
 
