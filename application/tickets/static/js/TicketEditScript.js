@@ -27,6 +27,21 @@ function track_matrix_select() {
     })
 }
 
+function validate_cmssw(id) {
+    var release = document.getElementById('cmssw_release_error_id')
+    if (release) release.parentNode.parentNode.remove()
+    value = document.getElementById(id).value
+    fetch('https://api.github.com/repos/cms-sw/cmssw/releases/tags/'+value).then(res => {
+        if (res.status == 200) {
+            var el = '<td></td><td style="padding-top: unset;"><small id="cmssw_release_error_id" style="color: green">Valid CMSSW release</small></td>'
+            document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
+        } else {
+            var el = '<td></td><td style="padding-top: unset;"><small id="cmssw_release_error_id" style="color: red">CMSSW release is not valid</small></td>'
+            document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
+        }
+    })
+}
+
 $(document).mouseup(function (e) {
     // Hide popover when clicked anywhere else
     if(!($(e.target).hasClass("popover-content"))){
@@ -44,5 +59,9 @@ $(document).ready(function(){
 	    track_matrix_select()
 	    $('#matrix-help-icon').css({'animation-name': 'blink', 'animation-duration': '0.5s', 'animation-iteration-count': '3'})
 	})
+
+    $('#cmssw_release').on( "change", function( event ) {
+        validate_cmssw(this.id)
+    })
 });
 

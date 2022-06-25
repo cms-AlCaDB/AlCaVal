@@ -7,6 +7,7 @@ from wtforms import widgets
 from markupsafe import Markup
 from wtforms.widgets.core import html_params
 from wtforms.fields.core import Label as BaseLabel
+import requests
 
 class CustomSelect:
     """
@@ -205,3 +206,9 @@ class TicketForm(FlaskForm):
                           label_rkw = label_rkw
                           )
     submit = SubmitField('Save Ticket')
+
+    def validate_cmssw_release(self, field):
+        url = f'https://api.github.com/repos/cms-sw/cmssw/releases/tags/{field.data}'
+        status_code = requests.head(url).status_code
+        if status_code != 200:
+            raise ValidationError('CMSSW release is not valid!')
