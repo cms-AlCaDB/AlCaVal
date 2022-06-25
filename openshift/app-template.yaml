@@ -40,6 +40,16 @@ objects:
     database-user: "${DATABASE_USER}"
     database-password: "${DATABASE_PASSWORD}"
     flask-secret-key: "${FLASK_SECRET_KEY}"
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: application-log
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -104,6 +114,7 @@ objects:
           name: "${NAME}"
       spec:
         volumes:
+        - name: application-log
         - name: client-secret
           secret:   
             secretName: client-secret-file
@@ -115,6 +126,8 @@ objects:
           volumeMounts:
           - name: client-secret
             mountPath: /home/pritam/secrets
+          - name: application-log
+            mountPath: /home/pritam/logs
 
           env:
           - name: INSTANCE
