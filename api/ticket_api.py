@@ -21,7 +21,7 @@ class CreateTicketAPI(APIBase):
 
     @APIBase.ensure_request_data
     @APIBase.exceptions_to_errors
-    @APIBase.ensure_role('manager')
+    @APIBase.ensure_role('user')
     def put(self):
         """
         Create a ticket with the provided JSON content
@@ -62,7 +62,7 @@ class UpdateTicketAPI(APIBase):
 
     @APIBase.ensure_request_data
     @APIBase.exceptions_to_errors
-    @APIBase.ensure_role('manager')
+    @APIBase.ensure_role('user')
     def post(self):
         """
         Update a ticket with the provided JSON content
