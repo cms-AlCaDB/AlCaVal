@@ -109,7 +109,7 @@ class DQMRequestSubmitter(BaseSubmitter):
         cmssw_version = dqm_pair['target_dataset'].split('/')[2].split('-')[0]
         ref_cmssw = dqm_pair['reference_dataset'].split('/')[2].split('-')[0]
 
-        command.extend(cmssw_setup(cmssw_version).split('\n'))
+        command.extend(cmssw_setup('CMSSW_12_3_3').split('\n'))
 
         data_url = 'https://cmsweb.cern.ch/dqm/relval/data/browse/ROOT/RelValData/'
         target_run = dbs_dataset_runs(dqm_pair['target_dataset'])[0]
