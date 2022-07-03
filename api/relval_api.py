@@ -324,8 +324,7 @@ class UpdateRelValWorkflowsAPI(APIBase):
             results = results.get_json()
         elif isinstance(relval_json, list):
             results = []
-            for single_relval_json in relval_json:
-                prepid = single_relval_json.get('prepid')
+            for prepid in relval_json:
                 relval = relval_controller.get(prepid)
                 results.append(relval_controller.update_workflows(relval))
 

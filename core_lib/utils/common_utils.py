@@ -301,7 +301,7 @@ def get_workflows_from_reqmgr2(workflow_names):
         for workflow_name in workflow_names:
             response = cmsweb_connection.api(
                 'GET',
-                f'/reqmgr2/data/request?prep_id={prepid}',
+                f'/reqmgr2/data/request?prep_id={workflow_name}',
                 headers=headers
             )
             response = json.loads(response.decode('utf-8'))
