@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import logging
 import logging.handlers
 from flask import Flask, request, session, g
@@ -13,10 +14,23 @@ oidc = OpenIDConnect()
 
 from resources.smart_tricks import askfor, DictObj
 def get_userinfo():
-	if not (g.oidc_id_token and 'user' in session.keys()):
-		userinfo = askfor.get('api/system/user_info', headers=request.headers).json()
+	"""Retrieve user info to store in client session"""
+	uptime = askfor.get('api/system/uptime').json().get('response').get('uptime')
+	session_uptime = session.get('time') if session.get('time') else 1
+	time_now = int(time.time())
+	uptime = time_now - uptime
+
+	# Refresh user credentials when system restarts
+	refresh = bool(uptime > session_uptime)
+	if not (g.oidc_id_token and 'user' in session.keys()) or refresh:
+		logger = logging.getLogger()
+		logger.info('Refreshing user credentials in client session')
+		userinfo = askfor.get('api/system/user_info',
+							   headers=request.headers
+							 ).json()
 		userinfo['dev_instance'] = Config.get('development')
 		session['user'] = userinfo
+		session['time'] = time_now
 	return session['user']
 
 def setup_logging(debug):
