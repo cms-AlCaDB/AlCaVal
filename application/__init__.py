@@ -3,6 +3,7 @@ import sys
 import time
 import logging
 import logging.handlers
+from colorlog import ColoredFormatter
 from flask import Flask, request, session, g
 from flask_restful import Api
 from flask_cors import CORS
@@ -12,7 +13,7 @@ from core_lib.utils.username_filter import UsernameFilter
 from flask_oidc import OpenIDConnect                                            
 oidc = OpenIDConnect()
 
-from resources.smart_tricks import askfor, DictObj
+from resources.smart_tricks import askfor
 def get_userinfo():
 	"""Retrieve user info to store in client session"""
 	uptime = askfor.get('api/system/uptime').json().get('response').get('uptime')
@@ -24,7 +25,7 @@ def get_userinfo():
 	refresh = bool(uptime > session_uptime)
 	if not (g.oidc_id_token and 'user' in session.keys()) or refresh:
 		logger = logging.getLogger()
-		logger.info('Refreshing user credentials in client session')
+		logger.warning('Refreshing user credentials in client session')
 		userinfo = askfor.get('api/system/user_info',
 							   headers=request.headers
 							 ).json()
@@ -49,7 +50,20 @@ def setup_logging(debug):
         handler = logging.handlers.RotatingFileHandler('logs/relval.log', 'a', 8*1024*1024, 50)
         handler.setLevel(logging.INFO)
 
-    formatter = logging.Formatter(fmt='[%(asctime)s][%(user)s][%(levelname)s] %(message)s')
+    formatter = ColoredFormatter(
+        "%(log_color)s[%(asctime)s UTC][%(user)s][%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",
+        datefmt='%d-%b-%y %H:%M:%S',
+        reset=True,
+        log_colors={
+			'DEBUG':    'white',
+			'INFO':     'green',
+			'WARNING':  'yellow',
+			'ERROR':    'red',
+			'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
     handler.setFormatter(formatter)
     handler.addFilter(UsernameFilter())
     logger.handlers.clear()
