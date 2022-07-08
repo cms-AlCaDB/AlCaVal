@@ -201,10 +201,16 @@
   function refreshWorkflows(jira) {
     $('body').addClass('loading');  
     fetch('/dqm/update_workflows/'+jira).then(res => res.json()).then(d =>{
-      console.log('Workflows for '+jira+' are updated')
-      show_available_datasets($('#jira_ticket')[0], jira)
-      $('body').removeClass('loading');  
-    })
+      if (d['success']) {
+        show_available_datasets($('#jira_ticket')[0], jira)
+        $('body').removeClass('loading');
+      } else {
+        throw Error(d['message'])
+      }
+    }).catch(error => {
+      $('body').removeClass('loading');
+      alertModal("Can not refresh workflows", error)
+    });
   }
 
   function show_available_datasets(obj, jira){

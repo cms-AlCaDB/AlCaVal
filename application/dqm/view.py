@@ -118,7 +118,7 @@ def update_workflows(relvals):
                             data=json.dumps(data),
                             headers=request.headers
                             ).json()
-        relval_list.append(status['response'])
+        relval_list.append(status)
     return relval_list
 
 def getValidJSON(jsonset):
@@ -173,8 +173,8 @@ def get_submitted_dataset(jira):
 def update_workflows_for_jira(jira):
     response = askfor.get('api/search?db_name=relvals&status=submitted' +'&jira_ticket='+jira).json()
     relvals = response['response']['results']
-    updated_relvals = update_workflows(relvals)
-    return jsonify({'updated_relvals': updated_relvals})
+    status = update_workflows(relvals)
+    return jsonify(status[0])
 
 @dqm_blueprint.route('/just/update_workflows/<prepid>')
 @oidc.check
