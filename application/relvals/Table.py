@@ -1,6 +1,8 @@
 from datetime import datetime
 from flask import url_for, Markup
 from flask_table import Table, Col, LinkCol, html
+from core_lib.utils.global_config import Config
+from flask import session
 
 class ActionCol(Col):
     def td_contents(self, item, attr_list):
@@ -10,9 +12,13 @@ class ActionCol(Col):
         status_list = ['new', 'approved', 'submitting', 'submitted', 'done', 'archived', 'nothing']
         newtab = 'target="_blank" rel="noopener noreferrer"'
         divAction = "<div class='actions'>{mylinks}</div>"
+        isAdmin = bool(session.get('user').get('response').get('role_index') >= 2)
+        isManager = bool(session.get('user').get('response').get('role_index') >= 1)
 
         edit = f"<a class='cls_edit_relval' href='/relvals/edit?prepid={content}' title='Edit this relval'>Edit</a>"
+        edit = edit if isManager else ""
         clone = f"<a class='cls_clone_relval' href='/relvals/edit?clone={content}' title='Clone this relval'>Clone</a>"
+        clone = clone if isManager else ""
         cmsDriver = f"<a href='api/relvals/get_cmsdriver/{content}' title='Show cmsDriver.py commands for this relval'>cmsDriver</a>"
         job_dict = f"<a href='api/relvals/get_dict/{content}' title='Show job dict of ReqMgr2 workflow'>Job dict</a>"
 
@@ -20,25 +26,22 @@ class ActionCol(Col):
         stats2 = f"<a href='https://cms-pdmv.cern.ch/stats/?prepid={content}' {newtab} {title}>Stats2</a>"
         stats2 = stats2 if status_list.index(item['status']) >= 3 else ""
 
-        title = "title='Go to the Jira discussion {}'".format(item["jira_ticket"])
-        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' {title} {newtab}>Jira</a>"
-        title='Create new Jira ticket'
-        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);" {title}>Create Jira Ticket</a>"""
-        jira = jira if item['jira_ticket'] != 'None' else ''
-
         prev_status = f"""<a id="prev_status_{content}" onclick="prevStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to previous status'>Previous</a>"""
-        prev_status = prev_status if item['status'] != 'new' else ""
+        prev_status = prev_status if (item['status'] != 'new' and isManager) else ""
 
         new_status = status_list[status_list.index(item['status'])+1]
         next_status = f"""<a class="cls_next_status nextStatus_{content}" onclick="nextStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to next status: from "{item['status']}" to "{new_status}"'>Next</a>"""
-        next_status = next_status if item['status'] != 'done' else ""
+        next_status = next_status if (item['status'] != 'done' and isManager) else ""
+
+        update_workflows = f"""<a id="updateWorkflows_{content}" onclick="updateWorkflows(['{content}'])" href="javascript:void(0);" title='Update RelVal information from ReqMgr2'>Update Workflows</a>"""
+        update_workflows = update_workflows if (item['status'] == 'submitted' and isAdmin) else ""
 
         ticket = f"<a href='tickets?created_relvals={content}' title='Show a ticket from which this relval was created'>Ticket</a>"
 
         delete = f"""<a class="delete_relval delete_{content}" onclick="delete_relval(['{content}'])" href="javascript:void(0);" title='Delete relval'>Delete</a>"""
-        delete = delete if item['status'] == 'new' else ""
+        delete = delete if (item['status'] == 'new' and isManager) else ""
         
-        links = "".join([edit, clone, delete, cmsDriver, job_dict, stats2, jira, ticket, prev_status, next_status])
+        links = "".join([edit, clone, delete, cmsDriver, job_dict, stats2, ticket, prev_status, next_status, update_workflows])
         return divAction.format(mylinks=links)
 
 ### Custom checkbox column class 
@@ -89,6 +92,23 @@ class CampaignCol(CheckboxCol):
         else:
             return "Not set"
 
+### Request manager status column class 
+class ReqMgr2Col(CheckboxCol):
+    def td_contents(self, item, attr_list):
+        text = self.td_format(self.text(item, attr_list))
+        if len(item['workflows']):
+            name = item['workflows'][-1]['name']
+            status = item['workflows'][-1].get('status_history')
+            status = None if not status else status[-1].get('status')
+            time = item['workflows'][-1].get('status_history')
+            time = 1 if not status else time[-1].get('time')
+            href = f'{Config.get("cmsweb_url")}/reqmgr2/fetch?rid=request-{name}'
+            time = '<small> ({})</small> '.format(datetime.fromtimestamp(time).strftime('%Y-%m-%d %H:%M:%S'))
+            attrs = dict(href=href, name='reqmgr2status', id='reqmgr2status_'+text, title='Status of submitted relval')
+            return html.element('a', attrs=attrs, content=status, escape_content=False)+time
+        else:
+            return "Not submitted"
+
 class RelvalTable(Table):
     checkbox = CheckboxCol('Checkbox', attr_list = ['prepid'], 
                             text_fallback='', 
@@ -104,16 +124,17 @@ class RelvalTable(Table):
 
     _id = ActionCol("Actions", attr_list = ['prepid'], td_html_attrs={'style': 'white-space: nowrap'})
 
-    cmssw_release = LinkCol('CMSSW Release', endpoint='relvals.get_relval', 
-                    url_kwargs=dict(cmssw_release='cmssw_release'), 
-                    anchor_attrs={'title':'Show relvals having this CMSSW release'}, 
-                    attr='cmssw_release')
-
     jira_ticket = LinkCol('Jira', endpoint='relvals.get_relval', 
                     url_kwargs=dict(jira_ticket='jira_ticket'), 
                     anchor_attrs={'title': 'Show relvals having this Jira ticket'}, 
                     attr='jira_ticket', 
                     td_html_attrs={'style': 'white-space: nowrap'}
+                    )
+
+    reqmgr_status = ReqMgr2Col(
+                        'ReqMgr2 Status',
+                        attr_list = ['prepid'],
+                        td_html_attrs={'style': 'white-space: nowrap'}
                     )
 
     batch_name = LinkCol('Batch Name', endpoint='relvals.get_relval', 
@@ -125,6 +146,11 @@ class RelvalTable(Table):
     campaign = CampaignCol('Campaign', attr_list = ['prepid'],
                     td_html_attrs={'style': 'white-space: nowrap'}
                     )
+
+    cmssw_release = LinkCol('CMSSW Release', endpoint='relvals.get_relval', 
+                    url_kwargs=dict(cmssw_release='cmssw_release'), 
+                    anchor_attrs={'title':'Show relvals having this CMSSW release'}, 
+                    attr='cmssw_release')
 
     cpu_cores = Col('CPU Cores')
 

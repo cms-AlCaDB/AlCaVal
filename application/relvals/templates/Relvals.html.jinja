@@ -25,28 +25,19 @@
     <div id="id_footer_actions2" class="actions" style="display: flex; align-items: center;" hidden>
        <span id="selected_items_id">Selected items: </span>
        {#<a id="multiple_relval_actions_edit" onclick="create_new_relval()" href="javascript:void(0);" title="Edit selected relvals">Edit</a>#}
-       <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);" title="Delete selected relvals">Delete</a>
-       <a id="multiple_relval_previous_status" onclick="prevStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to previous status">Previous</a>
-       <a id="multiple_relval_next_status" onclick="nextStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to next status">Next</a>
+        {% if userinfo['role_index'] >= 1 %}
+          <a id="multiple_relval_actions_delete" onclick="delete_selected_relvals()" href="javascript:void(0);" title="Delete selected relvals">Delete</a>
+          <a id="multiple_relval_previous_status" onclick="prevStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to previous status">Previous</a>
+          <a id="multiple_relval_next_status" onclick="nextStatus_selected_relvals()" href="javascript:void(0);" title="Move selected relvals to next status">Next</a>
+        {% endif %}
+        {% if userinfo['role_index'] >= 2 %}
+          <a id="updateWorkflows_footer" onclick="updateWorkflows_selected_relvals()" href="javascript:void(0);" title="Update reqmgr2 workflows">Update Workflows</a>
+        {% endif %}
     </div>    
   </footer>
 
-  <script>
-    (function(){
-      {% if userinfo['role_index'] < 1 %}
-        console.log({{ userinfo['role_index'] }});
-        document.querySelectorAll('.cls_edit_relval').forEach(element => {element.remove();});
-        document.querySelectorAll('.cls_clone_relval').forEach(element => {element.remove();});
-        document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
-        document.querySelectorAll('.cls_previous_status').forEach(element => {element.remove();});
-        document.querySelectorAll('.cls_next_status').forEach(element => {element.remove();});
-        document.querySelectorAll('.delete_relval').forEach(element => {element.remove();});
-      {% endif %}
-    })();
-  </script>
-
   <script type="text/javascript">
-    var datatable = $('#relvals_list').DataTable({
+    var tableOptions = {
       "scrollX": true,
       "scrollY": true,
       "pageLength": 50,
@@ -75,7 +66,8 @@
         $('.top').appendTo('.mysearchbar');
         $('select').removeClass('custom-select-sm');
       }
-    });
+    }
+    var datatable = $('#relvals_list').DataTable(tableOptions);
 
     function create_new_relval(prepid) {
       var req = new XMLHttpRequest();
@@ -214,6 +206,32 @@
           }
         }
       }
+    }
+
+    function updateWorkflows_selected_relvals() {
+      prepids = get_prepids_for_selected_checkboxes()
+      updateWorkflows(prepids);
+    }
+    function updateWorkflows(prepids){
+      const options = {
+        method: 'POST',
+        body: JSON.stringify(prepids),
+        headers: {'Content-Type': 'application/json'}
+      }
+      $('body').addClass('loading');
+      fetch('api/relvals/update_workflows', options).then(res => {
+        if (res.status >= 200 && res.status <= 299) {
+          console.log('workflows updated')
+        } else {
+          throw Error(res.statusText);
+        }
+      }).then(data =>{
+        window.location.reload(false)
+        $('body').removeClass('loading');
+      }).catch(error => {
+        window.location.reload(false)
+        $('body').removeClass('loading');
+      })
     }
 
     function monitor_checkbox_status(){
