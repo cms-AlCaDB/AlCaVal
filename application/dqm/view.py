@@ -76,7 +76,10 @@ def compare_dqm():
                                 data=json.dumps(data),
                                 headers=request.headers
                               ).json()
-        return redirect(url_for('dqm.dqm_plots', jira_ticket=f'{data["jira_ticket"]}'))
+        if response['success']:
+            return redirect(url_for('dqm.dqm_plots', jira_ticket=f'{data["jira_ticket"]}'))
+        else:
+            flash(response['message'], 'danger')
     return render_template('SubmitForComparison.html.jinja', form=form)
 
 # Tickets table
