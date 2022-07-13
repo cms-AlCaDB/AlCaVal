@@ -3,7 +3,7 @@ Module that contains TicketController class
 """
 import json
 import os
-import time
+import time, datetime
 from copy import deepcopy
 from database.database import Database
 from core_lib.controller.controller_base import ControllerBase
@@ -553,3 +553,103 @@ class TicketController(ControllerBase):
         command += ' --noCaf --wm force'
         self.logger.debug('runTheMatrix.py for %s:\n%s', ticket.get_prepid(), command)
         return command
+
+    def get_input_info_for_jira(self, ticket):
+        """
+        Getting summary, description for jira ticket
+        """
+
+        relval_controller = RelValController()
+        created_relvals = ticket.get('created_relvals')
+        result = {}
+        for relval_prepid in created_relvals:
+            relval = relval_controller.get(relval_prepid)
+            relval = relval.get_json()
+
+            runs = set(relval.get('steps')[0]['input']['lumisection'].keys())
+            if not len(runs):
+                runs = set(relval.get('steps')[0]['input']['run'].split(','))
+            if result.get('run_number'):
+                result['run_number'] = result['run_number'] | runs
+            else:
+                result['run_number'] = runs
+
+            dataset = relval.get('steps')[0]['input']['dataset']
+            if result.get('datasets'):
+                result.get('datasets').add(dataset)
+            else:
+                result['datasets'] = set([dataset])
+
+            gtag = relval.get('steps')[1]['driver']['conditions']
+            if result.get('global_tags'):
+                result['global_tags'].add(gtag)
+            else:
+                result['global_tags'] = set([gtag])
+
+            cmssw = relval.get('cmssw_release')
+            cmssw = set(result.get('cmssw_release')) if result.get('cmssw_release') else set() | {cmssw}
+            result['cmssw_release'] = cmssw
+
+        # Getting summary
+        hlt = 'HLT' if (ticket.get('hlt_gt') or ticket.get('hlt_gt_ref')) else None
+        prompt = 'Prompt' if (ticket.get('prompt_gt') or ticket.get('prompt_gt_ref')) else None
+        express = 'Express' if (ticket.get('express_gt') or ticket.get('express_gt_ref')) else None
+        conditions = list(filter(None, [hlt, prompt, express]))
+        summary_tag = '/'.join(conditions)
+        summary_title = ticket.get('title')
+
+        date = datetime.date.today()
+        year, week_num, day_of_week = date.isocalendar()
+        summary_date = f'(Week {week_num}, {year})'
+        summary = f'[{summary_tag}] {summary_title} {summary_date}'
+        result['summary'] = summary
+
+        cmsoms = '[{run}|https://cmsoms.cern.ch/cms/runs/report?cms_run={run}&cms_run_sequence=GLOBAL-RUN]'
+        run_numbers = [cmsoms.format(run=run) for run in result.get('run_number')]
+
+        cmsswLink = '[{cmssw}|https://github.com/cms-sw/cmssw/releases/tag/{cmssw}]'
+        cmssw = [cmsswLink.format(cmssw=cmssw) for cmssw in result.get('cmssw_release')]
+
+        input_info = " * Run numbers: %s\n"%(', '.join(run_numbers))
+        input_info += " * CMSSW release: %s\n"%(', '.join(cmssw))
+        input_info += " * Datasets:\n"
+        for dataset in result.get('datasets'):
+            input_info += f" ** [{dataset}|https://cmsweb.cern.ch/das/request?input={dataset}]\n"
+
+        # Getting description
+        gt_list = ''
+        tag_link = 'https://cms-conddb.cern.ch/cmsDbBrowser/list/Prod/gts/{}'
+        diff = 'https://cms-conddb.cern.ch/cmsDbBrowser/diff/Prod/gts/{target}/{ref}'
+        for cond in conditions:
+            gt = ticket.get(cond.lower()+'_gt')
+            if gt:
+                gt_list += f' * Target {cond} GT: [{gt}|{tag_link.format(gt)}]\n'
+            gt_ref = ticket.get(cond.lower()+'_gt_ref')
+            if gt_ref:
+                gt_list += f' * Reference {cond} GT: [{gt_ref}|{tag_link.format(gt_ref)}]\n'
+            if cond == 'HLT':
+                common_gt = ticket.get('common_prompt_gt')
+                gt_list += f' * Common Prompt GT: [{common_gt}|{tag_link.format(common_gt)}]\n'
+            if gt and gt_ref:
+                differ = diff.format(target=gt, ref=gt_ref)
+                gt_list += f' * Difference: [{cond} target vs reference|{differ}]\n'
+            gt_list += '\n'
+        description = f"""Dear Colleagues, 
+We are going to perform {summary_title}.
+Request email for this validation is [0].
+Details of the workflow:
+{gt_list}{input_info}
+Details of the submission is available at [1].
+Once the workflows are ready, we will ask the validators to report the outcome of the checks at this Jira ticket.
+
+Best regards,
+AlCa/DB Team
+
+[0] {ticket.get('cms_talk_link')}
+[1] {Config.get('service_url')}/relvals?ticket={ticket.get('prepid')}
+"""
+        result['description'] = description
+        for key, value in result.items():
+            if isinstance(value, set):
+                result[key] = list(value)
+        return result
