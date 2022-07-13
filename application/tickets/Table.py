@@ -19,7 +19,7 @@ class ActionCol(Col):
 
         matrix = f"<a href='api/tickets/run_the_matrix/{content}' title='Show runTheMatrix.py command which generates cmsDriver workflows'>Matrix</a>"
         jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' title='Go to the Jira discussion {item['jira_ticket']}'>Jira</a>"
-        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira('{content}')" href="javascript:void(0);" title='Create new Jira ticket'>Create Jira Ticket</a> """
+        create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira_ticket('{content}')" href="javascript:void(0);" title='Create new Jira ticket'>Create Jira Ticket</a> """
         jira = jira if item['jira_ticket'] != 'None' else create_jira
 
         delete_title = f"title='Delete this ticket: {content}'"

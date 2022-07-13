@@ -2,6 +2,7 @@
 {% block headercontent %}
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.css"/>
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('tickets.static', filename='js/Jira.js') }}"></script>
   <link href="{{ url_for('static', filename='css/datatables_style_override.css') }}" rel="stylesheet" type="text/css">
 {% endblock %}
 
@@ -12,6 +13,7 @@
   </div>
 
   {% include 'ConditionModal.html' %}
+  {% include 'JiraModal.html' %}
 
   <footer class="footer fixed-bottom badge-light" style="padding: 0 12px; display: inline-flex; justify-content: space-between; box-shadow: -1px 0px 7px 1px gray;">
     <div id="new_ticket_link_at_footer_id" class="actions" style="display: flex;align-items: center;">
@@ -27,8 +29,6 @@
   <script>
     (function(){
       {% if userinfo['role_index'] < 1 %}
-        // document.querySelectorAll('.cls_edit_ticket').forEach(element => {element.remove();});
-        // document.querySelectorAll('.cls_clone_ticket').forEach(element => {element.remove();});
         document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
         document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
         document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
@@ -160,7 +160,6 @@
         }
       }
     }
-
 
     function open_wf_classifier_modal(prepid, ticketData) {
       $('#exampleModal').on('show.bs.modal', function (event) {

@@ -1,0 +1,54 @@
+<div class="modal" id="jiraModal" tabindex="-1" aria-labelledby="jiraModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" style="display: flex; width: fit-content; min-width: 900px;">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom: unset; background-color: mediumpurple;">
+        <h5 class="modal-title" id="jiraModalLabel">New message</h5>
+      </div>
+      <div class="modal-body" style="padding-bottom:unset; background-color: aliceblue;">
+	      <form id="create-jira-form">
+					<table style="width: 100%">
+
+		        <tr id="prepid_row">
+		        	<td class="col1">
+		            <label for="jira_prepid_id" class="classsss">Prep ID</label>
+							</td>
+				    	<td class="col2">
+		            <input type="text" class="form-control form-control-sm" id="jira_prepid_id" name="jira_prepid" readonly>
+	            </td>
+		        </tr>
+
+		        <tr id="summary_row">
+		        	<td class="col1">
+		            <label for="jira_summary_id" class="classsss">Summary</label>
+							</td>
+				    	<td class="col2">
+		            <input type="text" class="form-control form-control-sm" id="jira_summary_id" name="jira_summary">
+	            </td>
+		        </tr>
+
+		        <tr id="description_row">
+		        	<td class="col1">
+		            <label for="jira_description_id" class="classsss">Description</label>
+							</td>
+				    	<td class="col2">
+		            <textarea class="form-control form-control-sm" id="jira_description_id" rows="15" name="jira_description"></textarea>
+	            </td>
+		        </tr>
+
+					</table>
+	      </form>
+      </div>
+	    <div class="modal-footer" style="border-top: unset; background-color: aliceblue;">
+	      <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal">Cancel</button>
+	      <button type="button" class="btn btn-sm btn-danger" id="jira_submit_id">Create New Jira Ticket</button>
+	    </div>
+    </div>
+  </div>
+</div>
+
+<style type="text/css">
+  .col2 {
+    width: 90%;
+    padding-bottom: 5px;
+  }
+</style>
