@@ -90,7 +90,8 @@ def create_app():
 	                            GetEditableTicketAPI,
 	                            CreateRelValsForTicketAPI,
 	                            GetWorkflowsOfCreatedRelValsAPI,
-	                            GetRunTheMatrixOfTicketAPI
+	                            GetRunTheMatrixOfTicketAPI,
+	                            GetInputInfoForJiraAPI
 	                            )
 	from api.relval_api import (CreateRelValAPI,
 	                            DeleteRelValAPI,
@@ -118,7 +119,9 @@ def create_app():
 
 	from api.search_api import SearchAPI, SuggestionsAPI, WildSearchAPI
 
-	from api.jira_api import GetJiraTicketsAPI
+	from api.jira_api import (GetJiraTicketsAPI,
+							  CreateJiraTicketAPI
+							  )
 
 	api = Api(app)
 	api.add_resource(CreateTicketAPI, '/api/tickets/create')
@@ -129,6 +132,7 @@ def create_app():
 					 '/api/tickets/get_editable', 
 					 '/api/tickets/get_editable/<string:prepid>')
 	api.add_resource(CreateRelValsForTicketAPI, '/api/tickets/create_relvals')
+	api.add_resource(GetInputInfoForJiraAPI, '/api/tickets/jira_info/<string:prepid>')
 	api.add_resource(GetWorkflowsOfCreatedRelValsAPI,
                  '/api/tickets/relvals_workflows/<string:prepid>')
 	api.add_resource(GetRunTheMatrixOfTicketAPI, '/api/tickets/run_the_matrix/<string:prepid>')
@@ -165,6 +169,7 @@ def create_app():
 	api.add_resource(WildSearchAPI, '/api/wild_search')
 
 	api.add_resource(GetJiraTicketsAPI, '/api/jira/tickets')
+	api.add_resource(CreateJiraTicketAPI, '/api/jira/create')
 
 	# Register Blueprints
 	from .relvals.views import relval_blueprint

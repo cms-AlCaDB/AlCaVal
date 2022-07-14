@@ -114,6 +114,39 @@ class GetEditableTicketAPI(APIBase):
                                  'success': True,
                                  'message': ''})
 
+class GetInputInfoForJiraAPI(APIBase):
+    """
+    Endpoint for getting information which is 
+    to be provided for creating Jira ticket
+    """
+
+    def __init__(self):
+        APIBase.__init__(self)
+
+    @APIBase.exceptions_to_errors
+    def get(self, prepid=None):
+        """
+        Endpoint for getting information which is 
+        to be provided for creating Jira ticket
+        """
+        if prepid:
+            ticket = ticket_controller.get(prepid)
+        else:
+            raise Exception('PrepID is not valid')
+
+        result = {}
+        if len(ticket.get('created_relvals')):
+            for relval_prepid in ticket.get('created_relvals'):
+                result['jira_info'] = ticket_controller.get_input_info_for_jira(ticket)
+        else:
+            result['message'] = 'Relvals are not created.'
+            result['jira_info'] = {'summary': 'Please create relvals before creating jira ticket',
+                                    'description': ''
+                                    }
+
+        return self.output_text({'response': result,
+                                 'success': True,
+                                 'message': ''})
 
 class CreateRelValsForTicketAPI(APIBase):
     """

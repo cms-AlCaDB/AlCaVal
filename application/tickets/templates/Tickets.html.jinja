@@ -2,6 +2,7 @@
 {% block headercontent %}
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.css"/>
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.11.5/fh-3.2.2/datatables.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('tickets.static', filename='js/Jira.js') }}"></script>
   <link href="{{ url_for('static', filename='css/datatables_style_override.css') }}" rel="stylesheet" type="text/css">
 {% endblock %}
 
@@ -12,6 +13,7 @@
   </div>
 
   {% include 'ConditionModal.html' %}
+  {% include 'JiraModal.html' %}
 
   <footer class="footer fixed-bottom badge-light" style="padding: 0 12px; display: inline-flex; justify-content: space-between; box-shadow: -1px 0px 7px 1px gray;">
     <div id="new_ticket_link_at_footer_id" class="actions" style="display: flex;align-items: center;">
@@ -19,16 +21,9 @@
     </div>
   </footer>
 
-  <style type="text/css">
-    .mycol {
-      padding-left: 5px;
-    }
-  </style>
   <script>
     (function(){
       {% if userinfo['role_index'] < 1 %}
-        // document.querySelectorAll('.cls_edit_ticket').forEach(element => {element.remove();});
-        // document.querySelectorAll('.cls_clone_ticket').forEach(element => {element.remove();});
         document.querySelectorAll('.cls_create_jira').forEach(element => {element.remove();});
         document.querySelectorAll('.create_relval_id').forEach(element => {element.remove();});
         document.querySelectorAll('.delete_ticket').forEach(element => {element.remove();});
@@ -161,7 +156,6 @@
       }
     }
 
-
     function open_wf_classifier_modal(prepid, ticketData) {
       $('#exampleModal').on('show.bs.modal', function (event) {
         var modal = $(this)
@@ -195,6 +189,7 @@
       }
 
       function setWorkflowInForm(prepid, attached_wfs) {
+        // Setting list of workflow IDs as options for classifier
         var workflow_options_hlt = ''
         var workflow_options_prompt = ''
         var workflow_options_express = ''
@@ -203,17 +198,23 @@
           if (attached_wfs.HLT.includes(wfs[i])) {
             workflow_options_hlt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
           } else {
-            workflow_options_hlt += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
+            wf = parseInt(String(wfs[i]).split('.')[String(wfs[i]).split('.').length-1])
+            selected = (wf % 2  == 0) ? '':'selected'
+            workflow_options_hlt += '<option value="'+wfs[i]+'" '+selected+'>'+wfs[i]+'</option>'
           }
           if (attached_wfs.Prompt.includes(wfs[i])) {
             workflow_options_prompt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
           } else {
-            workflow_options_prompt += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
+            wf = parseInt(String(wfs[i]).split('.')[String(wfs[i]).split('.').length-1])
+            selected = (wf % 2  == 1) ? '':'selected'
+            workflow_options_prompt += '<option value="'+wfs[i]+'" '+selected+'>'+wfs[i]+'</option>'
           }
           if (attached_wfs.Express.includes(wfs[i])) {
+            wf = parseInt(String(wfs[i]).split('.')[String(wfs[i]).split('.').length-1])
+            selected = (wf % 2  == 1) ? '':'selected'
             workflow_options_express += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
           } else {
-            workflow_options_express += '<option value="'+wfs[i]+'">'+wfs[i]+'</option>'
+            workflow_options_express += '<option value="'+wfs[i]+'" '+selected+'>'+wfs[i]+'</option>'
           }
         }
         document.getElementById('wf_hlt_gt').innerHTML = workflow_options_hlt
