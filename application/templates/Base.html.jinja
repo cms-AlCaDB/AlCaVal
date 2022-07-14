@@ -33,12 +33,12 @@
         <!-- Responsive navbar-->
         <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="box-shadow: 0px 5px 5px -5px gray;">
-          <a href="{{ url_for('home.index')}}" title="Home"><img src="{{ url_for('static', filename='tabicon.png') }}" width="30" height="30" /></a>
+          <a class="navbar-brand" href="{{ url_for('home.index')}}" title="Home" style="align-content: left; display: contents;"><img src="{{ url_for('static', filename='tabicon.png') }}" height="24"/><font face = "Wildwest"><strong>AlCa</strong>Val</font></a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
 
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <div class="collapse navbar-collapse" id="navbarSupportedContent" style="margin-left: 30px;">
             <ul class="navbar-nav mr-auto" > {#style="height: 35px;"#}
               <li class="nav-item active mynav-item">
                 <a class="mynav-link" href="/tickets" title="List of tickets">TICKETS</a>
