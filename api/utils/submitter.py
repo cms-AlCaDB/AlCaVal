@@ -11,7 +11,7 @@ from core_lib.utils.submitter import Submitter as BaseSubmitter
 from core_lib.utils.common_utils import clean_split, refresh_workflows_in_stats
 from core_lib.utils.global_config import Config
 from ..utils.emailer import Emailer
-
+from resources.smart_tricks import askfor
 
 class RequestSubmitter(BaseSubmitter):
     """
@@ -58,15 +58,27 @@ class RequestSubmitter(BaseSubmitter):
         Handle notification of successful submission
         """
         prepid = relval.get_prepid()
+        res = askfor.get(f'api/search?db_name=tickets&created_relvals={prepid}').json()
+        ticket_prepid = None
+        if len(res['response']['results']):
+            ticket_prepid = res['response']['results'][0]['prepid']
+
         last_workflow = relval.get('workflows')[-1]['name']
         cmsweb_url = Config.get('cmsweb_url')
         self.logger.info('Submission of %s succeeded', prepid)
         service_url = Config.get('service_url')
         emailer = Emailer()
         subject = f'RelVal {prepid} submission succeeded'
-        body = f'Hello,\n\nSubmission of {prepid} succeeded.\n'
+        if ticket_prepid:
+            subject = f'RelVal submission for ticket {ticket_prepid} succeeded'
+        body = f'Hello,\n\nSubmission of relval {prepid} succeeded.\n'
         body += (f'You can find this relval at '
                  f'{service_url}/relvals?prepid={prepid}\n')
+        if ticket_prepid:
+            body += (f'Ticket for this relval is at: '
+                     f'{service_url}/ticket?prepid={ticket_prepid}\n')
+        else:
+            body += 'There is no ticket associated with this relval.\n'
         body += f'Workflow in ReqMgr2 {cmsweb_url}/reqmgr2/fetch?rid={last_workflow}'
         if Config.get('development'):
             body += '\nNOTE: This was submitted from a development instance of RelVal machine '
