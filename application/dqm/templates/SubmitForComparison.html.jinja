@@ -118,19 +118,10 @@
       });
       return d;
   }
-  function refresh_set(){
+  function add_default_pairs(jira){
     var set_col = document.getElementById('set_column_id')
     var setNumber = getCount(set_col, false)
-    var disabled = $('form').find(':input:disabled').removeAttr('disabled');
-    var formarray = $('form').serializeArray();
-    disabled.attr('disabled','disabled');
-    var forminputdata = JSON.stringify(relvalFormToJSON(formarray));
-    let options = {
-        method: "PUT", 
-        body: forminputdata,
-        headers: {"Content-Type": "application/json;"}
-    }
-    fetch('/dqm/refresh_set', options).then(res => {
+    fetch('/dqm/add_defualt_pairs/'+jira).then(res => {
       if (res.status >= 200 && res.status <= 299) {
         return res.json();
       } else {
@@ -216,13 +207,15 @@
   function show_available_datasets(obj, jira){
     fetch('/dqm/get_submitted_dataset/'+jira).then(res => res.json()).then(d =>{
       choices = []
+      good_status = ['normal-archived', 'announced']
       for (var i = 0; i < d.datasets.length; i++) {
-        choices.push('<li style="color: brown">'+d.datasets[i][1]+'</li><span>'+d.datasets[i][0]+'</span>')
+        color = (good_status.includes(d.datasets[i][2])) ? 'green': 'brown'
+        choices.push('<tr><td><li style="color: '+color+'; list-style: none;">'+d.datasets[i][1]+'</li> <span>'+d.datasets[i][0]+'</span></td><td>'+d.datasets[i][2]+'</td></tr>')
       }
       $('.av_ds').remove()
       choices_str = '<button type="button" class="btn btn-sm btn-secondary" style="margin-top: 10px; margin-bottom: 10px" onclick=refreshWorkflows("'+jira+'")>Refresh workflows</button>'
       choices_str += '<h6>Available datasets: </h6>'
-      choices_str += '<ul>'+choices.join('')+'</ul>'
+      choices_str += '<table class="workflows-table">'+choices.join('')+'</table>'
       obj.parentNode.parentNode.insertAdjacentHTML('afterend', '<tr class="small-footers av_ds"><td></td><td><small>'+choices_str+'</small></td></tr>')
     })
   }
@@ -234,7 +227,7 @@
     }
     $('#jira_ticket').on( "change", function( event ) {
       show_available_datasets(this, this.value)
-      refresh_set()
+      add_default_pairs(this.value)
     })
   })
 
@@ -245,5 +238,10 @@
   $('title').html('AlCaVal | Compare DQM')
 </script>
 
-
+<style type="text/css">
+  .workflows-table td{
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+</style>
 {% endblock %}

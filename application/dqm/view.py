@@ -16,6 +16,8 @@ from .ComparisonForm import ComparisonForm, SetForm
 
 dqm_blueprint = Blueprint('dqm', __name__, template_folder='templates', static_folder='static')
 
+good_status = {'normal-archived', 'announced'}
+
 @dqm_blueprint.route('/dqm')
 @oidc.check
 def index():
@@ -29,7 +31,10 @@ def get_dataset_choices(relvals):
         for relval in relvals:
             for dataset in relval['output_datasets']:
                 if 'DQMIO' in dataset:
-                    choices.append([dataset, relval['prepid']])
+                    status = relval.get('workflows')[-1].get('status_history')
+                    status = [k['status'] for k in status][-1]
+                    choices.append([dataset, relval['prepid'], status])
+        choices.sort()
         return choices
     try:
         choices = get_choices(relvals)
@@ -43,19 +48,21 @@ def get_dataset_choices(relvals):
 @oidc.check
 def compare_dqm():
     user = get_userinfo()
-    form = ComparisonForm()
     query_string = 'status=submitted'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     jira_tickets = {res['jira_ticket'] for res in response['response']['results']}
     jira_tickets.discard('None')
     jira_choices = [[jira, jira] for jira in jira_tickets]
+    jira_choices.sort(reverse=True)
+
+    form = ComparisonForm()
     form.jira_ticket.choices = form.jira_ticket.choices + jira_choices
 
     if form.data:
         query_string = 'jira_ticket='+form.data['jira_ticket']+'&status=submitted'
         response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
         relvals = response['response']['results']
-        choices = get_dataset_choices(relvals)
+        choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
         for myset in form.Set:
             myset.form.target_dataset.choices += choices
             myset.form.reference_dataset.choices += choices
@@ -101,7 +108,11 @@ def dqm_plots():
     items = []
     for obj in data:
         for dqms in obj['dqm_comparison']:
-            item = {'dataset': dqms['target'],
+            item = {'source': dqms['source'],
+                    'compared_with': dqms['compared_with'],
+                    'dataset': dqms['target'],
+                    'reference': dqms.get('reference'),
+                    'overlay_plots': 'None',
                     'dqmlink': 'None',
                     'run_number': dqms.get('run_number'),
                     'jira_ticket': obj['jira_ticket'],
@@ -138,30 +149,6 @@ def getValidJSON(jsonset):
                 copiedjson['Set'].append({})
             copiedjson['Set'][int(index)-1].update({newkey: value})
     return copiedjson
-
-@dqm_blueprint.route('/dqm/refresh_set', methods=['GET', 'PUT'])
-@oidc.check
-def refresh_set():
-    """Dynamically refresihing dataset pairs of the dqm comparison form"""
-    user = get_userinfo()
-    jsonset = None
-    if request.method == 'PUT':
-        jsonset = json.loads(request.data.decode('utf-8'))
-    request.method = 'GET'
-    copiedjson = getValidJSON(jsonset)
-
-    form = SetForm(data=copiedjson) 
-    query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted'
-    response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
-    relvals = response['response']['results']
-    choices = get_dataset_choices(relvals)
-    for myset in form.Set:
-        myset.form.target_dataset.choices += choices
-        myset.form.reference_dataset.choices += choices
-
-    return jsonify({'response': str(form.Set()), 
-        'message': "These are the sets in the dqm form. \
-        Can be use for dynamically adding new pair of dataset"})
 
 @dqm_blueprint.route('/dqm/get_submitted_dataset/<jira>')
 @oidc.check
@@ -201,7 +188,7 @@ def add_set():
     query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
-    choices = get_dataset_choices(relvals)
+    choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
     for myset in form.Set:
         myset.form.target_dataset.choices += choices
         myset.form.reference_dataset.choices += choices
@@ -210,6 +197,39 @@ def add_set():
         'message': "These are the sets in the dqm form. \
         Can be use for dynamically adding new pair of dataset"})
 
+@dqm_blueprint.route('/dqm/add_defualt_pairs/<jira_ticket>', methods=['GET'])
+@oidc.check
+def add_defualt_pairs(jira_ticket):
+    """Endpoint for getting list of default pairs in html form"""
+
+    query_string = 'jira_ticket='+jira_ticket+'&status=submitted'
+    response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
+    relvals = response['response']['results']
+    choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
+
+    prepids = set([p[1] for p in choices])
+    dsets = set([d.split('-')[2].strip() for d in prepids])
+    default_pairs = list()
+    for dname in dsets:
+        for cond in ['HLT', 'Prompt', 'Express']:
+            newid = [p for p in prepids if cond+'New-'+dname in p]
+            refid = [p for p in prepids if cond+'Ref-'+dname in p]
+            newid.sort(); refid.sort()
+            if not (len(newid) and len(refid)): continue
+            pair = {'target_dataset': [v[0] for v in choices if v[1]==newid[0]][0],
+                    'reference_dataset': [v[0] for v in choices if v[1]==refid[0]][0]}
+            default_pairs.append(pair)
+    inputjson = dict()
+    inputjson['Set'] = default_pairs
+    form = SetForm(Set=inputjson['Set'])
+    for myset in form.Set:
+        myset.form.target_dataset.choices += choices
+        myset.form.reference_dataset.choices += choices
+
+    return jsonify({
+        'response': str(form.Set()),
+        'pairs': inputjson['Set']
+        })
 
 @dqm_blueprint.route('/dqm/delete_set/<int:setid>', methods=['PUT'])
 @oidc.check
@@ -226,7 +246,7 @@ def delete_set(setid):
     query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
-    choices = get_dataset_choices(relvals)
+    choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
     for myset in form.Set:
         myset.form.target_dataset.choices += choices
         myset.form.reference_dataset.choices += choices
