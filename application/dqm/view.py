@@ -101,7 +101,11 @@ def dqm_plots():
     items = []
     for obj in data:
         for dqms in obj['dqm_comparison']:
-            item = {'dataset': dqms['target'],
+            item = {'source': dqms['source'],
+                    'compared_with': dqms['compared_with'],
+                    'dataset': dqms['target'],
+                    'reference': dqms.get('reference'),
+                    'overlay_plots': 'None',
                     'dqmlink': 'None',
                     'run_number': dqms.get('run_number'),
                     'jira_ticket': obj['jira_ticket'],
