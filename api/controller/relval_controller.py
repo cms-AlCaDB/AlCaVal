@@ -1026,7 +1026,7 @@ class RelValController(ControllerBase):
                 return version, run
 
     def compare_dqm_datasets(self, relvalT, relvalR, dqm_pair):
-        """Compare"""
+        """Compare DQM dataset pair and save info to database"""
         results = []
         lock_key = '+'.join([relvalR.get_prepid(), relvalT.get_prepid()])
         with self.locker.get_nonblocking_lock(lock_key):
@@ -1050,11 +1050,17 @@ class RelValController(ControllerBase):
                     old_ver = dqm_pair[f'{a}_dataset'].split("/")[-2].split("-")[-1].strip('v')
                     version, run_number = self.get_new_dataset_version(dqm_pair[f'{a}_dataset'])
                     target_data = dqm_pair[f'{a}_dataset'].replace(f'-v{old_ver}/', f'-v{version}/').replace('/', '__')
+
+                    old_ver = dqm_pair[f'{b}_dataset'].split("/")[-2].split("-")[-1].strip('v')
+                    version, run_number = self.get_new_dataset_version(dqm_pair[f'{b}_dataset'])
+                    reference_data = dqm_pair[f'{b}_dataset'].replace(f'-v{old_ver}/', f'-v{version}/')
+
                     target_pair.append(target_data)
 
                     info = {'source': dqm_pair[f'{a}_dataset'],
                             'compared_with': dqm_pair[f'{b}_dataset'],
                             'target': target_data.replace('__', '/'),
+                            'reference': reference_data,
                             'status': 'comparing',
                             'run_number': run_number
                             }
@@ -1062,11 +1068,3 @@ class RelValController(ControllerBase):
                     relval_db.save(relval.get_json())
             DQMRequestSubmitter().add(relvalT, relvalR, dqm_pair, self, target_pair)
         return results
-
-# auth-get-sso-cookie -u https://cmsweb.cern.ch -o cookies.txt
-# --certificate-type=PEM
-# --private-key=/afs/cern.ch/user/a/alcauser/.globus/userkey.pem
-# --private-key-type=PEM
-
-
-# wget -nd -P __MinimumBias__CMSSW_12_3_2_patch1-123X_dataRun3_Prompt_EGMReg_w16_2022_v1_EGMnew_RelVal-v1__DQMIO --certificate=${HOME}/.globus/usercert.pem --certificate-type=PEM --private-key=${HOME}/.globus/userkey.pem --private-key-type=PEM https://cmsweb.cern.ch:443/dqm/relval/data/browse/ROOT/RelValData/CMSSW_12_3_x/DQM_V0001_R000346512__MinimumBias__CMSSW_12_3_2_patch1-123X_dataRun3_Prompt_EGMReg_w16_2022_v1_EGMnew_RelVal-v1__DQMIO.root
