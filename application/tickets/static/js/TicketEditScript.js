@@ -3,7 +3,7 @@ function addHelpIcons(){
 	var nstreams_help = '<tr class="small-footers"><td></td><td><small style="color: gray"><i class="bi bi-arrow-up-circle"></i> If number of streams is 0, default value will be used</small></td></tr>'
 	document.getElementById("n_streams").parentNode.parentNode.insertAdjacentHTML('afterend', nstreams_help)
 
-	var common_gt_help = "Common Prompt GT is required if you are using HLT GT. It will be used in RECO stage of the HLT workflow"
+	var common_gt_help = "Common Prompt GT is usually same as target prompt GT. This field is required if you are using HLT GTs. It will be used in RECO stage of the HLT workflow"
 	common_gt_help = '<span id="commong-gt-help-icon" class="help-icons" data-toggle="popover" data-content="'+common_gt_help+'"><i class="bi bi-question-circle-fill"></i></span>'
 	document.getElementById("common_prompt_gt").insertAdjacentHTML('afterend', common_gt_help)
 }

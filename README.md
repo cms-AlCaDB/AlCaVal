@@ -55,7 +55,7 @@ GRID user-key to be used for accessing cmsweb services
 GRID user-certificate to be used for accessing cmsweb services
 
 ### Launching the application
-Install docker in case it is not installed in your machine. Follow [Install Docker Engine](https://docs.docker.com/engine/install/).
+Install docker in case it is not installed in your machine. Follow [Install Docker Engine](https://docs.docker.com/engine/install/) and [Install Docker Compose](https://docs.docker.com/compose/install/).
 Then launch application using:
 
 ```docker-compose up -d```
