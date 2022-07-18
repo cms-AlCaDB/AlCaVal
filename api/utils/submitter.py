@@ -114,7 +114,7 @@ class RequestSubmitter(BaseSubmitter):
 
         # Dump config upload to file
         with open(f'/tmp/{prepid}_upload.sh', 'w') as temp_file:
-            upload_file_content = controller.get_config_upload_file(relval, for_submission=True)
+            upload_file_content = controller.get_config_upload_file(relval)
             temp_file.write(upload_file_content)
 
         # Re-create the directory and create a voms proxy there

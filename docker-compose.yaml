@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  app:
+    # Access application from 'http://localhost:8080'
+    container_name: alcaval
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: flask run --host '0.0.0.0' --port 8080
+    environment:
+      - FLASK_APP=run
+      - FLASK_ENV=development
+      - DB_HOST=mongodb
+      - DB_PORT=27017
+    env_file: secrets/environs.txt
+    depends_on:
+      - database
+    ports:
+      - 8080:8080
+    volumes:
+      - ${PWD}:/home/pritam
+    user: root
+  database:
+    container_name: mongodb
+    image: mongo
+    env_file: secrets/environs.txt
+    ports:
+      - 27017
+    volumes:
+      - mongodb_volume:/data/db
+  dbmonitor:
+    # Access Mongo-Express from 'http://localhost:8081'
+    container_name: mongo-express
+    image: mongo-express
+    env_file: secrets/environs.txt
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    ports:
+     - "8081:8081"
+    depends_on:
+      - database
+
+volumes:
+  mongodb_volume:
