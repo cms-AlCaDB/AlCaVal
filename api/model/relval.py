@@ -4,7 +4,7 @@ Module that contains RelVal class
 from copy import deepcopy
 from ..model.model_base import ModelBase
 from ..model.relval_step import RelValStep
-from core_lib.utils.common_utils import clean_split, cmssw_setup, run_commands_in_singularity
+from core_lib.utils.common_utils import clean_split, cmssw_setup, run_commands_in_cmsenv
 
 
 class RelVal(ModelBase):
@@ -109,44 +109,26 @@ class RelVal(ModelBase):
         """
         Get all cmsDriver commands for this RelVal
         """
-        built_command = ''
-        previous_step_cmssw = None
-        previous_scram_arch = None
-        fragment = self.get('fragment')
         prepid = self.get_prepid()
-        container_code = ''
-        container_steps = []
-        default_os = 'slc7_'
-        for index, step in enumerate(self.get('steps')):
+        bash = ['#!/bin/bash',
+                '']
+
+        steps = self.get('steps')
+        previous_cmssw = None
+        previous_scram = None
+        fragment = self.get('fragment')
+        commands = []
+        for index, step in enumerate(steps):
             if index == 0 and step.get_step_type() == 'input_file' and for_submission:
                 continue
 
             step_cmssw = step.get_release()
-            real_scram_arch = step.get_scram_arch()
-            os_name, _, gcc_version = clean_split(real_scram_arch, '_')
-            scram_arch = f'{os_name}_amd64_{gcc_version}'
-            if step_cmssw != previous_step_cmssw or scram_arch != previous_scram_arch:
-                if container_code:
-                    if not previous_scram_arch.startswith(default_os):
-                        container_script_name = f'script-steps-{"-".join(container_steps)}'
-                        container_code = run_commands_in_singularity(container_code,
-                                                                     previous_scram_arch,
-                                                                     container_script_name)
-                        container_code = '\n'.join(container_code)
+            scram_arch = step.get_scram_arch()
 
-                    built_command += container_code.strip()
-                    built_command += '\n\n\n'
-                    container_code = ''
-                    container_steps = []
+            if commands and (step_cmssw != previous_cmssw or scram_arch != previous_scram):
+                bash += run_commands_in_cmsenv(commands, previous_cmssw, previous_scram).split('\n')
+                commands = []
 
-                if real_scram_arch != scram_arch:
-                    container_code += f'# Real scram arch is {real_scram_arch}\n'
-
-                container_code += cmssw_setup(step_cmssw, scram_arch=scram_arch)
-                container_code += '\n\n'
-
-            previous_step_cmssw = step_cmssw
-            previous_scram_arch = scram_arch
             custom_fragment_name = None
             if index == 0 and fragment and step.get_step_type() == 'cms_driver':
                 # If this is the first step, is cmsDriver and fragment is present,
@@ -163,23 +145,20 @@ class RelVal(ModelBase):
                 if not custom_fragment_name.endswith('.py'):
                     custom_fragment_name += '.py'
 
-                container_code += self.get_fragment_command(fragment, custom_fragment_name)
-                container_code += '\n\n'
+                commands += self.get_fragment_command(fragment, custom_fragment_name).split('\n')
+                commands += ['']
 
-            container_code += step.get_command(custom_fragment=custom_fragment_name,
-                                               for_submission=for_submission)
-            container_code += '\n\n'
-            container_steps.append(str(index + 1))
+            commands += step.get_command(custom_fragment=custom_fragment_name,
+                                         for_submission=for_submission).split('\n')
+            commands += ['']
+            previous_cmssw = step_cmssw
+            previous_scram = scram_arch
 
-        if not scram_arch.startswith(default_os):
-            container_script_name = f'script-steps-{"-".join(container_steps)}'
-            container_code = run_commands_in_singularity(container_code,
-                                                         scram_arch,
-                                                         container_script_name)
-            container_code = '\n'.join(container_code)
+        if commands:
+            commands += ['']
+            bash += run_commands_in_cmsenv(commands, previous_cmssw, previous_scram).split('\n')
 
-        built_command += container_code
-        return built_command.strip()
+        return '\n'.join(bash)
 
     def get_fragment_command(self, fragment, fragment_file):
         """
