@@ -190,41 +190,49 @@
 
       function setWorkflowInForm(prepid, attached_wfs) {
         // Setting list of workflow IDs as options for classifier
+
+        function selected(workflow, id) {
+            // Return selected tag to classify workflows
+            length = String(workflow).split('.').length
+            wf = parseInt(String(workflow).split('.')[length-1])
+            id = (id==undefined) ? 1: 0
+            tag = (wf % 2  == id) ? '':'selected'
+            return tag
+        }
         var workflow_options_hlt = ''
         var workflow_options_prompt = ''
         var workflow_options_express = ''
         var wfs = items[prepid].workflow_ids
+
+        empty_hlt_gt = (items[prepid].hlt_gt ==='' && items[prepid].hlt_gt_ref ==='')
+        empty_prompt_gt = (items[prepid].prompt_gt ==='' && items[prepid].prompt_gt_ref ==='')
+        empty_express_gt = (items[prepid].express_gt ==='' && items[prepid].express_gt_ref ==='')
+
         for (var i = 0; i < wfs.length; i++) {
           if (attached_wfs.HLT.includes(wfs[i])) {
             workflow_options_hlt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
-          } else {
-            wf = parseInt(String(wfs[i]).split('.')[String(wfs[i]).split('.').length-1])
-            selected = (wf % 2  == 0) ? '':'selected'
-            workflow_options_hlt += '<option value="'+wfs[i]+'" '+selected+'>'+wfs[i]+'</option>'
+          } else if (!empty_hlt_gt) {
+            workflow_options_hlt += '<option value="'+wfs[i]+'" '+selected(wfs[i], 0)+'>'+wfs[i]+'</option>'
           }
           if (attached_wfs.Prompt.includes(wfs[i])) {
             workflow_options_prompt += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
-          } else {
-            wf = parseInt(String(wfs[i]).split('.')[String(wfs[i]).split('.').length-1])
-            selected = (wf % 2  == 1) ? '':'selected'
-            workflow_options_prompt += '<option value="'+wfs[i]+'" '+selected+'>'+wfs[i]+'</option>'
+          } else if (!empty_prompt_gt) {
+            workflow_options_prompt += '<option value="'+wfs[i]+'" '+selected(wfs[i])+'>'+wfs[i]+'</option>'
           }
           if (attached_wfs.Express.includes(wfs[i])) {
-            wf = parseInt(String(wfs[i]).split('.')[String(wfs[i]).split('.').length-1])
-            selected = (wf % 2  == 1) ? '':'selected'
             workflow_options_express += '<option value="'+wfs[i]+'" selected>'+wfs[i]+'</option>'
-          } else {
-            workflow_options_express += '<option value="'+wfs[i]+'" '+selected+'>'+wfs[i]+'</option>'
+          } else if (!empty_express_gt) {
+            workflow_options_express += '<option value="'+wfs[i]+'" '+selected(wfs[i])+'>'+wfs[i]+'</option>'
           }
         }
         document.getElementById('wf_hlt_gt').innerHTML = workflow_options_hlt
         document.getElementById('wf_prompt_gt').innerHTML = workflow_options_prompt
         document.getElementById('wf_express_gt').innerHTML = workflow_options_express
-        if(items[prepid].hlt_gt ==='' && items[prepid].hlt_gt_ref ==='')
+        if (empty_hlt_gt)
           document.getElementById('hlt_row_id').style = "display: none";
-        if(items[prepid].prompt_gt ==='' && items[prepid].prompt_gt_ref ==='')
+        if (empty_prompt_gt)
           document.getElementById('prompt_row_id').style = "display: none";
-        if(items[prepid].express_gt ==='' && items[prepid].express_gt_ref ==='')
+        if (empty_express_gt)
           document.getElementById('express_row_id').style = "display: none";
       }
     }
