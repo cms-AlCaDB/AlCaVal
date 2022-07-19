@@ -58,10 +58,7 @@ def cmssw_setup(cmssw_release, scram_arch=None):
                 'ORG_PWD=$(pwd)']
     if cmssw_release.startswith('/'):
         # Path to CMSSW
-        commands += [f'if [ ! -r {cmssw_release}/src ] ; then',
-                     f'  echo "Cannot find {cmssw_release}/src"',
-                     f'  exit 1',
-                     'fi']
+        commands += [f'if [ ! -r {cmssw_release}/src ]; then echo "Cannot find {cmssw_release}/src"; exit 1; fi']
     else:
         # CMSSW release name
         commands += ['mkdir -p $SCRAM_ARCH',
@@ -72,9 +69,7 @@ def cmssw_setup(cmssw_release, scram_arch=None):
                  'CMSSW_SRC=$(pwd)',
                  'eval `scram runtime -sh`',
                  'PYTHON_INT="python"',
-                 'if [[ $(head -n 1 `which cmsDriver.py`) =~ "python3" ]]; then',
-                 '  PYTHON_INT="python3"',
-                 'fi',
+                 'if [[ $(head -n 1 `which cmsDriver.py`) =~ "python3" ]]; then PYTHON_INT="python3"; fi',
                  'echo "Using "$PYTHON_INT interpreter',
                  'cd $ORG_PWD']
 
