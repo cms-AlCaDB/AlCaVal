@@ -304,8 +304,7 @@ class TicketController(ControllerBase):
         Remotely run workflow info extraction from CMSSW and return all workflows
         """
         ticket_prepid = ticket.get_prepid()
-        submission_directory = Config.get('remote_path').rstrip('/')
-        remote_directory = f'{submission_directory}/{ticket_prepid}'
+        remote_directory = Config.get('remote_path').rstrip('/')
         if ticket.get('recycle_gs') and not ticket.get('recycle_input_of'):
             recycle_gs_flag = '-r '
         else:
@@ -313,7 +312,7 @@ class TicketController(ControllerBase):
 
         cmssw_release = ticket.get('cmssw_release')
         scram_arch = ticket.get('scram_arch')
-        scram_arch = scram_arch if scram_arch else get_scram_arch(cmssw_release.split('/')[-1])
+        scram_arch = scram_arch if scram_arch else get_scram_arch(cmssw_release)
         if not scram_arch:
             raise Exception(f'Could not find SCRAM arch of {cmssw_release}')
 
@@ -331,18 +330,18 @@ class TicketController(ControllerBase):
 
         workflow_ids = ','.join([str(x) for x in ticket.get('workflow_ids')])
         self.logger.info('Creating RelVals %s for %s', workflow_ids, ticket_prepid)
-        # Prepare remote directory with run_the_matrix_pdmv.py
-        out, err, code = ssh_executor.execute_command([f'rm -rf {remote_directory}',
-                                                       f'mkdir -p {remote_directory}'])
-        out, err, code = ssh_executor.execute_command([f'cp {submission_directory}/relval_alca.py {submission_directory}/alcaval_steps.py {remote_directory}'])
+        # Prepare remote directory with run_the_matrix_alca.py
+        command = [f'mkdir -p {remote_directory}']
+        _, err, code = ssh_executor.execute_command(command)
         if code != 0:
-            raise Exception(f'Error code {code} preparing workspace. stdout: {out}, stderr: {err}')
+            raise Exception(f'Error code {code} preparing workspace: {err}')
 
         ssh_executor.upload_file('api/utils/run_the_matrix_alca.py',
-                                f'{remote_directory}/run_the_matrix_alca.py')
+                                 f'{remote_directory}/run_the_matrix_alca.py')
         # Defined a name for output file
-        file_name = f'{ticket_prepid}.json'
-        # Execute run_the_matrix_pdmv.py
+        file_name = f'{ticket_prepid}_{int(time.time())}.json'
+
+        # Execute run_the_matrix_alca.py
         matrix_command = run_commands_in_cmsenv([f'cd {remote_directory}',
                                                  '$PYTHON_INT run_the_matrix_alca.py '
                                                  f'-l={workflow_ids} '
@@ -352,23 +351,20 @@ class TicketController(ControllerBase):
                                                  f'{recycle_gs_flag}'],
                                                 cmssw_release,
                                                 scram_arch)
-
-        self.logger.debug('Matrix command:\n\n%s', matrix_command)
-        ssh_executor.upload_as_file(matrix_command,
-                                    f'{remote_directory}/generate.sh')
-        command = [f'cd {remote_directory}',
-                   'chmod +x generate.sh',
-                   './generate.sh || exit $?',
-                   'rm generate.sh']
-        out, err, code = ssh_executor.execute_command(command)
+        _, err, code = ssh_executor.execute_command(matrix_command)
         if code != 0:
             raise Exception(f'Error code {code} creating RelVals. stdout: {out}, stderr: {err}')
 
         # Download generated json
-        workflows_json = ssh_executor.download_as_string(f'{remote_directory}/{file_name}')
-        workflows = json.loads(workflows_json)
-        # Cleanup remote directory by removing ticket directory
-        ssh_executor.execute_command(f'rm -rf {remote_directory}')
+        ssh_executor.download_file(f'{remote_directory}/{file_name}',
+                                   f'/tmp/{file_name}')
+
+        # Cleanup remote directory by removing all ticket jsons
+        ssh_executor.execute_command(f'rm -rf {remote_directory}/{ticket_prepid}_*.json')
+        with open(f'/tmp/{file_name}', 'r') as workflows_file:
+            workflows = json.load(workflows_file)
+
+        os.remove(f'/tmp/{file_name}')
         return workflows
 
     def create_relval_from_workflow(self, ticket, workflow_id, workflow_dict, cond_tag=''):

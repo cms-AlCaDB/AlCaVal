@@ -10,12 +10,13 @@ class JiraTicketController():
 
     def __init__(self):
         self.database_name = 'tickets'
-        jira = Jira(Config.get('jira_credentials_file'))
-        self.conn = jira.setup_jira_connection()
+        self.jira = Jira(Config.get('jira_credentials_file'))
 
     def get(self):
         # Summaries of my last 50 reported issues
-        issues = self.conn.search_issues('project=CMSALCA order by created desc', maxResults=50)
+        connection = self.jira.setup_jira_connection()
+        issues = connection.search_issues('project=CMSALCA order by created desc', maxResults=50)
+        connection.close()
         return issues
 
     def create_ticket(self, jira_json):
@@ -28,12 +29,16 @@ class JiraTicketController():
                 'priority': {'name': 'Major'},
                 'components': [{'name' : 'AlCaDB'}]
                }
-        new_issue = self.conn.create_issue(fields = fields)
+        connection = self.jira.setup_jira_connection()
+        new_issue = connection.create_issue(fields = fields)
+        connection.close()
         return new_issue.key
 
     def add_comment(self, text):
-        issue = self.conn.issue('CMSALCA-{}'.format(self.args['Jira']))
-        comment = self.conn.add_comment(issue.key, text)
+        connection = self.jira.setup_jira_connection()
+        issue = connection.issue('CMSALCA-{}'.format(self.args['Jira']))
+        comment = connection.add_comment(issue.key, text)
+        connection.close()
 
 class Jira():
     def __init__(self, credentials_file, host='http://its.cern.ch/jira'):
