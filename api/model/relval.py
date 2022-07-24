@@ -48,13 +48,13 @@ class RelVal(ModelBase):
         # Overwrite default CMSSW scram arch
         'scram_arch': '',
         # Size per event in kilobytes
-        'size_per_event': 1.0,
+        'size_per_event': 60.0,
         # Status of this relval
         'status': 'new',
         # Steps of RelVal
         'steps': [],
         # Time per event in seconds
-        'time_per_event': 1.0,
+        'time_per_event': 60.0,
         # Workflow ID
         'workflow_id': 0.0,
         # Workflows name
