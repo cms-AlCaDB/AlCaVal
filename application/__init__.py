@@ -4,7 +4,7 @@ import time
 import logging
 import logging.handlers
 from colorlog import ColoredFormatter
-from flask import Flask, request, session, g
+from flask import Flask, render_template, request, session, g
 from flask_restful import Api
 from flask_cors import CORS
 from database.database import Database
@@ -124,6 +124,38 @@ def create_app():
 							  )
 
 	api = Api(app)
+
+	@app.route('/api', defaults={'_path': ''})
+	@app.route('/api/<path:_path>')
+	def api_documentation(_path):
+	    """
+	    Endpoint for API documentation HTML
+	    """
+	    docs = {}
+	    for endpoint, view in app.view_functions.items():
+	        view_class = dict(view.__dict__).get('view_class')
+	        if view_class is None:
+	            continue
+
+	        class_name = view_class.__name__
+	        class_doc = view_class.__doc__.strip()
+	        #pylint: disable=protected-access
+	        urls = sorted([r.rule for r in app.url_map._rules_by_endpoint[endpoint]])
+	        #pylint: enable=protected-access
+	        category = [x for x in urls[0].split('/') if x][1]
+	        if category not in docs:
+	            docs[category] = {}
+
+	        docs[category][class_name] = {'doc': class_doc, 'urls': urls, 'methods': {}}
+	        for method_name in view_class.methods:
+	            method = view_class.__dict__.get(method_name.lower())
+	            method_dict = {'doc': method.__doc__.strip()}
+	            docs[category][class_name]['methods'][method_name] = method_dict
+	            if hasattr(method, '__role__'):
+	                method_dict['role'] = getattr(method, '__role__')
+
+	    return render_template('api_documentation.html.jinja', docs=docs)
+
 	api.add_resource(CreateTicketAPI, '/api/tickets/create')
 	api.add_resource(DeleteTicketAPI, '/api/tickets/delete')
 	api.add_resource(UpdateTicketAPI, '/api/tickets/update')
