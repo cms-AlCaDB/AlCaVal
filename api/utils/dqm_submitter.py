@@ -122,9 +122,9 @@ class DQMRequestSubmitter(BaseSubmitter):
         ref_file = f'DQM_V0001_R000{ref_run}{reference_dataset}.root'
 
         wget_options = r'--no-check-certificate '
-        wget_options += r'-nd --certificate=/afs/cern.ch/user/a/$USER/.globus/usercert.pem '
+        wget_options += r'-nd --certificate=${HOME}/.globus/usercert.pem '
         wget_options += r'--certificate-type=PEM '
-        wget_options += r'--private-key=/afs/cern.ch/user/a/$USER/.globus/userkey.pem '
+        wget_options += r'--private-key=${HOME}/.globus/userkey.pem '
         wget_options += r'--private-key-type=PEM '
         target_prefix = f'-P "{target_dataset}" ' + wget_options
         ref_prefix = f'-P "{reference_dataset}" ' + wget_options
@@ -134,7 +134,9 @@ class DQMRequestSubmitter(BaseSubmitter):
         target_path = data_url + stript_cmssw + target_file
         ref_path = data_url+ stript_cmssw_ref + ref_file
 
-        command = ['wget -nv -N ' + target_prefix + target_path]
+        #Set home for accessing ssl certs (in Singularity)
+        command = [f'export HOME=/afs/cern.ch/user/a/alcauser']
+        command += ['wget -nv -N ' + target_prefix + target_path]
         command += ['wget -nv -N ' + ref_prefix + ref_path]
 
         tar = target_dataset + '/' + target_file
@@ -143,8 +145,6 @@ class DQMRequestSubmitter(BaseSubmitter):
         newref_file = f'DQM_V0001_R000{ref_run}{target_pair[1]}.root'
         command += [f'./compareHistograms.py -p {tar} -b {ref} --new-target {target_pair[0]} --ref-target {target_pair[1]}']
 
-        #Set home for accessing ssl certs (in Singularity)
-        command += [f'export HOME=/afs/cern.ch/user/a/alcauser']
         file = f'dqmHistoComparisonOutput/pr/{newtar_file}'
         command += [f'visDQMUpload.py https://cmsweb.cern.ch/dqm/dev {file}']
         file = f'dqmHistoComparisonOutput/base/{newref_file}'
