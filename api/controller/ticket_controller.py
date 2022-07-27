@@ -351,7 +351,7 @@ class TicketController(ControllerBase):
                                                  f'{recycle_gs_flag}'],
                                                 cmssw_release,
                                                 scram_arch)
-        _, err, code = ssh_executor.execute_command(matrix_command)
+        out, err, code = ssh_executor.execute_command(matrix_command)
         if code != 0:
             raise Exception(f'Error code {code} creating RelVals. stdout: {out}, stderr: {err}')
 
