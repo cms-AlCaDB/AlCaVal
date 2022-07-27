@@ -9,7 +9,11 @@ from core_lib.utils.locker import Locker
 from database.database import Database
 from core_lib.utils.connection_wrapper import ConnectionWrapper
 from core_lib.utils.submitter import Submitter as BaseSubmitter
-from core_lib.utils.common_utils import clean_split, cmssw_setup, dbs_dataset_runs
+from core_lib.utils.common_utils import (clean_split,
+                                        cmssw_setup,
+                                        dbs_dataset_runs,
+                                        get_scram_arch,
+                                        run_commands_in_cmsenv)
 from core_lib.utils.global_config import Config
 from ..utils.emailer import Emailer
 
@@ -105,11 +109,9 @@ class DQMRequestSubmitter(BaseSubmitter):
         credentials_file = Config.get('credentials_file')
         # Remember to set WORK directory in worker node
         remote_directory = r'${WORK}/dqm_comparison_submission'
-        command = [f'cd {remote_directory}']
         cmssw_version = dqm_pair['target_dataset'].split('/')[2].split('-')[0]
         ref_cmssw = dqm_pair['reference_dataset'].split('/')[2].split('-')[0]
-
-        command.extend(cmssw_setup('CMSSW_12_3_3').split('\n'))
+        scram_arch = get_scram_arch(cmssw_version)
 
         data_url = 'https://cmsweb.cern.ch/dqm/relval/data/browse/ROOT/RelValData/'
         target_run = dbs_dataset_runs(dqm_pair['target_dataset'])[0]
@@ -119,18 +121,21 @@ class DQMRequestSubmitter(BaseSubmitter):
         target_file = f'DQM_V0001_R000{target_run}{target_dataset}.root'
         ref_file = f'DQM_V0001_R000{ref_run}{reference_dataset}.root'
 
-        wget_options = r'-nd --certificate=${HOME}/.globus/usercert.pem '
+        wget_options = r'--no-check-certificate '
+        wget_options += r'-nd --certificate=${HOME}/.globus/usercert.pem '
         wget_options += r'--certificate-type=PEM '
         wget_options += r'--private-key=${HOME}/.globus/userkey.pem '
         wget_options += r'--private-key-type=PEM '
-        target_prefix = f'-P {target_dataset} ' + wget_options
-        ref_prefix = f'-P {reference_dataset} ' + wget_options
+        target_prefix = f'-P "{target_dataset}" ' + wget_options
+        ref_prefix = f'-P "{reference_dataset}" ' + wget_options
 
         stript_cmssw = '_'.join(cmssw_version.split('_')[:3]+['x/'])
         stript_cmssw_ref = '_'.join(ref_cmssw.split('_')[:3]+['x/'])
         target_path = data_url + stript_cmssw + target_file
         ref_path = data_url+ stript_cmssw_ref + ref_file
 
+        #Set home for accessing ssl certs (in Singularity)
+        command = [f'export HOME=/afs/cern.ch/user/a/alcauser']
         command += ['wget -nv -N ' + target_prefix + target_path]
         command += ['wget -nv -N ' + ref_prefix + ref_path]
 
@@ -139,6 +144,7 @@ class DQMRequestSubmitter(BaseSubmitter):
         newtar_file = f'DQM_V0001_R000{target_run}{target_pair[0]}.root'
         newref_file = f'DQM_V0001_R000{ref_run}{target_pair[1]}.root'
         command += [f'./compareHistograms.py -p {tar} -b {ref} --new-target {target_pair[0]} --ref-target {target_pair[1]}']
+
         file = f'dqmHistoComparisonOutput/pr/{newtar_file}'
         command += [f'visDQMUpload.py https://cmsweb.cern.ch/dqm/dev {file}']
         file = f'dqmHistoComparisonOutput/base/{newref_file}'
@@ -155,7 +161,8 @@ class DQMRequestSubmitter(BaseSubmitter):
             self.logger.debug('Compare DQM dataset pair command:\n%s', '\n'.join(command))
             try:
                 with SSHExecutor('lxplus.cern.ch', credentials_file) as ssh_executor:
-                    stdout, stderr, exit_code = ssh_executor.execute_command(f'mkdir -p {remote_directory}')
+                    start_cmd = [f'mkdir -p {remote_directory}']
+                    stdout, stderr, exit_code = ssh_executor.execute_command(start_cmd)
                     if exit_code != 0:
                         self.logger.error('Error creating %s:\nstdout:%s\nstderr:%s',
                                           remote_directory,
@@ -163,7 +170,8 @@ class DQMRequestSubmitter(BaseSubmitter):
                                           stderr)
                         raise Exception(f'Error creting remote directory: {stderr}')
 
-                    stdout, stderr, exit_code = ssh_executor.execute_command(command)
+                    dqm_script_commands = run_commands_in_cmsenv(command, cmssw_version, scram_arch)
+                    stdout, stderr, exit_code = ssh_executor.execute_command([f'cd {remote_directory}', dqm_script_commands])
                     if exit_code != 0:
                         self.logger.error('Error creating comparison plots:\nstdout:%s\nstderr:%s',
                                           stdout,

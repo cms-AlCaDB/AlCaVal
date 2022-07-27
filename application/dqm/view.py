@@ -48,7 +48,7 @@ def get_dataset_choices(relvals):
 @oidc.check
 def compare_dqm():
     user = get_userinfo()
-    query_string = 'status=submitted'
+    query_string = 'status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     jira_tickets = {res['jira_ticket'] for res in response['response']['results']}
     jira_tickets.discard('None')
@@ -59,7 +59,7 @@ def compare_dqm():
     form.jira_ticket.choices = form.jira_ticket.choices + jira_choices
 
     if form.data:
-        query_string = 'jira_ticket='+form.data['jira_ticket']+'&status=submitted'
+        query_string = 'jira_ticket='+form.data['jira_ticket']+'&status=submitted|done'
         response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
         relvals = response['response']['results']
         choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
@@ -96,7 +96,7 @@ from .DQMTable import DQMTable
 @oidc.check
 def dqm_plots():
     user = get_userinfo()
-    response = askfor.get('api/search?db_name=relvals&status=submitted'+'&'+ request.query_string.decode()).json()
+    response = askfor.get('api/search?db_name=relvals&status=submitted|done'+'&'+ request.query_string.decode()).json()
     mdata = response['response']['results']
     data = copy(mdata)
     for item in mdata:
@@ -153,7 +153,7 @@ def getValidJSON(jsonset):
 @dqm_blueprint.route('/dqm/get_submitted_dataset/<jira>')
 @oidc.check
 def get_submitted_dataset(jira):
-    response = askfor.get('api/search?db_name=relvals&status=submitted' +'&jira_ticket='+jira).json()
+    response = askfor.get('api/search?db_name=relvals&status=submitted|done' +'&jira_ticket='+jira).json()
     relvals = response['response']['results']
     choices = get_dataset_choices(relvals)
     return jsonify({'datasets': choices})
@@ -161,7 +161,7 @@ def get_submitted_dataset(jira):
 @dqm_blueprint.route('/dqm/update_workflows/<jira>')
 @oidc.check
 def update_workflows_for_jira(jira):
-    response = askfor.get('api/search?db_name=relvals&status=submitted' +'&jira_ticket='+jira).json()
+    response = askfor.get('api/search?db_name=relvals&status=submitted|done' +'&jira_ticket='+jira).json()
     relvals = response['response']['results']
     status = update_workflows(relvals)
     return jsonify(status[0])
@@ -185,7 +185,7 @@ def add_set():
     copiedjson['Set'].append({})
 
     form = SetForm(data=copiedjson)
-    query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted'
+    query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
     choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
@@ -202,7 +202,7 @@ def add_set():
 def add_defualt_pairs(jira_ticket):
     """Endpoint for getting list of default pairs in html form"""
 
-    query_string = 'jira_ticket='+jira_ticket+'&status=submitted'
+    query_string = 'jira_ticket='+jira_ticket+'&status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
     choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
@@ -243,7 +243,7 @@ def delete_set(setid):
     copiedjson = getValidJSON(jsonset)
     copiedjson['Set'].pop(setid-1)
     form = SetForm(data=copiedjson)
-    query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted'
+    query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
     choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
