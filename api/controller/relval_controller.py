@@ -607,11 +607,10 @@ class RelValController(ControllerBase):
                     dataset = step.get('input').get('dataset')
                     runsLs = set(step.get('input').get('lumisection').keys())
                     runs = set(step.get('input').get('run'))
-
-        ds_runs = dbs_dataset_runs(dataset)
-        db_runs = {int(run) for run in runs or runsLs}
-        if not set(ds_runs).intersection(db_runs):
-            raise Exception(f'Runs {", ".join(runs or runsLs)} are not there in the dataset {dataset}')
+            ds_runs = dbs_dataset_runs(dataset)
+            db_runs = {int(run) for run in runs or runsLs}
+            if not set(ds_runs).intersection(db_runs):
+                raise Exception(f'Runs {", ".join(runs or runsLs)} are not there in the dataset {dataset}')
 
         conditions_tree = self.get_resolved_conditions(relvals)
         results = []
