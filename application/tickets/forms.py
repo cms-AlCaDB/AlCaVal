@@ -200,6 +200,22 @@ class TicketForm(FlaskForm):
                 render_kw = classDict | {'placeholder': 'Express reference global tag'},
                 label_rkw = label_rkw
                 )
+    input_datasets = STextAreaField('Datasets', validators=[],
+                        render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
+                        'placeholder': 'Comma or line separated datasets. e.g: \
+                         \n/HLTPhysics/Run2022C-v1/RAW, /ZeroBias/Run2022C-v1/RAW \
+                         \n/JetHT/Run2022C-v1/RAW'
+                        },
+                        label_rkw = label_rkw
+                        )
+    input_runs = STextAreaField('Run numbers', validators=[],
+                        render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
+                        'placeholder': 'List of run numbers separated by comma e.g. 345633, 35540 \
+                         \nOr Lumisections in JSON format. e.g. {"354553": [[1, 300]]}',
+                        'onkeyup': 'validateJSON_or_List(this.id)'
+                        },
+                        label_rkw = label_rkw
+                        )
     notes = STextAreaField('Notes',  
                           render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
                           'placeholder': "Description of the request. TWiki links etc.."},
