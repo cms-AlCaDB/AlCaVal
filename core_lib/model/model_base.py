@@ -205,6 +205,11 @@ class ModelBase():
                 if not lambda_check(value):
                     raise Exception(f'Bad {key} value "{value}" in {attribute_name} dictionary')
 
+        # List or dict
+        if f'___{attribute_name}' in self.lambda_checks:
+            if not (isinstance(attribute_value, list) or isinstance(attribute_value, dict)):
+                raise Exception(f'Expected {attribute_name} to be a list or dict')
+
         return True
 
     def cast_value_to_correct_type(self, attribute_name, attribute_value):
@@ -221,7 +226,11 @@ class ModelBase():
         expected_type_name = expected_type.__name__
         got_type_name = got_type.__name__
         try:
-            return expected_type(attribute_value)
+            builtin = [bool, int, float, complex, str, list, tuple, set, dict]
+            if expected_type in builtin:
+                return expected_type(attribute_value)
+            else:
+                return expected_type().typecast(attribute_value)
         except Exception as ex:
             self.logger.error(ex)
             raise Exception(f'Object {prepid} attribute {attribute_name} is wrong type. '

@@ -85,6 +85,8 @@ class TicketController(ControllerBase):
         editing_info['attached_wfs'] = not_done
         editing_info['scram_arch'] = not_done
         editing_info['workflow_ids'] = not_done
+        editing_info['input_datasets'] = not_done
+        editing_info['input_runs'] = not_done
 
         return editing_info
 
