@@ -52,16 +52,16 @@ function validateJSON_or_List(id) {
     if (input_runs_error) input_runs_error.parentNode.parentNode.remove()
     value = document.getElementById(id).value
     if (value.includes("{") | value.includes("}")){
-        validateJSON(id, value)
+        validateJSON(id)
     } else {
         validateRunNumbers(id)
     }
 }
 
-function validateJSON(id, value) {
+function validateJSON(id) {
     var el = ''
     try{
-        value = value.replaceAll('\'', '\"')
+        value = document.getElementById(id).value.replaceAll('\'', '\"')
         document.getElementById(id).value = value
         add_number_of_runs(id, [])
         var json = JSON.parse(value);

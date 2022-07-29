@@ -98,7 +98,7 @@ function validateRunNumbers(id) {
         if (Number(runs[run]) < 200000 || Number(runs[run]) > 400000)
           throw new Error(runs[run] + " is not valid run")
       }
-      var el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color: green">Valid run number/s</small></td>'
+      var el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color: green">Acceptable format</small></td>'
       document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
     }catch (e){
       var el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color: red">'+e+'</small></td>'
