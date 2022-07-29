@@ -64,7 +64,14 @@ $( document ).ready(function() {
 function prettyPrint(id) {
     var ugly = document.getElementById(id).value;
     var obj = JSON.parse(ugly);
-    var pretty = JSON.stringify(obj, undefined, 4);
+    // var pretty = JSON.stringify(obj, undefined, 4);
+    pretty = '{\n'
+    Object.keys(obj).forEach(function(key){
+        pretty += '\t"'+key+'": '+JSON.stringify(obj[key])
+        if (Object.keys(obj)[Object.keys(obj).length - 1] != key)
+            pretty += ',\n'
+    })
+    pretty += '\n}'
     document.getElementById(id).value = pretty;
 }
 
