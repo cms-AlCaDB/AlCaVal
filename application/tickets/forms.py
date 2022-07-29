@@ -131,43 +131,6 @@ class TicketForm(FlaskForm):
                 label_rkw = label_rkw
                 )
 
-    # command = SStringField('Command (--command)',
-    #             render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
-    #             label_rkw = {'class': 'col-form-label-sm'}
-    #             )
-    # command_steps = SStringField('Command Steps',
-    #             render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
-    #             label_rkw = {'class': 'col-form-label-sm'}
-    #             )
-    cpu_cores = SIntegerField('CPU Cores (-t)', default=8, validators=[NumberRange(min=1, max=16)],
-                render_kw = classDict,
-                label_rkw = {'class': 'col-form-label-sm'}
-                )
-
-    memory = SIntegerField('Memory', default=16000, validators=[NumberRange(min=0, max=30000)],
-                render_kw = classDict | {'step': 1000},
-                label_rkw = {'class': 'col-form-label-sm'}
-                )
-    n_streams = SIntegerField('Streams (--nStreams)', default=2, validators=[NumberRange(min=0, max=16)],
-                render_kw = classDict,
-                label_rkw = {'class': 'col-form-label-sm'}
-                )
-    matrix_choices = [
-        ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
-        ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
-        ['extendedgen', 'extendedgen'], ['gpu', 'gpu']
-    ]
-    matrix = SSelectField('Matrix (--what)', choices=matrix_choices,
-                           validators=[DataRequired()],
-                           default='alca',
-                           render_kw = classDict,
-                           label_rkw = label_rkw
-                        )
-    workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
-                        default='6.13, 6.14',
-                        render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
-                        label_rkw = {'class': 'col-form-label-sm required'}
-                        )
     title = SStringField('Title',
                 validators=[],
                 render_kw = classDict | {"placeholder":"Title/purpose of the validation"},
@@ -225,6 +188,44 @@ class TicketForm(FlaskForm):
                         },
                         label_rkw = label_rkw
                         )
+
+    # command = SStringField('Command (--command)',
+    #             render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
+    #             label_rkw = {'class': 'col-form-label-sm'}
+    #             )
+    # command_steps = SStringField('Command Steps',
+    #             render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
+    #             label_rkw = {'class': 'col-form-label-sm'}
+    #             )
+    cpu_cores = SIntegerField('CPU Cores (-t)', default=8, validators=[NumberRange(min=1, max=16)],
+                render_kw = classDict,
+                label_rkw = {'class': 'col-form-label-sm'}
+                )
+
+    memory = SIntegerField('Memory', default=16000, validators=[NumberRange(min=0, max=30000)],
+                render_kw = classDict | {'step': 1000},
+                label_rkw = {'class': 'col-form-label-sm'}
+                )
+    n_streams = SIntegerField('Streams (--nStreams)', default=2, validators=[NumberRange(min=0, max=16)],
+                render_kw = classDict,
+                label_rkw = {'class': 'col-form-label-sm'}
+                )
+    matrix_choices = [
+        ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
+        ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
+        ['extendedgen', 'extendedgen'], ['gpu', 'gpu']
+    ]
+    matrix = SSelectField('Matrix (--what)', choices=matrix_choices,
+                           validators=[DataRequired()],
+                           default='alca',
+                           render_kw = classDict,
+                           label_rkw = label_rkw
+                        )
+    workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
+                        default='6.13, 6.14',
+                        render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
+                        label_rkw = {'class': 'col-form-label-sm required'}
+                        )
     notes = STextAreaField('Notes',  
                            render_kw = classDict | {
                                 "rows": 5,
@@ -262,17 +263,19 @@ class TicketForm(FlaskForm):
                 if not res: wrong_datasets.append(dataset)
         if wrong_datasets:
             raise ValidationError(f'Invalid datasets: {", ".join(wrong_datasets)}')
+        if (not field.data) and self.input_runs.data:
+            raise ValidationError(f"Input dataset field is required when 'Run numbers' are provided")
 
     def validate_input_runs(self, field):
         try:
-            if not ('{' in field.data and '}' in field.data):
+            if field.data == '':
+                test_runs = list()
+            elif not ('{' in field.data and '}' in field.data):
                 test_runs = list(map(lambda x: x.strip(), field.data.split(',')))
             elif isinstance(ast.literal_eval(field.data), dict):
                 test_runs = list(ast.literal_eval((field.data)).keys())
-            else:
-                raise Exception
+            else: raise Exception
         except Exception as e:
-            print(e)
             raise ValidationError('Accepted only comma separated list of runs \
                                     or JSON formatted lumisections')
         wrong_runs = list()
@@ -289,3 +292,5 @@ class TicketForm(FlaskForm):
                 if not res: wrong_runs.append(run)
         if wrong_runs:
             raise ValidationError(f'Invalid runs: {", ".join(wrong_runs)}')
+        if (not field.data) and self.input_datasets.data:
+            raise ValidationError(f"Run numbers field is required when 'Dataset' field is provided")
