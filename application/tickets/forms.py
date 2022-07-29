@@ -184,7 +184,7 @@ class TicketForm(FlaskForm):
                         render_kw = classDict | {"rows": 6, 'style': 'padding-bottom: 5px;',
                         'placeholder': 'Comma separated list of run numbers e.g. 346512, 346513 \
                          \nOr\nLumisections in JSON format. e.g. {"354553": [[1, 300]]}',
-                        'onkeyup': 'validateJSON_or_List(this.id)'
+                        'oninput': 'validateJSON_or_List(this.id)'
                         },
                         label_rkw = label_rkw
                         )

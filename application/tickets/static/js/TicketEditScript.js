@@ -62,7 +62,9 @@ function validateJSON(id) {
     var el = ''
     try{
         value = document.getElementById(id).value.replaceAll('\'', '\"')
+        var cpos = $('#'+id).prop("selectionStart")
         document.getElementById(id).value = value
+        document.getElementById(id).setSelectionRange(cpos, cpos);
         add_number_of_runs(id, [])
         var json = JSON.parse(value);
         add_number_of_runs(id, Object.keys(json))

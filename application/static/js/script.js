@@ -72,7 +72,9 @@ function prettyPrint(id) {
             pretty += ',\n'
     })
     pretty += '\n}'
+    var cpos = $('#'+id).prop("selectionStart")
     document.getElementById(id).value = pretty;
+    document.getElementById(id).setSelectionRange(cpos, cpos);
 }
 
 function add_number_of_runs(id, runs){
