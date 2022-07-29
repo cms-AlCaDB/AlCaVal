@@ -1,3 +1,6 @@
+import re
+import ast
+import json
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, SelectField, StringField, FieldList, TextAreaField, IntegerField
 from wtforms.validators import DataRequired, InputRequired, ValidationError, StopValidation, Length, NumberRange
@@ -7,7 +10,13 @@ from wtforms import widgets
 from markupsafe import Markup
 from wtforms.widgets.core import html_params
 from wtforms.fields.core import Label as BaseLabel
+from core_lib.utils.global_config import Config
+from core_lib.utils.common_utils import ConnectionWrapper
 import requests
+
+grid_cert = Config.get('grid_user_cert')
+grid_key = Config.get('grid_user_key')
+cmsweb_url = 'https://cmsweb.cern.ch'
 
 class CustomSelect:
     """
@@ -201,7 +210,7 @@ class TicketForm(FlaskForm):
                 label_rkw = label_rkw
                 )
     input_datasets = STextAreaField('Datasets', validators=[],
-                        render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
+                        render_kw = classDict | {"rows": 6, 'style': 'padding-bottom: 5px;',
                         'placeholder': 'Comma or line separated datasets. e.g: \
                          \n/HLTPhysics/Run2022C-v1/RAW, /ZeroBias/Run2022C-v1/RAW \
                          \n/JetHT/Run2022C-v1/RAW'
@@ -209,22 +218,74 @@ class TicketForm(FlaskForm):
                         label_rkw = label_rkw
                         )
     input_runs = STextAreaField('Run numbers', validators=[],
-                        render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
-                        'placeholder': 'List of run numbers separated by comma e.g. 345633, 35540 \
-                         \nOr Lumisections in JSON format. e.g. {"354553": [[1, 300]]}',
+                        render_kw = classDict | {"rows": 10, 'style': 'padding-bottom: 5px;',
+                        'placeholder': 'Comma separated list of run numbers e.g. 346512, 346513 \
+                         \nOr\nLumisections in JSON format. e.g. {"354553": [[1, 300]]}',
                         'onkeyup': 'validateJSON_or_List(this.id)'
                         },
                         label_rkw = label_rkw
                         )
     notes = STextAreaField('Notes',  
-                          render_kw = classDict | {"rows": 5, 'style': 'padding-bottom: 5px;',
-                          'placeholder': "Description of the request. TWiki links etc.."},
-                          label_rkw = label_rkw
-                          )
+                           render_kw = classDict | {
+                                "rows": 5,
+                                'style': 'padding-bottom: 5px;',
+                                'placeholder': "Description of the request. \
+                                 TWiki links etc.."
+                           },
+                           label_rkw = label_rkw
+                      )
     submit = SubmitField('Save Ticket')
 
+    # Validators
     def validate_cmssw_release(self, field):
         url = f'https://api.github.com/repos/cms-sw/cmssw/releases/tags/{field.data}'
         status_code = requests.head(url).status_code
         if status_code != 200:
             raise ValidationError('CMSSW release is not valid!')
+
+    def validate_input_datasets(self, field):
+        test_datasets = field.data.replace(',', '\n').split('\n')
+        test_datasets = list(map(lambda x: x.strip(), test_datasets))
+        test_datasets = list((filter(lambda x: len(x)>5, test_datasets)))
+        wrong_datasets = list()
+        with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
+            for dataset in test_datasets:
+                regex = r'^/[a-zA-Z0-9\-_]{1,99}/[a-zA-Z0-9\.\-_]{1,199}/[A-Z\-]{1,50}$'
+                if not re.fullmatch(regex, dataset):
+                    wrong_datasets.append(dataset)
+                    continue
+                res = dbs_conn.api(
+                        'GET',
+                        f'/dbs/prod/global/DBSReader/datasets?dataset={dataset}'
+                        )
+                res = json.loads(res.decode('utf-8'))
+                if not res: wrong_datasets.append(dataset)
+        if wrong_datasets:
+            raise ValidationError(f'Invalid datasets: {", ".join(wrong_datasets)}')
+
+    def validate_input_runs(self, field):
+        try:
+            if not ('{' in field.data and '}' in field.data):
+                test_runs = list(map(lambda x: x.strip(), field.data.split(',')))
+            elif isinstance(ast.literal_eval(field.data), dict):
+                test_runs = list(ast.literal_eval((field.data)).keys())
+            else:
+                raise Exception
+        except Exception as e:
+            print(e)
+            raise ValidationError('Accepted only comma separated list of runs \
+                                    or JSON formatted lumisections')
+        wrong_runs = list()
+        with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
+            for run in test_runs:
+                if not re.fullmatch(r'^\d{6}$', run):
+                    wrong_runs.append(run)
+                    continue
+                res = dbs_conn.api(
+                        'GET',
+                        f'/dbs/prod/global/DBSReader/runs?run_num={run}'
+                        )
+                res = json.loads(res.decode('utf-8'))
+                if not res: wrong_runs.append(run)
+        if wrong_runs:
+            raise ValidationError(f'Invalid runs: {", ".join(wrong_runs)}')
