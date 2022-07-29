@@ -181,7 +181,7 @@ class TicketForm(FlaskForm):
                         label_rkw = label_rkw
                         )
     input_runs = STextAreaField('Run numbers', validators=[],
-                        render_kw = classDict | {"rows": 10, 'style': 'padding-bottom: 5px;',
+                        render_kw = classDict | {"rows": 6, 'style': 'padding-bottom: 5px;',
                         'placeholder': 'Comma separated list of run numbers e.g. 346512, 346513 \
                          \nOr\nLumisections in JSON format. e.g. {"354553": [[1, 300]]}',
                         'onkeyup': 'validateJSON_or_List(this.id)'
@@ -228,10 +228,9 @@ class TicketForm(FlaskForm):
                         )
     notes = STextAreaField('Notes',  
                            render_kw = classDict | {
-                                "rows": 5,
-                                'style': 'padding-bottom: 5px;',
-                                'placeholder': "Description of the request. \
-                                 TWiki links etc.."
+                            "rows": 5,
+                            'style': 'padding-bottom: 5px;',
+                            'placeholder': "Description of the request. TWiki links etc.."
                            },
                            label_rkw = label_rkw
                       )
@@ -244,10 +243,10 @@ class TicketForm(FlaskForm):
         if status_code != 200:
             raise ValidationError('CMSSW release is not valid!')
 
-    def validate_input_datasets(self, field):
+    def validate_input_datasets(self, field, test=None):
         test_datasets = field.data.replace(',', '\n').split('\n')
         test_datasets = list(map(lambda x: x.strip(), test_datasets))
-        test_datasets = list((filter(lambda x: len(x)>5, test_datasets)))
+        test_datasets = list((filter(lambda x: len(x)>0, test_datasets)))
         wrong_datasets = list()
         with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
             for dataset in test_datasets:
@@ -261,10 +260,16 @@ class TicketForm(FlaskForm):
                         )
                 res = json.loads(res.decode('utf-8'))
                 if not res: wrong_datasets.append(dataset)
-        if wrong_datasets:
+        if wrong_datasets and not test:
             raise ValidationError(f'Invalid datasets: {", ".join(wrong_datasets)}')
-        if (not field.data) and self.input_runs.data:
+        elif (not field.data) and self.input_runs.data and not test:
             raise ValidationError(f"Input dataset field is required when 'Run numbers' are provided")
+
+        # This is to test if this validator is successfull from another validator
+        if not (wrong_datasets or ((not field.data) and self.input_runs.data)) and test: 
+            return test_datasets
+        else:
+            return False
 
     def validate_input_runs(self, field):
         try:
@@ -294,3 +299,24 @@ class TicketForm(FlaskForm):
             raise ValidationError(f'Invalid runs: {", ".join(wrong_runs)}')
         if (not field.data) and self.input_datasets.data:
             raise ValidationError(f"Run numbers field is required when 'Dataset' field is provided")
+
+        # Test if given runs are available in all datasets
+        input_datasets = self.validate_input_datasets(self.input_datasets, test=True)
+        if input_datasets:
+            incompatible_runs = {d: [] for d in input_datasets}
+            with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
+                for dataset in input_datasets:
+                    runs_in_dataset = dbs_conn.api(
+                            'GET',
+                            f'/dbs/prod/global/DBSReader/runs?dataset={dataset}'
+                            )
+                    res = json.loads(runs_in_dataset.decode('utf-8'))
+                    res = {a_dict['run_num'] for a_dict in res}
+                    bad_runs = list(set([int(a) for a in test_runs]).difference(res))
+                    incompatible_runs[dataset] = bad_runs
+            if [v for _, v in incompatible_runs.items() if v]:
+                msg = ""
+                for k, v in incompatible_runs.items():
+                    if v:
+                        msg += f"Run/s {', '.join([str(l) for l in v])} is/are not present in {k}.\n"
+                raise ValidationError(msg)
