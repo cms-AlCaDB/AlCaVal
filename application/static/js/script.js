@@ -88,9 +88,12 @@ function validateRunNumbers(id) {
       })
       add_number_of_runs(id, runs)
       if (!runs.length) return ;
+      runs = document.getElementById(id).value.split(',')
       for (let run in runs){
         if (runs[run].trim() == '')
           throw new Error("Can not have empty spaces, remove extra comma!")
+        if (runs[run].includes('\n'))
+          throw new Error("New line seperation is not allowed")
         if (!Number(runs[run]))
           throw new Error(runs[run] + " is not valid run")
         if (runs[run].includes('.'))
