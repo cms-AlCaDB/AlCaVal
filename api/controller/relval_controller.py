@@ -601,6 +601,17 @@ class RelValController(ControllerBase):
                     if not gpu_dict.get('cuda_runtime'):
                         raise Exception(f'GPU Runtime not set in {prepid} step {index + 1}')
 
+            # Check existance of dataset and runs and if they have enough events
+            for step in relval.get('steps'):
+                if step.get_step_type() == 'input_file':
+                    dataset = step.get('input').get('dataset')
+                    runsLs = set(step.get('input').get('lumisection').keys())
+                    runs = set(step.get('input').get('run'))
+            ds_runs = dbs_dataset_runs(dataset)
+            db_runs = {int(run) for run in runs or runsLs}
+            if not set(ds_runs).intersection(db_runs):
+                raise Exception(f'Runs {", ".join(runs or runsLs)} are not there in the dataset {dataset}')
+
         conditions_tree = self.get_resolved_conditions(relvals)
         results = []
         # Go through relvals and set resolved globaltags from the updated dict

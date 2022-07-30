@@ -4,6 +4,21 @@ Module that contains Ticket class
 from copy import deepcopy
 from ..model.model_base import ModelBase
 
+class dict_or_list():
+    def typecast(self, input_string):
+        try:
+            if input_string.strip() == '':
+                return []
+            if isinstance(eval(input_string), dict):
+                return eval(input_string)
+            if isinstance(eval(input_string), tuple):
+                return list(eval(input_string))
+            if isinstance(eval(input_string), int):
+                return [eval(input_string)]
+            if type(input_string) in [list, dict]:
+                return input_string
+        except:
+            raise Exception('Input is required to be list or dict in string format')
 
 class Ticket(ModelBase):
     """
@@ -85,6 +100,10 @@ class Ticket(ModelBase):
         'status': 'new',
         # Workflow ids
         'workflow_ids': [],
+        # Input datasets
+        'input_datasets': [],
+        # Input runs
+        'input_runs': dict_or_list(),
     }
 
     lambda_checks = {
@@ -112,6 +131,8 @@ class Ticket(ModelBase):
         'scram_arch': lambda s: not s or ModelBase.lambda_check('scram_arch')(s),
         'workflow_ids': lambda wf: len(wf) > 0,
         '__workflow_ids': lambda wf: wf > 0,
+        '__input_datasets': lambda ds: len(ds) >= 0,
+        '___input_runs': lambda ir: len(ir) >= 0,
 
     }
 

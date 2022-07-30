@@ -7,6 +7,7 @@ charset-normalizer==2.0.12
 click==8.1.2
 colorlog==6.6.0
 cryptography==36.0.2
+decorator==5.1.1
 defusedxml==0.7.1
 Flask==2.1.1
 Flask-Babel==2.0.0
@@ -15,6 +16,7 @@ flask-oidc==1.4.0
 Flask-RESTful==0.3.9
 Flask-Table==0.5.0
 Flask-WTF==1.0.1
+future==0.18.2
 httplib2==0.20.4
 idna==3.3
 importlib-metadata==4.11.3

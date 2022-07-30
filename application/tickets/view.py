@@ -29,8 +29,14 @@ def create_ticket():
 
         # workflow IDs to string
         workflows = formdata.get('workflow_ids')
+        input_runs = formdata.get('input_runs')
+        input_datasets = formdata.get('input_datasets')
         # command_steps = formdata.get('command_steps')
         formdata.update({'workflow_ids': ", ".join([str(i) for i in workflows])})
+        if isinstance(input_datasets, list):
+            formdata.update({'input_datasets': "\n".join([str(i) for i in input_datasets])})
+        if isinstance(input_runs, list):
+            formdata.update({'input_runs': ", ".join([str(i) for i in input_runs])})
         # formdata.update({'command_steps': ", ".join([str(i) for i in command_steps])})
 
         editing_info = res['response']['editing_info']
@@ -73,6 +79,10 @@ def create_ticket():
     if form.validate_on_submit():
         data = form.data
         data.update({'workflow_ids': data['workflow_ids'].strip().split(',')})
+        input_datasets = data['input_datasets'].replace(',', '\n').split('\n')
+        input_datasets = list(map(lambda x: x.strip(), input_datasets))
+        input_datasets = list((filter(lambda x: len(x)>5, input_datasets)))
+        data.update({'input_datasets': input_datasets})
         # data.update({'command_steps': data['command_steps'].strip().split(',')})
         if creating_new:
             res = askfor.put('api/tickets/create', data=str(json.dumps(data)), headers=request.headers).json()

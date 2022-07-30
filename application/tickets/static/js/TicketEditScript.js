@@ -42,6 +42,40 @@ function validate_cmssw(id) {
     })
 }
 
+
+function validate_input_runs(){
+    validateJSON_or_List('input_runs')
+}
+
+function validateJSON_or_List(id) {
+    var input_runs_error = document.getElementById('nrun_error_id')
+    if (input_runs_error) input_runs_error.parentNode.parentNode.remove()
+    value = document.getElementById(id).value
+    if (value.includes("{") | value.includes("}")){
+        validateJSON(id)
+    } else {
+        validateRunNumbers(id)
+    }
+}
+
+function validateJSON(id) {
+    var el = ''
+    try{
+        value = document.getElementById(id).value.replaceAll('\'', '\"')
+        var cpos = $('#'+id).prop("selectionStart")
+        document.getElementById(id).value = value
+        document.getElementById(id).setSelectionRange(cpos, cpos);
+        add_number_of_runs(id, [])
+        var json = JSON.parse(value);
+        add_number_of_runs(id, Object.keys(json))
+        prettyPrint(id)
+        el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color: green">Valid JSON</small></td>'
+    }catch (e){
+        el = '<td></td><td style="padding-top: unset;"><small id="nrun_error_id" style="color:red">Invalid JSON: '+e+'</small></td>'
+    }
+    document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
+}
+
 $(document).mouseup(function (e) {
     // Hide popover when clicked anywhere else
     if(!($(e.target).hasClass("popover-content"))){
@@ -63,5 +97,8 @@ $(document).ready(function(){
     $('#cmssw_release').on( "change", function( event ) {
         validate_cmssw(this.id)
     })
+
+    // Validate InputRuns
+    validate_input_runs()
 });
 
