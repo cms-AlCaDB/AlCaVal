@@ -5,14 +5,14 @@ metadata:
   name: alcaval
   annotations:
     openshift.io/display-name: AlCaVal Web App
-    description: Flask app/api, with MongoDB and Mongo Express. 
+    description: Flask app/api, with MongoDB
     tags: quickstart,python,flask,mongodb
     iconClass: icon-python
     openshift.io/long-description: This template defines resources needed to deploy
       a Flask based fitter web application, including a build configuration, application deployment
       configuration, and database deployment configuration.
     openshift.io/provider-display-name: Pritam Kalbhor
-    openshift.io/documentation-url: https://gitlab.cern.ch/pkalbhor/alcaval
+    openshift.io/documentation-url: https://github.com/cms-AlCaDB/AlCaVal/wiki
     openshift.io/support-url: https://github.com/pkalbhor
     template.openshift.io/bindable: 'false'
 message: |-
@@ -83,7 +83,13 @@ objects:
     - type: ConfigChange
     - type: GitLab
       gitlab:
-        secret: "${GITLAB_WEBHOOK_SECRET}"
+        secret: "${WEBHOOK_SECRET}"
+    - type: GitHub
+      github:
+        secret: "${WEBHOOK_SECRET}"
+    - type: Generic
+      generic:
+        secret: "${WEBHOOK_SECRET}"
 - kind: DeploymentConfig
   apiVersion: v1
   metadata:
@@ -294,9 +300,9 @@ parameters:
   description: The exposed hostname that will route to the Flask service, if left
     blank a value will be defaulted.
   value: 'alcaval.web.cern.ch'
-- name: GITLAB_WEBHOOK_SECRET
-  displayName: GitLab Webhook Secret
-  description: GitLab trigger secret.  A difficult to guess string encoded as part
+- name: WEBHOOK_SECRET
+  displayName: Webhook Secret
+  description: A difficult to guess string encoded as part
     of the webhook URL.  Not encrypted.
   generate: expression
   from: "[a-zA-Z0-9]{40}"
@@ -327,20 +333,12 @@ parameters:
 - name: FLASK_OIDC_CLIENT_SECRETS
   displayName: Flask OIDC Client Secret in JSON Format
   description: Put client secrets needed for using login functionality from CERN OIDC. Base-64 encoded is required
-  generate: expression
-  from: "[\\w]{50}"
 - name: SSH_CREDENTIALS
   displayName: SSH credentials in JSON Format
   description: Put username, password of SSH node in JSON format. Base-64 encoded is required
-  generate: expression
-  from: "[\\w]{50}"
 - name: GRID_USERCERT
   displayName: GRID user certificate
   description: GRID user certificate. Base-64 encoded is required
-  generate: expression
-  from: "[\\w]{5000}"
 - name: GRID_USERKEY
   displayName: GRID user key
-  description: GRID user key. Base-64 encoded is required
-  generate: expression
-  from: "[\\w]{5000}"
+  description: GRID user certificate key. Base-64 encoded is required
