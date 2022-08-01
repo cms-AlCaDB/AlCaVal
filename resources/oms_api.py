@@ -36,7 +36,7 @@ class OMSAPI(object):
 			cred_file = Config.get('credentials_file')
 			with open(cred_file) as json_file: creds = json.load(json_file)
 			user = creds['username']
-			os.system(f'kinit -kt secrets/{user}.keytab {user}@CERN.CH')
+			os.system(f'kinit -kt logs/{user}.keytab {user}@CERN.CH')
 
 		url = "http://cmsoms.cern.ch"
 		session, response = cern_sso.login_with_kerberos(url, False, "auth.cern.ch", False)

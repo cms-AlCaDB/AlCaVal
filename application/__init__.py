@@ -133,10 +133,10 @@ def create_app():
 		with open(cred_file) as json_file: credentials = json.load(json_file)
 		user = credentials['username']
 		passwd = credentials['password']
-		if f'{user}.keytab' in os.listdir('secrets'): return
+		if f'{user}.keytab' in os.listdir('logs'): return
 
-		os.system(f'printf "%b" "addent -password -p {user}@CERN.CH -k 1 -e RC4-HMAC\n{passwd}\nwkt secrets/{user}.keytab" | ktutil')
-		os.system(f'kinit -kt secrets/{user}.keytab {user}@CERN.CH')
+		os.system(f'printf "%b" "addent -password -p {user}@CERN.CH -k 1 -e RC4-HMAC\n{passwd}\nwkt logs/{user}.keytab" | ktutil')
+		os.system(f'kinit -kt logs/{user}.keytab {user}@CERN.CH')
 
 	@app.route('/api', defaults={'_path': ''})
 	@app.route('/api/<path:_path>')
