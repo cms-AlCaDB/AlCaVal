@@ -59,9 +59,9 @@ def create_ticket():
         for field in common_keys:
             rkw_value = form._fields.get(field).render_kw
             if rkw_value:
-                form._fields.get(field).render_kw.update({'disabled': not editInfo.get(field)})
+                form._fields.get(field).render_kw.update({'readonly': not editInfo.get(field)})
             else:
-                form._fields.get(field).render_kw = {'disabled': not editInfo.get(field)}
+                form._fields.get(field).render_kw = {'readonly': not editInfo.get(field)}
     if clone:
         form._fields.get('prepid').data = ""
 
@@ -74,7 +74,7 @@ def create_ticket():
             if key in ['prepid', 'submit', 'csrf_token']:
                 continue
             else:
-                form._fields.get(key).render_kw.update({'disabled': False})
+                form._fields.get(key).render_kw.update({'readonly': False})
 
     if form.validate_on_submit():
         data = form.data

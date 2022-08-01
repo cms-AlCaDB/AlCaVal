@@ -15,6 +15,7 @@ services:
     env_file: secrets/environs.txt
     depends_on:
       - database
+      - dbmonitor
     ports:
       - 8080:8080
     volumes:
