@@ -1,7 +1,5 @@
 # AlCaVal: [Relval](https://github.com/cms-PdmV/RelVal) submision tool for AlCa
-Production instance: https://alcaval.web.cern.ch
-
-Development instance: https://alcaval-dev.web.cern.ch
+Documentation: [Wiki](https://github.com/cms-AlCaDB/AlCaVal/wiki)
 
 ## Development
 ### Prerequisites
@@ -11,7 +9,7 @@ Put appropriate values for `client_id` and `client_secret`. If you do not have t
 ```json
 {
   "web": {
-    "client_id": "<oidc client id>",
+    "client_id": "<oidc client id here>",
     "client_secret": "<oidc client secret here>"
   }
 }
@@ -58,10 +56,6 @@ GRID user-certificate to be used for accessing cmsweb services
 Install docker in case it is not installed in your machine. Follow [Install Docker Engine](https://docs.docker.com/engine/install/) and [Install Docker Compose](https://docs.docker.com/compose/install/).
 Then launch application using:
 
-```docker-compose up -d```
+```docker-compose up app```
 
 Application is accesible at http://localhost:8080 and database can be accessed from http://localhost:8081.
-
-Accessing logs of those detached containers:
-
-```docker-compose logs -f -t```
