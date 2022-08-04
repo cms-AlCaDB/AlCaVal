@@ -465,6 +465,11 @@ class TicketController(ControllerBase):
         new_relvals = []
         new_relval_tags = []
         for relval, relval_tag in zip(relvals, relval_tags):
+            if relval_tag[0] == '':
+                # Do not modify unclassified relvals
+                new_relvals.append(deepcopy(relval))
+                new_relval_tags.append(relval_tag)
+                continue
             for dataset in input_datasets:
                 workflow_name = ''.join(dataset.split('-')[0].split('/'))
                 relval_name = relval.set('workflow_name', workflow_name)
