@@ -269,7 +269,7 @@ class TicketForm(FlaskForm):
                 if not res: wrong_datasets.append(dataset)
         if wrong_datasets and not test:
             raise ValidationError(f'Invalid datasets: {", ".join(wrong_datasets)}')
-        elif (not field.data) and self.input_runs.data and (not test):
+        elif (not field.data.strip()) and self.input_runs.data and (not test):
             raise ValidationError(f"Input dataset field is required when 'Run numbers' are provided")
 
         # This is to test if this validator is successfull from another validator
@@ -304,7 +304,7 @@ class TicketForm(FlaskForm):
                 if not res: wrong_runs.append(run)
         if wrong_runs:
             raise ValidationError(f'Invalid runs: {", ".join(wrong_runs)}')
-        if (not field.data) and self.input_datasets.data:
+        if (not field.data.strip()) and self.input_datasets.data:
             raise ValidationError(f"Run numbers field is required when 'Dataset' field is provided")
 
         # Test if given runs are available in all datasets
