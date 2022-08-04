@@ -1,6 +1,7 @@
 import re
 import ast
 import json
+import logging
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, SelectField, StringField, FieldList, TextAreaField, IntegerField
 from wtforms.validators import DataRequired, InputRequired, ValidationError, StopValidation, Length, NumberRange
@@ -13,7 +14,10 @@ from wtforms.fields.core import Label as BaseLabel
 from core_lib.utils.global_config import Config
 from core_lib.utils.common_utils import ConnectionWrapper
 import requests
+from resources.oms_api import OMSAPI
+import urllib3
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 grid_cert = Config.get('grid_user_cert')
 grid_key = Config.get('grid_user_key')
 cmsweb_url = 'https://cmsweb.cern.ch'
@@ -244,9 +248,12 @@ class TicketForm(FlaskForm):
             raise ValidationError('CMSSW release is not valid!')
 
     def validate_input_datasets(self, field, test=None):
-        test_datasets = field.data.replace(',', '\n').split('\n')
-        test_datasets = list(map(lambda x: x.strip(), test_datasets))
-        test_datasets = list((filter(lambda x: len(x)>0, test_datasets)))
+        if not field.data:
+            test_datasets = list()
+        else:
+            test_datasets = field.data.replace(',', '\n').split('\n')
+            test_datasets = list(map(lambda x: x.strip(), test_datasets))
+            test_datasets = list((filter(lambda x: len(x)>0, test_datasets)))
         wrong_datasets = list()
         with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
             for dataset in test_datasets:
@@ -262,7 +269,7 @@ class TicketForm(FlaskForm):
                 if not res: wrong_datasets.append(dataset)
         if wrong_datasets and not test:
             raise ValidationError(f'Invalid datasets: {", ".join(wrong_datasets)}')
-        elif (not field.data) and self.input_runs.data and not test:
+        elif (not field.data.strip()) and self.input_runs.data and (not test):
             raise ValidationError(f"Input dataset field is required when 'Run numbers' are provided")
 
         # This is to test if this validator is successfull from another validator
@@ -273,7 +280,7 @@ class TicketForm(FlaskForm):
 
     def validate_input_runs(self, field):
         try:
-            if field.data == '':
+            if not field.data:
                 test_runs = list()
             elif not ('{' in field.data and '}' in field.data):
                 test_runs = list(map(lambda x: x.strip(), field.data.split(',')))
@@ -297,7 +304,7 @@ class TicketForm(FlaskForm):
                 if not res: wrong_runs.append(run)
         if wrong_runs:
             raise ValidationError(f'Invalid runs: {", ".join(wrong_runs)}')
-        if (not field.data) and self.input_datasets.data:
+        if (not field.data.strip()) and self.input_datasets.data:
             raise ValidationError(f"Run numbers field is required when 'Dataset' field is provided")
 
         # Test if given runs are available in all datasets
@@ -320,3 +327,59 @@ class TicketForm(FlaskForm):
                     if v:
                         msg += f"Run/s {', '.join([str(l) for l in v])} is/are not present in {k}.\n"
                 raise ValidationError(msg)
+        else:
+            return
+
+        # Validate if lumisections range is correctly casted
+        runs = ast.literal_eval(field.data)
+        if isinstance(runs, dict):
+            for _, value in runs.items():
+                is_list = isinstance(value, list)
+                is_int = all(
+                 (len(items) == 2 if isinstance(items, list) else False) and\
+                 isinstance(items, list) and \
+                 all(isinstance(item, int) for item in items) for items in value
+                )
+                if is_list and is_int:
+                    lsec = []
+                    for v in value: lsec += v
+                    asc_range = True if lsec == sorted(lsec) else False
+                else:
+                    asc_range = False
+                if not (is_list and is_int and asc_range):
+                    raise ValidationError(
+                        f'Lumisections format is not valid. \
+                        It should be list of list of lumisection ranges. \
+                        e.g. [[1 ,40],[100, 200]]'
+                        )
+
+        # Validating number of events
+        try:
+            oms = OMSAPI()
+            stats = {}
+            for dataset in input_datasets:
+                dname = dataset.split('/')[1].strip()
+                events = 0
+                for run in test_runs:
+                    if isinstance(runs, dict):
+                        events += oms.get_nEvents(dname, run, LumiSec=str(runs[run]))
+                    else:
+                        events += oms.get_nEvents(dname, run)
+                stats[dataset] = events
+            emptysets = []
+            for dataset, events in stats.items():
+                if events < 5000: emptysets.append(dataset)
+            if emptysets:
+                msg = "<ul>"
+                for dataset, events in stats.items():
+                    msg += f"<li>{dataset}: \
+                    <span style='color:blue'>{events}</span> events</li>"
+                msg += "</ul>"
+                raise ValidationError(
+                     f"Too few events in dataset: \
+                     {', '.join([d.split('/')[1] for d in emptysets])} {msg}"
+                    )
+
+        except Exception as e:
+            if isinstance(e, ValidationError): raise
+            logging.getLogger().error(e)

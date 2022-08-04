@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import json
 import logging
 import logging.handlers
 from colorlog import ColoredFormatter
@@ -124,6 +125,18 @@ def create_app():
 							  )
 
 	api = Api(app)
+
+	@app.before_first_request
+	def _declare_keytab():
+		config = Config.load('config.cfg', os.getenv('INSTANCE', 'prod'))
+		cred_file = config.get('credentials_file')
+		with open(cred_file) as json_file: credentials = json.load(json_file)
+		user = credentials['username']
+		passwd = credentials['password']
+		if f'{user}.keytab' in os.listdir('logs'): return
+
+		os.system(f'printf "%b" "addent -password -p {user}@CERN.CH -k 1 -e RC4-HMAC\n{passwd}\nwkt logs/{user}.keytab" | ktutil')
+		os.system(f'kinit -kt logs/{user}.keytab {user}@CERN.CH')
 
 	@app.route('/api', defaults={'_path': ''})
 	@app.route('/api/<path:_path>')

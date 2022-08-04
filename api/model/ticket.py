@@ -7,16 +7,16 @@ from ..model.model_base import ModelBase
 class dict_or_list():
     def typecast(self, input_string):
         try:
-            if input_string.strip() == '':
-                return []
+            if type(input_string) in [list, dict]:
+                return input_string
+            if isinstance(input_string, str):
+                if input_string.strip() == '': return []
             if isinstance(eval(input_string), dict):
                 return eval(input_string)
             if isinstance(eval(input_string), tuple):
                 return list(eval(input_string))
             if isinstance(eval(input_string), int):
                 return [eval(input_string)]
-            if type(input_string) in [list, dict]:
-                return input_string
         except:
             raise Exception('Input is required to be list or dict in string format')
 
