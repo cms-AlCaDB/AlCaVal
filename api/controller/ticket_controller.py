@@ -454,6 +454,36 @@ class TicketController(ControllerBase):
                         relval_tags.append((WFname, workflow_id))
         return (relvals, relval_tags)
 
+    def expand_relvals_for_inputs(self, ticket, relvals, relval_tags):
+        """This will modify relvals to add input dataset and runs """
+        input_datasets = ticket.get('input_datasets')
+        input_runs = ticket.get('input_runs')
+        if not (input_runs and input_datasets): return relvals, relval_tags
+
+        lumisection = input_runs if isinstance(input_runs, dict) else {}
+        run = input_runs if isinstance(input_runs, list) else []
+        new_relvals = []
+        new_relval_tags = []
+        for relval, relval_tag in zip(relvals, relval_tags):
+            for dataset in input_datasets:
+                workflow_name = ''.join(dataset.split('-')[0].split('/'))
+                relval_name = relval.set('workflow_name', workflow_name)
+                steps = relval.get('steps')
+                input_step_index = None
+                for index, relval_step in enumerate(steps):
+                    if relval_step.get_step_type() == 'input_file':
+                        input_step_index = index
+                        input_step_json = relval_step.get_json()
+                        input_step_json['input']['dataset'] = dataset
+                        input_step_json['input']['lumisection'] = lumisection
+                        input_step_json['input']['run'] = run
+                        input_step = RelValStep(input_step_json, relval, False)
+                steps[input_step_index] = input_step
+                relval.set('steps', steps)
+                new_relvals.append(deepcopy(relval))
+                new_relval_tags.append(relval_tag)
+        return new_relvals, new_relval_tags
+
     def create_relvals_for_ticket(self, ticket):
         """
         Create RelVals from given ticket. Return list of relval prepids
@@ -471,6 +501,7 @@ class TicketController(ControllerBase):
                 workflows = self.generate_workflows(ticket, ssh_executor)
                 # Iterate through workflows and create RelVal objects
                 relvals, relval_tags = self.create_relval_for_alca(ticket, workflows)
+                relvals, relval_tags = self.expand_relvals_for_inputs(ticket, relvals, relval_tags)
 
                 # Handle recycling if needed
                 if recycle_input_of:
