@@ -612,7 +612,7 @@ class TicketController(ControllerBase):
 
             runs = set(relval.get('steps')[0]['input']['lumisection'].keys())
             if not len(runs):
-                runs = set(relval.get('steps')[0]['input']['run'].split(','))
+                runs = set(relval.get('steps')[0]['input']['run'])
             if result.get('run_number'):
                 result['run_number'] = result['run_number'] | runs
             else:
