@@ -3,6 +3,7 @@ Module that contains RelValController class
 """
 import json
 import time
+import random
 import requests
 from database.database import Database
 from core_lib.controller.controller_base import ControllerBase
@@ -314,7 +315,7 @@ class RelValController(ControllerBase):
         job_dict['SubRequestType'] = 'RelVal'
         job_dict['RequestString'] = relval.get_request_string()
         job_dict['Campaign'] = relval.get_campaign()
-        job_dict['RequestPriority'] = 900000
+        job_dict['RequestPriority'] = random.randrange(800000, 900000, 5000)
         job_dict['TimePerEvent'] = relval.get('time_per_event')
         job_dict['SizePerEvent'] = relval.get('size_per_event')
         job_dict['ProcessingVersion'] = 1
