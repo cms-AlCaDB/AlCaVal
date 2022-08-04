@@ -80,10 +80,17 @@
       // Returning list of AlCa workflows in html format
       var alca_wfs = get_alca_wf_list()
       var attached_wfs = globalTicket.attached_wfs
+      var input_datasets = globalTicket.input_datasets
+      if (input_datasets.length){
+        datamsg = joinList(input_datasets.map(function(x){x = x.split("/")[1]; return x}))
+        datamsg = ' for ' + datamsg
+      } else{
+        datamsg = ''
+      }
       if (alca_wfs.length === 0)return '';
       var html_output = '';
       Object.keys(attached_wfs).forEach(function(key) {
-        if (attached_wfs[key].length !== 0) {html_output += '<li style="text-align: left"><b>'+key+' : </b>'+attached_wfs[key].join(', ')+'</li>'}
+        if (attached_wfs[key].length !== 0) {html_output += '<li style="text-align: left"><b>'+key+' : </b>'+attached_wfs[key].join(', ')+datamsg+'</li>'}
       })
       html_output = '<p style="text-align: left">AlCa Specific:<ul>'+html_output+'</ul></p>'
       return html_output
