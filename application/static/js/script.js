@@ -121,7 +121,7 @@ function validateRunNumbers(id) {
 
 function joinList(array) {
   // Join list with comma and last element with 'and'
-  if (array.length === 1) return arr[0];
+  if (array.length === 1) return array[0];
   const firsts = array.slice(0, array.length - 1);
   const last = array[array.length - 1];
   return firsts.join(', ') + ' and ' + last;
