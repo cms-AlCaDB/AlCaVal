@@ -170,7 +170,8 @@ class DQMRequestSubmitter(BaseSubmitter):
                                           stderr)
                         raise Exception(f'Error creting remote directory: {stderr}')
 
-                    dqm_script_commands = run_commands_in_cmsenv(command, cmssw_version, scram_arch)
+                    # Fixing CMSSW runtime env to CMSSW_12_3_3
+                    dqm_script_commands = run_commands_in_cmsenv(command, 'CMSSW_12_3_3', scram_arch)
                     stdout, stderr, exit_code = ssh_executor.execute_command([f'cd {remote_directory}', dqm_script_commands])
                     if exit_code != 0:
                         self.logger.error('Error creating comparison plots:\nstdout:%s\nstderr:%s',
