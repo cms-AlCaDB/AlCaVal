@@ -408,7 +408,6 @@ def run_commands_in_singularity(commands, scram_arch, script_name=None):
              '',
              ('singularity run '
               '-B /afs -B /cvmfs -B /eos -B /etc/grid-security '
-              '--home $PWD:$PWD '
               f'{container_path}/$CONTAINER_NAME'
               f' $(pwd)/{script_name}.sh')]
 
