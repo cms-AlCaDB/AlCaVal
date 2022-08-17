@@ -148,6 +148,8 @@ class RelVal(ModelBase):
                 commands += self.get_fragment_command(fragment, custom_fragment_name).split('\n')
                 commands += ['']
 
+            if 'HLT:Custom' in step.get('driver').get('step'):
+                commands += self.add_custom_hltmenu(step).split('\n')
             commands += step.get_command(custom_fragment=custom_fragment_name,
                                          for_submission=for_submission).split('\n')
             commands += ['']
@@ -159,6 +161,28 @@ class RelVal(ModelBase):
             bash += run_commands_in_cmsenv(commands, previous_cmssw, previous_scram).split('\n')
 
         return '\n'.join(bash)
+
+    def add_custom_hltmenu(self, step):
+        """
+        Adding extra step when 'HLT:Custom' step is used in the cmsDriver steps
+        """
+        step_index = step.get_index_in_parent()
+
+        # This is temporary workaround with fixed hlt_menu 
+        # Future development: Create 'hlt_menu' field and pass its value 
+        # from ticket -> relval to here 
+        menu = self.get_json().get('hlt_menu')
+        menu = menu if menu else '/dev/CMSSW_12_4_0/GRun'
+        # ----------------------------------------------------------------
+
+        comment = '# Commands for creation of custom HLT configuration'+ \
+                 f' to be used for step {step_index + 1}:\n'
+        command = 'git cms-addpkg HLTrigger/Configuration -q\n'
+        command += 'cd $CMSSW_SRC && scramv1 b && cd $ORG_PWD\n'
+        command += "hltGetConfiguration --unprescale --cff --offline" + \
+                   f" {menu}" + \
+        " > ${CMSSW_BASE}/src/HLTrigger/Configuration/python/HLT_Custom_cff.py"
+        return comment + command + '\n'
 
     def get_fragment_command(self, fragment, fragment_file):
         """
