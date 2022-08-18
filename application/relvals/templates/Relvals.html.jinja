@@ -227,10 +227,10 @@
         }
       }).then(data =>{
         window.location.reload(false)
-        $('body').removeClass('loading');
+        window.onload = function() { $('body').removeClass('loading');}
       }).catch(error => {
         window.location.reload(false)
-        $('body').removeClass('loading');
+        window.onload = function() { $('body').removeClass('loading');}
       })
     }
 
