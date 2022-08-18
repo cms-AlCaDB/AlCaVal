@@ -148,10 +148,12 @@ class RelVal(ModelBase):
                 commands += self.get_fragment_command(fragment, custom_fragment_name).split('\n')
                 commands += ['']
 
-            if 'HLT:Custom' in step.get('driver').get('step'):
-                commands += self.add_custom_hltmenu(step).split('\n')
-            commands += step.get_command(custom_fragment=custom_fragment_name,
+            step_command = step.get_command(custom_fragment=custom_fragment_name,
                                          for_submission=for_submission).split('\n')
+            if 'HLT:Custom' in step.get('driver').get('step'):
+                commands += self.add_custom_hltmenu(step, step_command).split('\n')
+            else:
+                commands += step_command
             commands += ['']
             previous_cmssw = step_cmssw
             previous_scram = scram_arch
@@ -162,10 +164,11 @@ class RelVal(ModelBase):
 
         return '\n'.join(bash)
 
-    def add_custom_hltmenu(self, step):
+    def add_custom_hltmenu(self, step, step_command):
         """
         Adding extra step when 'HLT:Custom' step is used in the cmsDriver steps
         """
+        step_command = '\n'.join(step_command)
         step_index = step.get_index_in_parent()
 
         # This is temporary workaround with fixed hlt_menu 
@@ -176,13 +179,16 @@ class RelVal(ModelBase):
         # ----------------------------------------------------------------
 
         comment = '# Commands for creation of custom HLT configuration'+ \
-                 f' to be used for step {step_index + 1}:\n'
+                 f' to be used for step {step_index + 1}:'
         command = 'git cms-addpkg HLTrigger/Configuration -q\n'
         command += 'cd $CMSSW_SRC && scramv1 b && cd $ORG_PWD\n'
         command += "hltGetConfiguration --unprescale --cff --offline" + \
                    f" {menu}" + \
-        " > ${CMSSW_BASE}/src/HLTrigger/Configuration/python/HLT_Custom_cff.py"
-        return comment + command + '\n'
+        " > ${CMSSW_BASE}/src/HLTrigger/Configuration/python/HLT_Custom_cff.py\n"
+
+        outputfile = f'step_{step_index+1}_cfg.py'
+        dump_command = f'edmConfigDump -o {outputfile} {outputfile}'
+        return '\n'.join([comment, command, step_command, dump_command])
 
     def get_fragment_command(self, fragment, fragment_file):
         """
