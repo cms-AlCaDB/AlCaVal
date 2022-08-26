@@ -48,7 +48,7 @@ class RelVal(ModelBase):
         # Overwrite default CMSSW scram arch
         'scram_arch': '',
         # Size per event in kilobytes
-        'size_per_event': 1.0,
+        'size_per_event': 100.0,
         # Status of this relval
         'status': 'new',
         # Steps of RelVal
