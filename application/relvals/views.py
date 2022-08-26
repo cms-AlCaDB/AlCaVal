@@ -39,7 +39,7 @@ def prepareStepForForm(data):
     data['driver']['datatier'] = ', '.join(data['driver']['datatier'])
     data['driver']['eventcontent'] = ', '.join(data['driver']['eventcontent'])
     data['driver']['step'] = ', '.join(data['driver']['step'])
-    data['input']['run'] = ', '.join(data['input']['run'])
+    data['input']['run'] = ', '.join([str(run) for run in data['input']['run']])
     data['input']['lumisection'] = json.dumps(data['input']['lumisection'])
     return data
 
