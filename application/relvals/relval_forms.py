@@ -185,7 +185,7 @@ class Label(BaseLabel):
 
 def SetLabel(myid, label, name, label_rkw):
     return Label(myid,
-                label if label is not None else self.gettext(name.replace("_", " ").title()),
+                label if label is not None else name.replace("_", " ").title(),
                 label_rkw=label_rkw)
 
 class SSelectField(SelectField):
@@ -368,6 +368,15 @@ class cmsDriverStepForm(Form):
 
     scram_arch  = SStringField('SCRAM Arch',
                     render_kw = classDict | {"placeholder":"If empty, uses default value of the release"},
+                    label_rkw = label_kw
+                    )
+
+    size_per_event  = SStringField('Size Per Event',
+                    render_kw = classDict | {"placeholder":"Size per event"},
+                    label_rkw = label_kw
+                    )
+    time_per_event  = SStringField('Time Per Event',
+                    render_kw = classDict | {"placeholder":"Time per event"},
                     label_rkw = label_kw
                     )
 
