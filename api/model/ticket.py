@@ -40,6 +40,8 @@ class Ticket(ModelBase):
         'title': '',
         # CMS-Talk link 
         'cms_talk_link': '',
+        # Custom HLT Menu
+        'hlt_menu': '',
         # HLT GT
         'hlt_gt': '',
         # Prompt GT

@@ -145,6 +145,10 @@ class TicketForm(FlaskForm):
                 render_kw = classDict | {"placeholder":"Put a link from where this validation was requested"},
                 label_rkw = label_rkw
                 )
+    hlt_menu = SStringField('Custom HLT Menu',
+                render_kw = classDict | {"id":"hlt_menu", "placeholder":"Custom HLT menu"},
+                label_rkw = label_rkw
+                )
     hlt_gt = SStringField('Target HLT GT',
                 validators=[],
                 render_kw = classDict | {"id":"hlt_gt", "placeholder":"HLT target global tag"},
