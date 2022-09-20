@@ -47,6 +47,8 @@ class RelVal(ModelBase):
         'sample_tag': '',
         # Overwrite default CMSSW scram arch
         'scram_arch': '',
+        # Custom HLT Menu (To be used in HLT step)
+        'hlt_menu': '',
         # Size per event in kilobytes
         'size_per_event': 100.0,
         # Status of this relval

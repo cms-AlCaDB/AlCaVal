@@ -75,6 +75,7 @@ class TicketController(ControllerBase):
         editing_info['sample_tag'] = not_done
         editing_info['title'] = True
         editing_info['cms_talk_link'] = True
+        editing_info['hlt_menu'] = not_done
         editing_info['hlt_gt'] = not_done
         editing_info['prompt_gt'] = not_done
         editing_info['express_gt'] = not_done
@@ -380,6 +381,7 @@ class TicketController(ControllerBase):
         n_streams = ticket.get('n_streams')
         gpu_dict = ticket.get('gpu')
         gpu_steps = ticket.get('gpu_steps')
+        hlt_menu = ticket.get('hlt_menu')
         rewrite_gt_string = ticket.get('rewrite_gt_string')
         relval_json = {'prepid': 'TempRelValObject-00000',
                        'batch_name': ticket.get('batch_name'),
@@ -391,6 +393,7 @@ class TicketController(ControllerBase):
                        'matrix': ticket.get('matrix'),
                        'sample_tag': ticket.get('sample_tag'),
                        'scram_arch': scram_arch,
+                       'hlt_menu': hlt_menu,
                        'steps': [],
                        'workflow_id': workflow_id,
                        'workflow_name': workflow_dict['workflow_name']}

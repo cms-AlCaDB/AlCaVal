@@ -122,6 +122,7 @@ class RelValController(ControllerBase):
         editing_info['matrix'] = creating_new
         editing_info['sample_tag'] = is_new
         editing_info['scram_arch'] = is_new
+        editing_info['hlt_menu'] = is_new
         editing_info['size_per_event'] = is_new
         editing_info['time_per_event'] = is_new
         editing_info['workflow_id'] = False
