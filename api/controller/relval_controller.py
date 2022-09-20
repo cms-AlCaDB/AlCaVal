@@ -284,6 +284,8 @@ class RelValController(ControllerBase):
         task_dict['AcquisitionEra'] = task_dict['CMSSWVersion']
         task_dict['Memory'] = relval.get('memory')
         task_dict['Multicore'] = relval.get('cpu_cores')
+        task_dict['TimePerEvent'] = step.get('time_per_event')
+        task_dict['SizePerEvent'] = step.get('size_per_event')
         task_dict['Campaign'] = relval.get_campaign()
         driver = step.get('driver')
         if driver.get('nStreams'):
@@ -322,7 +324,7 @@ class RelValController(ControllerBase):
         job_dict['ProcessingVersion'] = 1
         # Harvesting should run on single core with 3GB memory,
         # and each task will have it's own core and memory setting
-        job_dict['Memory'] = 4000
+        job_dict['Memory'] = 3000
         job_dict['Multicore'] = 1
         job_dict['EnableHarvesting'] = False
         # Set DbsUrl differently for dev and prod versions

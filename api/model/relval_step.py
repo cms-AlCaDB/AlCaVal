@@ -21,6 +21,10 @@ class RelValStep(ModelBase):
         'cmssw_release': '',
         # Hash of configuration file uploaded to ReqMgr2
         'config_id': '',
+        # Size Per Event for a step
+        'size_per_event': 3000,
+        # Time per Event for a step
+        'time_per_event': 20,
         # cmsDriver arguments
         'driver': {
             'beamspot': '',
