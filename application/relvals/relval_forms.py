@@ -384,6 +384,10 @@ class cmsDriverStepForm(Form):
                         render_kw = classDict,
                         label_rkw = label_kw
                         )
+    lumis_per_job = SStringField('Lumis per job',
+                render_kw = classDict,
+                label_rkw = label_kw
+                )
     keep_output = SBooleanField('Keep Output',
                     render_kw = {'class': ''},
                     label_rkw = label_kw
