@@ -9,7 +9,7 @@ class ActionCol(Col):
         return self.td_format(self.from_attr_list(item, attr_list), item)
 
     def td_format(self, content, item):
-        status_list = ['new', 'approved', 'submitting', 'submitted', 'done', 'archived', 'nothing']
+        status_list = ['new', 'approving', 'approved', 'submitting', 'submitted', 'done', 'archived', 'nothing']
         newtab = 'target="_blank" rel="noopener noreferrer"'
         divAction = "<div class='actions'>{mylinks}</div>"
         isAdmin = bool(session.get('user').get('response').get('role_index') >= 2)
@@ -24,7 +24,7 @@ class ActionCol(Col):
 
         title = "title='Check the status of the submision'"
         stats2 = f"<a href='https://cms-pdmv.cern.ch/stats/?prepid={content}' {newtab} {title}>Stats2</a>"
-        stats2 = stats2 if status_list.index(item['status']) >= 3 else ""
+        stats2 = stats2 if status_list.index(item['status']) > 3 else ""
 
         prev_status = f"""<a id="prev_status_{content}" onclick="prevStatus(['{content}'])" href="javascript:void(0);" title='Move Relval to previous status'>Previous</a>"""
         prev_status = prev_status if (item['status'] != 'new' and isManager) else ""
