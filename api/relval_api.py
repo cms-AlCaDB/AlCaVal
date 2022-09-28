@@ -111,6 +111,25 @@ class GetRelValAPI(APIBase):
         obj = relval_controller.get(prepid)
         return self.output_text({'response': obj.get_json(), 'success': True, 'message': ''})
 
+class GetRelValTestsAPI(APIBase):
+    """
+    Endpoint for retrieving local test result of a single relval
+    """
+
+    def __init__(self):
+        APIBase.__init__(self)
+
+    @APIBase.exceptions_to_errors
+    def get(self, prepid):
+        """
+        Get a single with given prepid
+        """
+        obj = relval_controller.get_tests(prepid)
+        command = 'Exit code: ' + obj.get('test_exit_code', '') + '\n' + \
+                  obj.get('test_stdout', '') + \
+                  obj.get('test_stderr', '')
+        return self.output_text(command, content_type='text/plain')
+        # return self.output_text({'response': obj, 'success': True, 'message': ''})
 
 class GetEditableRelValAPI(APIBase):
     """
@@ -163,10 +182,25 @@ class GetCMSDriverAPI(APIBase):
         Get a text file with RelVal's cmsDriver.py commands
         """
         relval = relval_controller.get(prepid)
-        for_submission = flask.request.args.get('submission', '').lower() == 'true'
-        commands = relval_controller.get_cmsdriver(relval, for_submission)
+        commands = relval_controller.get_cmsdriver(relval)
         return self.output_text(commands, content_type='text/plain')
 
+class GetCMSDriverTestAPI(APIBase):
+    """
+    Endpoint for getting a bash script for TESTING cmsDriver.py commands 
+    """
+
+    def __init__(self):
+        APIBase.__init__(self)
+
+    @APIBase.exceptions_to_errors
+    def get(self, prepid=None):
+        """
+        Get cmsDriver.py command for testing
+        """
+        relval = relval_controller.get(prepid)
+        commands = relval_controller.get_cmsdriver_test(relval)
+        return self.output_text(commands, content_type='text/plain')
 
 class GetConfigUploadAPI(APIBase):
     """
@@ -182,8 +216,7 @@ class GetConfigUploadAPI(APIBase):
         Get a text file with relval's cmsDriver.py commands
         """
         relval = relval_controller.get(prepid)
-        for_submission = flask.request.args.get('submission', '').lower() == 'true'
-        commands = relval_controller.get_config_upload_file(relval, for_submission)
+        commands = relval_controller.get_config_upload_file(relval)
         return self.output_text(commands, content_type='text/plain')
 
 

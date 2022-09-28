@@ -286,7 +286,7 @@ class RelValStep(ModelBase):
 
         return f'# Step {step_index + 1} is input dataset for next step: {dataset}'
 
-    def get_command(self, custom_fragment=None, for_submission=False):
+    def get_command(self, custom_fragment=None, for_submission=False, for_test=False):
         """
         Return a cmsDriver command for this step
         Config file is named like this
@@ -353,8 +353,63 @@ class RelValStep(ModelBase):
                 else:
                     arguments_dict['filein'] = f'"file:step{input_number}_in{eventcontent}.root"'
 
+            # Customisation for fetching job report
+            if step_type != 'input_file' and for_test:
+                customise = arguments_dict.get('customise')
+                addMonitoring = 'Configuration/DataProcessing/Utils.addMonitoring'
+                customise = ','.join([customise, addMonitoring]) if customise else addMonitoring
+                arguments_dict['customise'] = customise
         cms_driver_command = self.__build_cmsdriver(index, arguments_dict, for_submission)
         return cms_driver_command
+
+    def get_test_command(self):
+        step_type = self.get_step_type()
+        index = self.get_index_in_parent()
+        if step_type == 'input_file' or 'HARVESTING' in self.get('driver')['step'][0]:
+            return ['']
+        report_name = f'REPORT{index+1}'
+        command = [f'{report_name}=step_{index+1}_report.xml']
+        command += [f'cmsRun -e -j ${report_name} step_{index+1}_cfg.py || exit $? ;']
+        # command += [f'python3 -c "import xmltodict; report = xmltodict.parse(open(\'$REPORT{index+1}\').read()); print(report)"']
+        command += [f'# Parse values from {report_name} report',
+                    f'processedEvents=$(grep -Po "(?<=<Metric Name=\\"NumberEvents\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'producedEvents=$(grep -Po "(?<=<TotalEvents>)(\\d*)(?=</TotalEvents>)" ${report_name} | tail -n 1)',
+                    f'threads=$(grep -Po "(?<=<Metric Name=\\"NumberOfThreads\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'peakValueRss=$(grep -Po "(?<=<Metric Name=\\"PeakValueRss\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'peakValueVsize=$(grep -Po "(?<=<Metric Name=\\"PeakValueVsize\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'totalSize=$(grep -Po "(?<=<Metric Name=\\"Timing-tstoragefile-write-totalMegabytes\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'totalSizeAlt=$(grep -Po "(?<=<Metric Name=\\"Timing-file-write-totalMegabytes\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'totalJobTime=$(grep -Po "(?<=<Metric Name=\\"TotalJobTime\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'totalJobCPU=$(grep -Po "(?<=<Metric Name=\\"TotalJobCPU\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'eventThroughput=$(grep -Po "(?<=<Metric Name=\\"EventThroughput\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    f'avgEventTime=$(grep -Po "(?<=<Metric Name=\\"AvgEventTime\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
+                    'if [ -z "$eventThroughput" ]; then',
+                    '  eventThroughput=$(bc -l <<< "scale=4; 1 / ($avgEventTime / $threads)")',
+                    'fi',
+                    'if [ -z "$totalSize" ]; then',
+                    '  totalSize=$totalSizeAlt',
+                    'fi',
+                    'if [ -z "$processedEvents" ]; then',
+                    '  processedEvents=$EVENTS',
+                    'fi',
+                    'cpu_eff=$(bc -l <<< "scale=2; ($totalJobCPU * 100) / ($threads * $totalJobTime)")',
+                    'size_per_event=$(bc -l <<< "scale=4; ($totalSize * 1024 / $producedEvents)")',
+                    'time_per_event=$(bc -l <<< "scale=4; (1 / $eventThroughput)")',
+                    f'echo "Validation report of Step {index + 1} sequence"',
+                    'echo "Processed events: $processedEvents"',
+                    'echo "Produced events: $producedEvents"',
+                    'echo "Threads: $threads"',
+                    'echo "Peak value RSS: $peakValueRss MB"',
+                    'echo "Peak value Vsize: $peakValueVsize MB"',
+                    'echo "Total size: $totalSize MB"',
+                    'echo "Total job time: $totalJobTime s"',
+                    'echo "Total CPU time: $totalJobCPU s"',
+                    'echo "Event throughput: $eventThroughput"',
+                    'echo "CPU efficiency: $cpu_eff %"',
+                    'echo "Size per event: $size_per_event kB"',
+                    'echo "Time per event: $time_per_event sec"'
+                    ]
+        return command
 
     def has_step(self, step):
         """
