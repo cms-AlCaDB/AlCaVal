@@ -167,8 +167,8 @@ def make_relval_step(workflow_step, workflow_step_name, wmsplit):
     elif 'INPUT' in workflow_step:
         step['lumis_per_job'] = workflow_step['INPUT'].split
     else:
-        # Default changed from 10 to 5
-        step['lumis_per_job'] = 5
+        # Default changed from 10 to 1
+        step['lumis_per_job'] = 1
 
     if 'INPUT' in workflow_step:
         # This step has input dataset
