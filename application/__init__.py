@@ -98,6 +98,7 @@ def create_app():
                                 DeleteRelValAPI,
                                 UpdateRelValAPI,
                                 GetRelValAPI,
+                                GetRelValTestsAPI,
                                 GetEditableRelValAPI,
                                 GetCMSDriverAPI,
                                 GetCMSDriverTestAPI,
@@ -187,6 +188,7 @@ def create_app():
     api.add_resource(DeleteRelValAPI, '/api/relvals/delete')
     api.add_resource(UpdateRelValAPI, '/api/relvals/update')
     api.add_resource(GetRelValAPI, '/api/relvals/get/<string:prepid>')
+    api.add_resource(GetRelValTestsAPI, '/api/relvals/tests/get/<string:prepid>')
     api.add_resource(GetEditableRelValAPI,
                      '/api/relvals/get_editable',
                      '/api/relvals/get_editable/<string:prepid>')

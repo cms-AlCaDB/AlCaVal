@@ -203,3 +203,18 @@ class SSHExecutor():
             self.ssh_client.close()
             self.ssh_client = None
             self.logger.debug('Closed ssh client')
+
+    def execute_command_new(self, command):
+        """Executing provided command: Combines stdout and stderr into 'stdout'.
+        Returns stdout file object to be read continously until end of execution.
+        """
+        if isinstance(command, list):
+            command = '; '.join(command)
+        if not self.ssh_client:
+            self.setup_ssh()
+        tran = self.ssh_client.get_transport()
+        chan = tran.open_session()
+        chan.get_pty()
+        stdout = chan.makefile()
+        chan.exec_command(command)
+        return stdout

@@ -80,7 +80,7 @@ class RelVal(ModelBase):
         'sample_tag': ModelBase.lambda_check('sample_tag'),
         'scram_arch': lambda s: not s or ModelBase.lambda_check('scram_arch')(s),
         'size_per_event': lambda spe: spe > 0.0,
-        'status': lambda status: status in ('new', 'approved', 'submitting',
+        'status': lambda status: status in ('new', 'approved', 'approving', 'submitting',
                                             'submitted', 'done', 'archived'),
         'steps': lambda s: len(s) > 0,
         'time_per_event': lambda tpe: tpe > 0.0,
@@ -107,9 +107,11 @@ class RelVal(ModelBase):
 
         ModelBase.__init__(self, json_input, check_attributes)
 
-    def get_cmsdrivers(self, for_submission=False):
+    def get_cmsdrivers(self, for_submission=False, for_test=False):
         """
         Get all cmsDriver commands for this RelVal
+        >> for_test=True can provide commands for local test. It will also 
+        create job report for each task.
         """
         prepid = self.get_prepid()
         bash = ['#!/bin/bash',
@@ -151,11 +153,15 @@ class RelVal(ModelBase):
                 commands += ['']
 
             step_command = step.get_command(custom_fragment=custom_fragment_name,
-                                         for_submission=for_submission).split('\n')
+                                         for_submission=for_submission,
+                                         for_test=for_test).split('\n')
             if 'HLT:Custom' in step.get('driver').get('step'):
                 commands += self.add_custom_hltmenu(step, step_command).split('\n')
             else:
                 commands += step_command
+
+            if for_test:
+                commands += step.get_test_command()
             commands += ['']
             previous_cmssw = step_cmssw
             previous_scram = scram_arch
@@ -191,6 +197,10 @@ class RelVal(ModelBase):
         outputfile = f'step_{step_index+1}_cfg.py'
         dump_command = f'edmConfigDump -o {outputfile} {outputfile}'
         return '\n'.join([comment, command, step_command, dump_command])
+
+    def get_cmsdrivers_test(self):
+        bash = self.get_cmsdrivers(for_submission=False, for_test=True)
+        return bash
 
     def get_fragment_command(self, fragment, fragment_file):
         """

@@ -5,28 +5,24 @@ import json
 import time
 import random
 import requests
+from api.utils.relval_test_submitter import RelvalTestSubmitter
 from database.database import Database
 from core_lib.controller.controller_base import ControllerBase
 from core_lib.utils.ssh_executor import SSHExecutor
 from core_lib.utils.global_config import Config
 from core_lib.utils.common_utils import (clean_split,
-                                         cmssw_setup,
                                          cmsweb_reject_workflows,
                                          config_cache_lite_setup,
-                                         dbs_datasetlist, get_hash,
-                                         get_workflows_from_stats,
-                                         get_workflows_from_reqmgr2,
-                                         get_workflows_from_stats_for_prepid,
+                                         dbs_datasetlist, get_hash, get_workflows_from_reqmgr2,
                                          get_workflows_from_reqmgr2_for_prepid,
-                                         refresh_workflows_in_stats,
                                          run_commands_in_cmsenv,
                                          dbs_dataset_runs)
-from core_lib.utils.connection_wrapper import ConnectionWrapper
 from ..utils.submitter import RequestSubmitter
 from ..utils.dqm_submitter import DQMRequestSubmitter
 from ..model.ticket import Ticket
 from ..model.relval import RelVal
 from ..model.relval_step import RelValStep
+from core_lib.utils.exceptions import ObjectNotFound
 
 
 DEAD_WORKFLOW_STATUS = {'rejected', 'aborted', 'failed', 'rejected-archived',
@@ -163,6 +159,20 @@ class RelValController(ControllerBase):
         cms_driver += '\n\n'
 
         return cms_driver
+
+    def get_cmsdriver_test(self, relval):
+        """
+        Get bash script with cmsDriver commands for test. 
+        It will test commands locally and provide a job report.
+        """
+        self.logger.debug('Getting cmsDriver commands for testing for %s', relval.get_prepid())
+        cms_driver_test = '#!/bin/bash\n\n'
+        cms_driver_test += 'export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"\n'
+        cms_driver_test += '\n'
+        cms_driver_test += relval.get_cmsdrivers_test()
+        cms_driver_test += '\n\n'
+
+        return cms_driver_test
 
     def get_config_upload_file(self, relval):
         """
@@ -520,7 +530,10 @@ class RelValController(ControllerBase):
         for status, relvals_with_status in by_status.items():
             self.logger.info('%s RelVals with status %s', len(relvals_with_status), status)
             if status == 'new':
-                results.extend(self.move_relvals_to_approved(relvals_with_status))
+                results.extend(self.move_relvals_to_approving(relvals_with_status))
+
+            elif status == 'approving':
+                raise Exception('Cannot move RelVals that are being approved to next status')
 
             elif status == 'approved':
                 results.extend(self.move_relvals_to_submitting(relvals_with_status))
@@ -546,6 +559,8 @@ class RelValController(ControllerBase):
         """
         prepid = relval.get_prepid()
         with self.locker.get_nonblocking_lock(prepid):
+            if relval.get('status') == 'approving':
+                self.move_relval_back_to_new(relval)
             if relval.get('status') == 'approved':
                 self.move_relval_back_to_new(relval)
             elif relval.get('status') == 'submitting':
@@ -586,9 +601,14 @@ class RelValController(ControllerBase):
         self.resolve_auto_conditions(conditions_tree)
         return conditions_tree
 
-    def move_relvals_to_approved(self, relvals):
+    def get_optimal_parameters(self, relval):
+        """Do local testing and fetch optimal parameters for submission"""
+        prepid = relval.get_prepid()
+        RelvalTestSubmitter().add(relval, self)
+
+    def move_relvals_to_approving(self, relvals):
         """
-        Try to move RelVals to approved status
+        Try to move RelVals to approving status
         """
         # Check if all necessary GPU parameters are set
         for relval in relvals:
@@ -635,7 +655,9 @@ class RelValController(ControllerBase):
                         step.set('resolved_globaltag', resolved_conditions)
                     else:
                         step.set('resolved_globaltag', conditions)
-                self.update_status(relval, 'approved')
+                # Perform local test and fetch optimal params for submission
+                self.get_optimal_parameters(relval)
+                self.update_status(relval, 'approving')
                 results.append(relval)
 
         return results
@@ -1070,3 +1092,11 @@ class RelValController(ControllerBase):
                     relval_db.save(relval.get_json())
             DQMRequestSubmitter().add(relvalT, relvalR, dqm_pair, self, target_pair)
         return results
+
+    def get_tests(self, prepid):
+        """Return document for relval-tests"""
+        test_db = Database('relval-tests')
+        object_json = test_db.get(prepid)
+        if not object_json:
+            raise ObjectNotFound(prepid)
+        return object_json
