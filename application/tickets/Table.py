@@ -7,6 +7,8 @@ class ActionCol(Col):
         return self.td_format(self.from_attr_list(item, attr_list), item)
 
     def td_format(self, content, item):
+        noref = 'target="_blank" rel="noopener noreferrer"'
+
         divAction = "<div class='actions'>{mylinks}</div>"
         edit = f"<a class='cls_edit_ticket' href='/tickets/edit?prepid={content}' title='Edit this ticket: {content}'>Edit</a>"
         clone = f"<a class='cls_clone_ticket' href='/tickets/edit?clone={content}' title='Clone this ticket to create new one'>Clone</a>"
@@ -18,7 +20,7 @@ class ActionCol(Col):
         wf_list = f"<a class='cls_show_wf_list' href='api/tickets/relvals_workflows/{content}' title='Show list of workflows from Request Manager for a this ticket!'>Workflows</a>"
 
         matrix = f"<a href='api/tickets/run_the_matrix/{content}' title='Show runTheMatrix.py command which generates cmsDriver workflows'>Matrix</a>"
-        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' title='Go to the Jira discussion {item['jira_ticket']}'>Jira</a>"
+        jira = f"<a href='https://its.cern.ch/jira/browse/{item['jira_ticket']}' title='Go to the Jira discussion {item['jira_ticket']}' {noref}>Jira</a>"
         create_jira = f"""<a class="cls_create_jira create_jira_{content}" onclick="create_jira_ticket('{content}')" href="javascript:void(0);" title='Create new Jira ticket'>Create Jira Ticket</a> """
         jira = jira if item['jira_ticket'] != 'None' else create_jira
 
