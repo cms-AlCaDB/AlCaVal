@@ -478,6 +478,12 @@ class RelvalForm(FlaskForm):
                         render_kw = {'class': 'form-control form-control-sm', "placeholder":"If empty, uses default value of the release"},
                         label_rkw = {'class': 'col-form-label-sm'}
                         )
+    hlt_menu = SStringField('HLT menu',
+                        render_kw = {'class': 'form-control form-control-sm',
+                                    "placeholder":"Custom HLT menu, if empty default GRun menu of the release is used"
+                                    },
+                        label_rkw = {'class': 'col-form-label-sm'}
+                        )
     step        = SFieldList(SFormField(cmsDriverStepForm), 
                         label='Steps', 
                         min_entries=0, 

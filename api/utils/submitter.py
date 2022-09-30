@@ -76,7 +76,7 @@ class RequestSubmitter(BaseSubmitter):
                  f'{service_url}/relvals?prepid={prepid}\n')
         if ticket_prepid:
             body += (f'Ticket for this relval is at: '
-                     f'{service_url}/ticket?prepid={ticket_prepid}\n')
+                     f'{service_url}/tickets?prepid={ticket_prepid}\n')
         else:
             body += 'There is no ticket associated with this relval.\n'
         body += f'Workflow in ReqMgr2 {cmsweb_url}/reqmgr2/fetch?rid={last_workflow}'
