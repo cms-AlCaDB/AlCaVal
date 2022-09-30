@@ -22,9 +22,9 @@ class RelValStep(ModelBase):
         # Hash of configuration file uploaded to ReqMgr2
         'config_id': '',
         # Size Per Event for a step
-        'size_per_event': 3000,
+        'size_per_event': 3000.1,
         # Time per Event for a step
-        'time_per_event': 20,
+        'time_per_event': 20.1,
         # cmsDriver arguments
         'driver': {
             'beamspot': '',
@@ -406,8 +406,8 @@ class RelValStep(ModelBase):
                     'echo "Total CPU time: $totalJobCPU s"',
                     'echo "Event throughput: $eventThroughput"',
                     'echo "CPU efficiency: $cpu_eff %"',
-                    'echo "Size per event: $size_per_event kB"',
-                    'echo "Time per event: $time_per_event sec"'
+                    f'echo "Step{index + 1} Size per event: $size_per_event (kB)"',
+                    f'echo "Step{index + 1} Time per event: $time_per_event (sec)"'
                     ]
         return command
 
