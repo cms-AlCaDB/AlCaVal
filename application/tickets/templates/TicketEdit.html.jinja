@@ -44,6 +44,25 @@
 	</div>
 </form>
 
+
+<div id="event-content-modal" class="event-content-modal modal fade bd-example-modal-m" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-m modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Dataset with number of events</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="event-modal-content"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
     $('title').html('AlCaVal | Ticket Edit')
 </script>
@@ -87,6 +106,10 @@
   @keyframes blink { 0%{ color:blue; } 50%{ color:gray; } 100%{ color:blue; } } 
   .help-icons:hover {
     color: blue;
+  }
+
+  button {
+    margin: 5px;
   }
 </style>
 {% endblock %}

@@ -1,3 +1,12 @@
+function showModal(e){
+    e.preventDefault();
+    $('.event-content-modal').modal({show: true})
+}
+
+function addnEventCalculator(){
+    nEventButton = '<button class="btn btn-sm btn-outline-info" onclick="showModal(event);">Get Events</button>';
+	document.getElementById("input_runs").insertAdjacentHTML('afterend', nEventButton);
+}
 
 function addHelpIcons(){
 	var nstreams_help = '<tr class="small-footers"><td></td><td><small style="color: gray"><i class="bi bi-arrow-up-circle"></i> If number of streams is 0, default value will be used</small></td></tr>'
@@ -87,6 +96,7 @@ function cancel(){window.location = '/tickets';}
 
 $(document).ready(function(){
 	addHelpIcons()
+    addnEventCalculator()
 	track_matrix_select()	
 
 	$('#matrix').on( "change", function( event ) {
@@ -96,6 +106,23 @@ $(document).ready(function(){
 
     $('#cmssw_release').on( "change", function( event ) {
         validate_cmssw(this.id)
+    })
+
+    $('#event-content-modal').on('show.bs.modal', (event)=>{
+        var modal = $(this)
+        $("#event-modal-content").html('Loading...')
+        fetch('/tickets/fetch-events', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                        datasets: $('#input_datasets').val(), 
+                        runs: $('#input_runs').val(),
+                        })
+        }).
+        then(res => res.json()).
+        then(data => {
+            modal.find('#event-modal-content').html(data.response)
+        })
     })
 
     // Validate InputRuns
