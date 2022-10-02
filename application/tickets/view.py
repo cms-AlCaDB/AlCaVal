@@ -119,8 +119,6 @@ def create_ticket():
             flash(res['message'], 'danger')
     return render_template('TicketEdit.html.jinja', user_name=user['response']['fullname'], user=user, form=form, createNew=creating_new)
 
-
-
 # Tickets table
 from .Table import ItemTable
 
@@ -138,11 +136,10 @@ def tickets():
 @ticket_blueprint.route('/fetch-events', methods=['POST'])
 def fetch_events():
     data = json.loads(request.data.decode('utf-8'))
-    response = validateData(data)
+    response = validateDataAndFetchEvents(data)
     return jsonify(response)
-    return jsonify({'title': 'Mr'})
 
-def validateData(data, test=None):
+def validateDataAndFetchEvents(data):
     datasets = data.get('datasets')
     runs = data.get('runs')
     resp = {'success': False}
@@ -167,7 +164,7 @@ def validateData(data, test=None):
                 res = json.loads(res.decode('utf-8'))
                 if not res: wrong_datasets.append(dataset)
 
-    if wrong_datasets and not test:
+    if wrong_datasets:
         resp['response'] = f'Invalid datasets: {", ".join(wrong_datasets)}'
         return resp
     elif not datasets.strip():
@@ -191,17 +188,18 @@ def validate_input_runs(runstring, datasets=[]):
                                 or JSON formatted lumisections'
         return resp
     wrong_runs = list()
-    with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
-        for run in test_runs:
-            if not re.fullmatch(r'^\d{6}$', run):
-                wrong_runs.append(run)
-                continue
-            res = dbs_conn.api(
-                    'GET',
-                    f'/dbs/prod/global/DBSReader/runs?run_num={run}'
-                    )
-            res = json.loads(res.decode('utf-8'))
-            if not res: wrong_runs.append(run)
+    if test_runs:
+        with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
+            for run in test_runs:
+                if not re.fullmatch(r'^\d{6}$', run):
+                    wrong_runs.append(run)
+                    continue
+                res = dbs_conn.api(
+                        'GET',
+                        f'/dbs/prod/global/DBSReader/runs?run_num={run}'
+                        )
+                res = json.loads(res.decode('utf-8'))
+                if not res: wrong_runs.append(run)
     if wrong_runs:
         resp['response']=f'Invalid runs: {", ".join(wrong_runs)}'
         return resp
@@ -211,6 +209,7 @@ def validate_input_runs(runstring, datasets=[]):
 
     # Test if given runs are available in all datasets
     incompatible_runs = {d: [] for d in datasets}
+    files_info = {d: 0 for d in datasets}
     with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
         for dataset in datasets:
             runs_in_dataset = dbs_conn.api(
@@ -221,11 +220,29 @@ def validate_input_runs(runstring, datasets=[]):
             res = {a_dict['run_num'] for a_dict in res}
             bad_runs = list(set([int(a) for a in test_runs]).difference(res))
             incompatible_runs[dataset] = bad_runs
+
+            # Filling files number info
+            for RunNumb in test_runs:
+                run_numbers = ast.literal_eval((runstring))
+                runWithLumi = isinstance(run_numbers, dict)
+                if runWithLumi:
+                    LumiSec = str(run_numbers[RunNumb]).replace(' ', '')
+                LumiSec = f'&lumi_list={LumiSec}' if runWithLumi else ''
+                files = dbs_conn.api('GET',
+                f'/dbs/prod/global/DBSReader/files?dataset={dataset}&run_num={RunNumb}{LumiSec}',
+                )
+                files_info[dataset] += len(json.loads(files.decode('utf-8')))
+
     if [v for _, v in incompatible_runs.items() if v]:
-        msg = ""
+        msg = "<ul style='list-style-type: none; padding: 0;'>"
         for k, v in incompatible_runs.items():
+            nRuns = len(v) > 1
             if v:
-                msg += f"Run/s {', '.join([str(l) for l in v])} is/are not present in {k}.\n"
+                msg += f"<li>Run{'s' if nRuns else ''} \
+                    {', '.join([str(l) for l in v])} \
+                    {'are' if nRuns else 'is'} not \
+                    present in <code>{k}</code> </li>"
+        msg+='</ul>'
         resp['response'] = msg
         return resp
 
@@ -246,9 +263,9 @@ def validate_input_runs(runstring, datasets=[]):
             else:
                 asc_range = False
             if not (is_list and is_int and asc_range):
-                resp['response'] = f'Lumisections format is not valid. \
+                resp['response'] = f'<p>Lumisections format is not valid. \
                     It should be list of list of lumisection ranges. \
-                    e.g. [[1 ,40],[100, 200]]'
+                    e.g. [[1 ,40],[100, 200]]</p>'
                 return resp
 
     # Validating number of events
@@ -264,11 +281,9 @@ def validate_input_runs(runstring, datasets=[]):
                 else:
                     events += oms.get_nEvents(dname, run)
             stats[dataset] = events
-        emptysets = []
         msg = "<ul>"
         for dataset, events in stats.items():
-            msg += f"<li><code>{dataset}</code>: <span style='color:blue'>{'{:,}'.format(events)}</span> events</li>"
-            if events < 5000: emptysets.append(dataset)
+            msg += f"<li><code>{dataset}</code>: <span style='color:blue'>{'{:,}'.format(events)}</span> events and {files_info[dataset]} files</li>"
         msg += "</ul>"
 
     except Exception as e:
