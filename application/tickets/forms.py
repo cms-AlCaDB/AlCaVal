@@ -230,7 +230,7 @@ class TicketForm(FlaskForm):
                            label_rkw = label_rkw
                         )
     workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
-                        default='6.13, 6.14',
+                        default='6.51, 6.52',
                         render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
                         label_rkw = {'class': 'col-form-label-sm required'}
                         )

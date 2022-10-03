@@ -19,8 +19,29 @@ class RelvalTestSubmitter(BaseSubmitter):
       controller=relval_controller
     )
   
+  def parseParamsFromTest(self, relval):
+    """Fetch and return parameters of insterest obtained from local test"""
+    db = Database('relval-tests')
+    data = db.get(relval.get_prepid())
+    stdout = data['test_stdout']
+    stdlines = stdout.split('\n')
+    params = {}
+    steps = ['Step2 ', 'Step3 ']
+    for key in steps: params[key.strip()] = {}
+
+    for line in stdlines:
+      if line.startswith(steps[0]) or line.startswith(steps[1]):
+        step = line.split(' ')[0].strip()
+        key = step.strip()
+        name = line.strip(step).split(':')[0].split(' ')
+        name = '_'.join([a.lower() for a in name if a])
+        value = line.split(':')[1].split('(')[0].strip()
+        params[key][name] = value
+    return params
+
   def store_submission_output(self, relval, stdout, exit_code):
-    """Novice way to store std output to db. 
+    """
+    Novice way to store std output to db. 
     if exit_code is other that 'None' then status is set to 'done'
     """
     test_db = Database('relval-tests')
@@ -51,18 +72,28 @@ class RelvalTestSubmitter(BaseSubmitter):
       self.prepare_workspace(relval, controller, ssh, workspace_dir)
       exit_code = self.perform_local_tests(ssh, relval, workspace_dir)
       ssh.close_connections()
-      relval.set('status', 'approved')
-      relval.add_history('approval', 'succeeded', 'automatic')
-      relval_db.save(relval.get_json())
       if exit_code:
         for step in relval.get('steps'):
           step.set('resolved_globaltag', '')
         relval.set('status', 'new')
         relval.add_history('approval', 'failed', 'automatic')
-        relval_db.save(relval.get_json())
-        return relval
       else:
+        try:
+          # Setting optimal params in relval
+          params = self.parseParamsFromTest(relval)
+          for step in relval.get('steps'):
+            idx = step.get_index_in_parent()
+            param = params.get(f'Step{idx+1}', {})
+            for p in param:
+              value = float(param[p])
+              step.set(p, value)
+        except Exception as e:
+          print(e)
+        relval.set('status', 'approved')
+        relval.add_history('approval', 'succeeded', 'automatic')
         print('SUCCESS: ', time.time()-start_time, ' sec')
+      relval_db.save(relval.get_json())
+    return relval
 
   def prepare_workspace(self, relval, controller, ssh_executor, workspace_dir):
     """
@@ -104,13 +135,17 @@ class RelvalTestSubmitter(BaseSubmitter):
     start_time = time.time()
     stdout = ssh.execute_command_new(command)
     chunk = ''; x = True; iTime=start_time
+    runOnce = True
     while x:
       line = stdout.readline()
       chunk += line
+      if runOnce:
+        self.store_submission_output(relval, str(chunk), None)
+        runOnce = False; chunk = ''
       if (time.time() - iTime) > 15:
         iTime = time.time()
         self.store_submission_output(relval, str(chunk), None)
-        chunk = ''; 
+        chunk = ''
       if not line:
         self.store_submission_output(relval, str(chunk), None)
         x = False

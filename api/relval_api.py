@@ -111,26 +111,6 @@ class GetRelValAPI(APIBase):
         obj = relval_controller.get(prepid)
         return self.output_text({'response': obj.get_json(), 'success': True, 'message': ''})
 
-class GetRelValTestsAPI(APIBase):
-    """
-    Endpoint for retrieving local test result of a single relval
-    """
-
-    def __init__(self):
-        APIBase.__init__(self)
-
-    @APIBase.exceptions_to_errors
-    def get(self, prepid):
-        """
-        Get a single with given prepid
-        """
-        obj = relval_controller.get_tests(prepid)
-        command = 'Exit code: ' + obj.get('test_exit_code', '') + '\n' + \
-                  obj.get('test_stdout', '') + \
-                  obj.get('test_stderr', '')
-        return self.output_text(command, content_type='text/plain')
-        # return self.output_text({'response': obj, 'success': True, 'message': ''})
-
 class GetEditableRelValAPI(APIBase):
     """
     Endpoint for getting information on which relval fields are editable

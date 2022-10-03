@@ -109,6 +109,18 @@ class ReqMgr2Col(CheckboxCol):
         else:
             return "Not submitted"
 
+class StatusCol(Col):
+    def td_contents(self, item, attr_list):
+        return self.td_format(self.from_attr_list(item, attr_list), item)
+
+    def td_format(self, content, item):
+        prepid = item['prepid']
+        href = f'/relvals/local_test_result/{prepid}'
+        title = 'Show local test result'
+        noref = 'target="_blank" rel="noopener noreferrer"'
+        status = f'{content}<a title="{title}" {noref} href={href}> <i class="bi bi-link-45deg"></i></a>'
+        return status
+
 class RelvalTable(Table):
     checkbox = CheckboxCol('Checkbox', attr_list = ['prepid'], 
                             text_fallback='', 
@@ -120,7 +132,7 @@ class RelvalTable(Table):
                     td_html_attrs={'style': 'white-space: nowrap'}
                     )
 
-    status = Col('Status')
+    status = StatusCol('Status', attr_list = ['status'], td_html_attrs={'style': 'white-space: nowrap'})
 
     _id = ActionCol("Actions", attr_list = ['prepid'], td_html_attrs={'style': 'white-space: nowrap'})
 

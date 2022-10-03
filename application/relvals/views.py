@@ -271,3 +271,11 @@ def delete_step(stepid):
         'inputdata': jsonstep,
         'message': "These are the steps in the relval form. \
         Can be use for dynamically deleting any step"})
+
+@relval_blueprint.route('/local_test_result/<prepid>', methods=['GET'])
+@oidc.check
+def get_relvals_react(prepid):
+    """Display local test result of a relval"""
+    return render_template('LocalTest.html.jinja',
+                            prepid=prepid,
+                          )

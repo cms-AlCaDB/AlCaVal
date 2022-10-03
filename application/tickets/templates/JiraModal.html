@@ -6,36 +6,53 @@
       </div>
       <div class="modal-body" style="padding-bottom:unset; background-color: aliceblue;">
 	      <form id="create-jira-form">
-					<table style="width: 100%">
+			<table style="width: 100%">
 
 		        <tr id="prepid_row">
 		        	<td class="col1">
-		            <label for="jira_prepid_id" class="classsss">Prep ID</label>
-							</td>
-				    	<td class="col2">
-		            <input type="text" class="form-control form-control-sm" id="jira_prepid_id" name="jira_prepid" readonly>
-	            </td>
+						<label for="jira_prepid_id" class="classsss">Prep ID</label>
+					</td>
+					<td class="col2">
+						<input type="text" class="form-control form-control-sm" id="jira_prepid_id" name="jira_prepid" readonly>
+					</td>
 		        </tr>
 
 		        <tr id="summary_row">
 		        	<td class="col1">
-		            <label for="jira_summary_id" class="classsss">Summary</label>
-							</td>
-				    	<td class="col2">
-		            <input type="text" class="form-control form-control-sm" id="jira_summary_id" name="jira_summary">
-	            </td>
+						<label for="jira_summary_id" class="classsss">Summary</label>
+					</td>
+					<td class="col2">
+						<input type="text" class="form-control form-control-sm" id="jira_summary_id" name="jira_summary">
+					</td>
 		        </tr>
 
 		        <tr id="description_row">
 		        	<td class="col1">
-		            <label for="jira_description_id" class="classsss">Description</label>
-							</td>
-				    	<td class="col2">
-		            <textarea class="form-control form-control-sm" id="jira_description_id" rows="15" name="jira_description"></textarea>
-	            </td>
+						<label for="jira_description_id" class="classsss">Description</label>
+					</td>
+					<td class="col2">
+						<textarea class="form-control form-control-sm" id="jira_description_id" rows="15" name="jira_description"></textarea>
+					</td>
 		        </tr>
 
-					</table>
+				<tr id="components_row">
+		        	<td class="col1">
+						<label for="jira_comp_id">Components</label>
+					</td>
+					<td class="col2">
+						<input type="text" class="form-control form-control-sm" id="jira_comp_id" name="jira_components">
+					</td>
+		        </tr>
+
+				<tr id="label_row">
+		        	<td class="col1">
+						<label for="jira_label_id">Labels</label>
+					</td>
+					<td class="col2">
+						<input type="text" class="form-control form-control-sm" id="jira_label_id" name="jira_labels">
+					</td>
+		        </tr>
+			</table>
 	      </form>
       </div>
 	    <div class="modal-footer" style="border-top: unset; background-color: aliceblue;">

@@ -18,7 +18,8 @@ class SearchAPI(APIBase):
     def __init__(self):
         APIBase.__init__(self)
         self.classes = {'tickets': Ticket,
-                        'relvals': RelVal,}
+                        'relvals': RelVal,
+                        'relval-tests': RelVal,}
 
     @APIBase.exceptions_to_errors
     def get(self):

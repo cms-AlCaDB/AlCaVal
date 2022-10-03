@@ -15,6 +15,8 @@ function open_jira_modal(prepid, ticket, jira_json) {
     modal.find('#jira_prepid_id').val(ticket.prepid)
     modal.find('#jira_summary_id').val(jira_json.response.jira_info.summary)
     modal.find('#jira_description_id').val(jira_json.response.jira_info.description)
+    modal.find('#jira_comp_id').val(jira_json.response.jira_info.components)
+    modal.find('#jira_label_id').val(jira_json.response.jira_info.labels)
     $(this).off('show.bs.modal')
   })
   $('#jiraModal').modal({backdrop: 'static', keyboard: false})

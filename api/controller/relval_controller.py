@@ -1092,11 +1092,3 @@ class RelValController(ControllerBase):
                     relval_db.save(relval.get_json())
             DQMRequestSubmitter().add(relvalT, relvalR, dqm_pair, self, target_pair)
         return results
-
-    def get_tests(self, prepid):
-        """Return document for relval-tests"""
-        test_db = Database('relval-tests')
-        object_json = test_db.get(prepid)
-        if not object_json:
-            raise ObjectNotFound(prepid)
-        return object_json
