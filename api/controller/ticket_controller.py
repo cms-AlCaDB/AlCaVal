@@ -699,4 +699,18 @@ AlCa/DB Team
         for key, value in result.items():
             if isinstance(value, set):
                 result[key] = list(value)
+
+        # Get components for given ticket
+        existing_comp = ['AlCaDB', 'CSC', 'ECAL', 'EGamma', 'GEM',
+         'HCAL', 'JetMET', 'Muon', 'PF', 'Pixel', 'PPS', 'Strip', 'Tau',
+         'Tracker', 'Tracking', 'TSG']
+        compt = set()
+        if ticket.get('hlt_gt') or ticket.get('hlt_gt_ref'):
+            compt.add('TSG')
+        if 'Trk' in ticket.get('batch_name') or 'Tracker' in ticket.get('batch_name'):
+            compt = compt.union({'Tracker', 'Tracking',})
+        if ticket.get('batch_name') in existing_comp:
+            compt.add(ticket.get('batch_name'))
+        result['components'] = list(compt)
+        result['labels'] = ticket.get('batch_name')
         return result

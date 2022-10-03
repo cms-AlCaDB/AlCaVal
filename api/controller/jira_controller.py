@@ -20,6 +20,7 @@ class JiraTicketController():
         return issues
 
     def create_ticket(self, jira_json):
+        components = [a.strip() for a in jira_json['jira_components'].split(',')]
         fields={
                 'project': 'CMSALCA',
                 'issuetype': {'name': 'Task'},
@@ -27,7 +28,8 @@ class JiraTicketController():
                 'description': jira_json['jira_description'],
                 'assignee': {'name': 'tvami'},
                 'priority': {'name': 'Major'},
-                'components': [{'name' : 'AlCaDB'}]
+                'components': [{'name' : 'AlCaDB'}] + [{'name': a} for a in components],
+                'labels': [l.strip() for l in jira_json['jira_labels'].split(',')]
                }
         connection = self.jira.setup_jira_connection()
         new_issue = connection.create_issue(fields = fields)
