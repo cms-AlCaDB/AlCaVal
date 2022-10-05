@@ -34,6 +34,7 @@
         </div>
       </div>
     </div>
+    <div id="dqm_link"></div>
   </body>
 
   <script type="text/javascript">
@@ -64,6 +65,7 @@
         if (data.response.total_rows > 0) {
           fetchedResultData = data.response.results[0]
           setData()
+          fetchDQMLink()
           if (fetchedResultData.test_status !== "done") {
             setTimeout(()=> getData(), 15000);
           }
@@ -95,6 +97,13 @@
         $('#ShowStatus').text('Status: '+status+', Exit code: '+exit_state+', Time: '+test_time)
         $('#test-result').text(fetchedResultData.test_stdout);
       }
+    }
+
+    function fetchDQMLink() {
+      // Create link of DQM plots and place it at the bottom of the page
+      dqm_link = fetchedResultData.test_stdout.split('\n').filter(e=>e.includes('dqm_link: '))
+      if(dqm_link.length) dqm_link = dqm_link[0].replace('dqm_link: ', '')
+      $('#dqm_link').html(`<a rel="noopener noreferrer" target="_blank" href=${dqm_link}>${dqm_link}</a>`)
     }
 
     $(document).ready(()=> {
