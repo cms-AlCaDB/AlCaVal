@@ -34,12 +34,11 @@ class RequestSubmitter(BaseSubmitter):
         """
         self.logger.error(error_message)
         relval_db = Database('relvals')
-        relval.set('status', 'new')
+        relval.set('status', 'approved')
         relval.set('campaign_timestamp', 0)
         relval.add_history('submission', 'failed', 'automatic')
         for step in relval.get('steps'):
             step.set('config_id', '')
-            step.set('resolved_globaltag', '')
 
         relval_db.save(relval.get_json())
         service_url = Config.get('service_url')
