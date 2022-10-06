@@ -37,6 +37,8 @@ class RelvalTestSubmitter(BaseSubmitter):
         name = '_'.join([a.lower() for a in name if a])
         value = line.split(':')[1].split('(')[0].strip()
         params[key][name] = value
+      elif line.startswith('dqm_link: '):
+        params['dqm_link'] = line.strip('dqm_link: ').strip()
     return params
 
   def store_submission_output(self, relval, stdout, exit_code):
@@ -59,7 +61,7 @@ class RelvalTestSubmitter(BaseSubmitter):
            "test_status": status
           } | {"test_stdout": stdout if stdout else test_stdout}
     test_db.save(doc)
-  
+
   def submit_relval_test(self, relval, controller):
     """Submit relval for local test"""
     prepid = relval.get_prepid()

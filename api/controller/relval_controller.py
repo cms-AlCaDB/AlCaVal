@@ -603,8 +603,16 @@ class RelValController(ControllerBase):
 
     def get_optimal_parameters(self, relval):
         """Do local testing and fetch optimal parameters for submission"""
-        prepid = relval.get_prepid()
-        RelvalTestSubmitter().add(relval, self)
+        tickets_db = Database('tickets')
+        tickets = tickets_db.query(f'created_relvals={relval.get_prepid()}')
+        ticket_note = tickets[0].get('notes') if tickets else ''
+        relval_note = relval.get('notes')
+        ticket_note = ticket_note.strip().startswith('Skip local test')
+        relval_note = relval_note.strip().startswith('Skip local test')
+        skip_test = relval_note or ticket_note
+        if not skip_test:
+            RelvalTestSubmitter().add(relval, self)
+        return skip_test
 
     def move_relvals_to_approving(self, relvals):
         """
@@ -656,8 +664,11 @@ class RelValController(ControllerBase):
                     else:
                         step.set('resolved_globaltag', conditions)
                 # Perform local test and fetch optimal params for submission
-                self.get_optimal_parameters(relval)
-                self.update_status(relval, 'approving')
+                test_skipped = self.get_optimal_parameters(relval)
+                if test_skipped:
+                    self.update_status(relval, 'approved')
+                else:
+                    self.update_status(relval, 'approving')
                 results.append(relval)
 
         return results

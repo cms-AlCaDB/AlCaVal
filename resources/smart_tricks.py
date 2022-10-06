@@ -1,4 +1,5 @@
 import os
+import requests
 from core_lib.utils.global_config import Config 
 from requests import Session
 from urllib.parse import urljoin
@@ -29,3 +30,16 @@ class DictObj:
 
     def get(self, attr):
         return getattr(self, str(attr))
+
+
+def check_if_dataset_exists(urlpart):
+    """Verify if dataset file exists in cmsweb dev instance"""
+    grid_cert = Config.get('grid_user_cert')
+    grid_key = Config.get('grid_user_key')
+    url = 'https://cmsweb.cern.ch/dqm/dev/data/browse/ROOT/RelValData/'
+    url += urlpart
+    ret = requests.head(url, cert=(grid_cert, grid_key), verify=False)
+    if ret.status_code != 200:
+        return False
+    else:
+        return True

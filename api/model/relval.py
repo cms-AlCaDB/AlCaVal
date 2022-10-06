@@ -179,9 +179,6 @@ class RelVal(ModelBase):
         step_command = '\n'.join(step_command)
         step_index = step.get_index_in_parent()
 
-        # This is temporary workaround with fixed hlt_menu 
-        # Future development: Create 'hlt_menu' field and pass its value 
-        # from ticket -> relval to here 
         menu = self.get_json().get('hlt_menu')
         menu = menu if menu else '/dev/CMSSW_12_4_0/GRun'
         # ----------------------------------------------------------------

@@ -4,6 +4,8 @@ Module that contains RelValStep class
 import weakref
 import json
 from copy import deepcopy
+
+from resources.smart_tricks import check_if_dataset_exists
 from ..model.model_base import ModelBase
 from core_lib.utils.common_utils import get_scram_arch
 
@@ -365,13 +367,36 @@ class RelValStep(ModelBase):
     def get_test_command(self):
         step_type = self.get_step_type()
         index = self.get_index_in_parent()
-        if step_type == 'input_file' or 'HARVESTING' in self.get('driver')['step'][0]:
-            return ['']
+        if step_type == 'input_file': return ['']
         report_name = f'REPORT{index+1}'
         command = [f'{report_name}=step_{index+1}_report.xml']
         command += [f'cmsRun -e -j ${report_name} step_{index+1}_cfg.py || exit $? ;']
-        # command += [f'python3 -c "import xmltodict; report = xmltodict.parse(open(\'$REPORT{index+1}\').read()); print(report)"']
-        command += [f'# Parse values from {report_name} report',
+
+        if 'HARVESTING' in self.get('driver')['step'][0]:
+            # Uploading DQM plots for browsing
+            all_steps = self.parent().get('steps')
+            dname = all_steps[0].get('input')['dataset'].split('/')[1]
+            run1 = all_steps[0].get('input')['run']
+            run2 = all_steps[0].get('input')['lumisection']
+            run = (run1 or list(run2.keys()))[0]
+            gtname = all_steps[1].get('driver')['conditions']
+            cmssw = self.parent().get('cmssw_release')
+            relvalname = '-'.join([cmssw, gtname])
+            dversion = 1
+            stript_cmssw = '_'.join(cmssw.split('_')[:3]+['x/'])
+            data_exists = True
+            while data_exists:
+                file_name = f'DQM_V0001_R000{run}__{dname}__{relvalname}-v{dversion}__DQMIO.root'
+                data_exists = check_if_dataset_exists(stript_cmssw + file_name)
+                if data_exists: dversion += 1
+            dqm_dev = 'https://cmsweb.cern.ch/dqm/dev'
+            file_name = f'DQM_V0001_R000{run}__{dname}__{relvalname}-v{dversion}__DQMIO.root'
+            command += [f'mv DQM_*.root {file_name}']
+            command += [f'visDQMUpload.py {dqm_dev} {file_name}']
+            command += [f'echo "dqm_link: {dqm_dev}/start?runnr={run};dataset=/{dname}/{relvalname}-v{dversion}/DQMIO;sampletype=offline_data;workspace=Everything;"'] 
+
+        if not 'HARVESTING' in self.get('driver')['step'][0]:
+            command += [f'# Parse values from {report_name} report',
                     f'processedEvents=$(grep -Po "(?<=<Metric Name=\\"NumberEvents\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
                     f'producedEvents=$(grep -Po "(?<=<TotalEvents>)(\\d*)(?=</TotalEvents>)" ${report_name} | tail -n 1)',
                     f'threads=$(grep -Po "(?<=<Metric Name=\\"NumberOfThreads\\" Value=\\")(.*)(?=\\"/>)" ${report_name} | tail -n 1)',
