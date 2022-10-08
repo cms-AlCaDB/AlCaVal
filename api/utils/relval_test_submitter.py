@@ -67,7 +67,7 @@ class RelvalTestSubmitter(BaseSubmitter):
     """Submit relval for local test"""
     prepid = relval.get_prepid()
     credentials_file = Config.get('credentials_file')
-    workspace_dir =   '/afs/cern.ch/work/a/alcauser/'+Config.get('remote_path').rstrip('/')
+    workspace_dir = Config.get('remote_path').rstrip('/')
     with Locker().get_lock(prepid):
       start_time = time.time()
       relval_db = Database('relvals')
@@ -140,7 +140,8 @@ class RelvalTestSubmitter(BaseSubmitter):
                 'chmod +x config_test_generate.sh',
                 'export X509_USER_PROXY=$(pwd)/proxy.txt',
                 'echo "$X509_USER_PROXY"',
-                './config_test_generate.sh']
+                './config_test_generate.sh',
+                f'rm -rf {workspace_dir}/{prepid}']
     start_time = time.time()
     stdout = ssh.execute_command_new(command)
     chunk = ''; x = True; iTime=start_time
