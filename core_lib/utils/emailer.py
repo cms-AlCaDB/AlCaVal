@@ -1,11 +1,15 @@
 """
 Module that handles all email notifications
 """
+from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import json
 import os
 import logging
 import smtplib
-from email.message import EmailMessage
 
+from core_lib.utils.global_config import Config
 
 class Emailer():
     """
@@ -14,6 +18,7 @@ class Emailer():
 
     def __init__(self):
         self.logger = logging.getLogger()
+        self.message = MIMEMultipart()
 
     def get_recipients(self, obj):
         """
@@ -33,28 +38,57 @@ class Emailer():
 
         return list(recipients)
 
-    def send(self, subject, body, recipients, attach=None):
+    def send_with_mime(self, subject, body, recipients, attachment=None):
         """
-        Send email
+        Send email with MIMEMultipart
         """
+        # Create a text/html message
+        self.message["Subject"] = f"{subject}"
+        self.message.attach(MIMEText(body.replace('\n', '<br/>'), 'html'))
+        if attachment:
+            with open(attachment, 'r') as fb:
+                content = MIMEText(str(fb.read()))
+                content.add_header('Content-Disposition',
+                                    'attachment',
+                                    filename='attachment.txt') 
+                self.message.attach(content)
+            os.remove(attachment)
+        self.message['From'] = 'AlCa Service Account <alcauser@cern.ch>'
+        self.message['To'] = ','.join(recipients)
+        self.message['Cc'] = 'alcauser@cern.ch'
+
+        # Send the self.message via our own SMTP server.
+        smtp = smtplib.SMTP('smtp.cern.ch', 587)
+        smtp.starttls()
+        credentials = json.loads(open(Config.get('credentials_file')).read())
+        smtp.login(*list(credentials.values()))
+        self.logger.debug('Sending email %s to %s', self.message['Subject'], self.message['To'])
+        text = self.message.as_string()
+        smtp.sendmail(self.message['From'], recipients, text)
+        smtp.quit()
+
+    def send(self, subject, body, recipients, attachment=None):
+        """Send email with text/plain format"""
         # Create a text/plain message
         message = EmailMessage()
-        body = body.strip()
         message.set_content(body)
-        if attach:
-            with open('attachment.txt', 'rb') as fb:
+        if attachment:
+            with open(attachment, 'rb') as fb:
                 message.add_attachment(fb.read(),
-                               maintype='application',
-                               subtype='text',
-                               filename='attachment.txt')
-            os.remove('attachment.txt')
+                            maintype='application',
+                            subtype='text',
+                            filename='attachment.txt')
+            os.remove(attachment)
         message['Subject'] = subject
         message['From'] = 'AlCa Service Account <alcauser@cern.ch>'
         message['To'] = ', '.join(recipients)
         message['Cc'] = 'alcauser@cern.ch'
+
         # Send the message via our own SMTP server.
-        smtp = smtplib.SMTP()
-        smtp.connect()
+        smtp = smtplib.SMTP('smtp.cern.ch', 587)
+        smtp.starttls()
+        credentials = json.loads(open(Config.get('credentials_file')).read())
+        smtp.login(*list(credentials.values()))
         self.logger.debug('Sending email %s to %s', message['Subject'], message['To'])
         smtp.send_message(message)
         smtp.quit()
