@@ -4,10 +4,10 @@ Module that has all classes used for request submission to computing
 import os
 import json
 import time
+from uuid import uuid4
 from core_lib.utils.ssh_executor import SSHExecutor
 from core_lib.utils.locker import Locker
 from database.database import Database
-from core_lib.utils.connection_wrapper import ConnectionWrapper
 from core_lib.utils.submitter import Submitter as BaseSubmitter
 from core_lib.utils.common_utils import (clean_split,
                                         cmssw_setup,
@@ -15,7 +15,7 @@ from core_lib.utils.common_utils import (clean_split,
                                         get_scram_arch,
                                         run_commands_in_cmsenv)
 from core_lib.utils.global_config import Config
-from ..utils.emailer import Emailer
+from core_lib.utils.emailer import Emailer
 
 
 class DQMRequestSubmitter(BaseSubmitter):
@@ -37,13 +37,13 @@ class DQMRequestSubmitter(BaseSubmitter):
                          controller=relval_controller,
                          target_pair=target_pair)
 
-    def __handle_error(self, relvalT, relvalR, error_message):
+    def __handle_error(self, relvalT, relvalR, error_message, error_code):
         """
         Handle error that occured during submission, modify RelVal accordingly
         """
-        self.logger.error(error_message)
         relval_db = Database('relvals')
         for relval in [relvalT, relvalR]:
+            # Remove failed links from DB
             dqm = relval.get('dqm_comparison')
             dqm.pop()
             relval.set('dqm_comparison', dqm)
@@ -53,53 +53,62 @@ class DQMRequestSubmitter(BaseSubmitter):
         emailer = Emailer()
         prepidT = relvalT.get_prepid()
         prepidR = relvalR.get_prepid()
-        subject = f'DQM comparison submission failed {prepidT}, {prepidR}'
-        body = f'Hello,\n\nUnfortunately submission of DQM comparison job failed.\n'
+        Ticket = relvalT.get('jira_ticket')
+        subject = f'\U0001F61F | DQM comparison for {Ticket}'
+        body = f'Hello,\nUnfortunately submission of DQM comparison job failed. See error log attached.\n'
+        body += (f'Target relval: <a href="{service_url}/relvals?prepid={prepidT}">{prepidT}</a>\n')
+        body += (f'Reference relval: <a href="{service_url}/relvals?prepid={prepidR}">{prepidR}</a>\n')
+        recipients = emailer.get_recipients(relvalT)
+
+        attachment = f'/tmp/attachment_{uuid4()}.txt'
+        with open(attachment, 'w') as f:
+            f.write(error_message)
+        emailer.send_with_mime(subject, body, recipients, attachment=attachment)
+
+    def __handle_success(self, relvalT, relvalR, stdout):
+        """
+        Handle success of the DQM comparison
+        """
+        relval_db = Database('relvals')
+        for relval in [relvalT, relvalR]:
+            dqm = relval.get('dqm_comparison')
+            dqm[-1]['status'] = 'compared'
+            relval.set('dqm_comparison', dqm)
+            relval_db.save(relval.get_json())
+
+        def get_dqm_link(tar, ref, path='relval'):
+            dqm_new = relvalT.get('dqm_comparison')[-1]
+            run_number = dqm_new['run_number']
+            tar_data = dqm_new[tar]
+            ref_data = dqm_new[ref]
+            s1 = f'https://cmsweb.cern.ch/dqm/{path}/start?runnr={run_number};'
+            s2 = f'dataset={tar_data};'
+            s3 = 'sampletype=offline_data;filter=all;referencepos=overlay;referenceshow=all;referencenorm=False;'
+            s4 = f'referenceobj1=other%3A{run_number}%3A{ref_data}%3AReference%3A;'
+            s5 = 'striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;'
+            link = s1 + s2 + s3 + s4 + s5
+            title = f"Target: {tar_data} Reference: {ref_data}"
+            return f"<a href='{link}' title='{title}'>DQM {path}</a>"
+
+        service_url = Config.get('service_url')
+        prepidT = relvalT.get_prepid()
+        prepidR = relvalR.get_prepid()
+        Ticket = relvalT.get('jira_ticket')
+        subject = f'\U0001F973 | DQM comparison for {Ticket}'
+        compared_link = get_dqm_link('target', 'reference', path='dev')
+        original_link = get_dqm_link('source', 'compared_with')
+        body = f'Hello,\n DQM comparison is successful. Here are the details\n'
+        body += (f'Post comparison link : {compared_link}\n')
+        body += (f'Pre comparison link: {original_link}\n')
         body += (f'Target relval: {service_url}/relvals?prepid={prepidT}\n')
         body += (f'Reference relval: {service_url}/relvals?prepid={prepidR}\n')
-        # body += f'Error message:\n\n{error_message}'
-        recipients = emailer.get_recipients(relvalT)
-        self.__send_email(repr(subject), repr(body), recipients, attach=error_message)
 
-    def __handle_success(self, relvalT, relvalR):
-        """
-        Handle notification of successful submission
-        """
-        prepid = relval.get_prepid()
-        last_workflow = relval.get('workflows')[-1]['name']
-        cmsweb_url = Config.get('cmsweb_url')
-        self.logger.info('Submission of %s succeeded', prepid)
-        service_url = Config.get('service_url')
+        attachment = f'/tmp/attachment_{uuid4()}.txt'
+        with open(attachment, 'w') as f:
+            f.write(stdout)
         emailer = Emailer()
-        subject = f'RelVal {prepid} submission succeeded'
-        body = f'Hello,\n\nSubmission of {prepid} succeeded.\n'
-        body += (f'You can find this relval at '
-                 f'{service_url}/relvals?prepid={prepid}\n')
-        body += f'Workflow in ReqMgr2 {cmsweb_url}/reqmgr2/fetch?rid={last_workflow}'
-        # if Config.get('development'):
-        #     body += '\nNOTE: This was submitted from a development instance of RelVal machine '
-        #     body += 'and this job will never start running in computing!\n'
-
-        recipients = emailer.get_recipients(relval)
-        self.__send_email(repr(subject), repr(body), recipients)
-
-    def __send_email(self, subject, body, recipients, attach=None):
-        credentials_file = Config.get('credentials_file')
-        remote_directory = Config.get('remote_path').rstrip('/')
-        if attach:
-            f = open('/tmp/attachment.txt', 'w')
-            f.write(attach)
-        with SSHExecutor('lxplus.cern.ch', credentials_file) as ssh:
-            ssh.upload_file('/tmp/attachment.txt', f'{remote_directory}/attachment.txt')
-            ssh.upload_file('./core_lib/utils/emailer.py', f'{remote_directory}/emailer.py')
-            command = [f'cd {remote_directory}']
-            command.append(f"""python3 -c "from emailer import Emailer; emailer = Emailer(); \
-                        emailer.send(str({subject}), str({body}), {recipients}, attach=True)" || exit $? """)
-            stdout, stderr, exit_code = ssh.execute_command(command)
-            if exit_code != 0:
-                self.logger.error('Error sending email:\nstdout:%s\nstderr:%s',
-                                  stdout,
-                                  stderr)
+        recipients = emailer.get_recipients(relvalT)
+        emailer.send_with_mime(subject, body, recipients, attachment=attachment)
 
     def create_dqm_comparison(self, relvalT, relvalR, dqm_pair, controller, target_pair):
         """
@@ -114,34 +123,35 @@ class DQMRequestSubmitter(BaseSubmitter):
         scram_arch = get_scram_arch(cmssw_version)
 
         data_url = 'https://cmsweb.cern.ch/dqm/relval/data/browse/ROOT/RelValData/'
-        target_run = dbs_dataset_runs(dqm_pair['target_dataset'])[0]
+        tar_run = dbs_dataset_runs(dqm_pair['target_dataset'])[0]
         ref_run = dbs_dataset_runs(dqm_pair['reference_dataset'])[0]
-        target_dataset = dqm_pair['target_dataset'].replace('/', '__')
-        reference_dataset = dqm_pair['reference_dataset'].replace('/', '__')
-        target_file = f'DQM_V0001_R000{target_run}{target_dataset}.root'
-        ref_file = f'DQM_V0001_R000{ref_run}{reference_dataset}.root'
+        tar_dataset = dqm_pair['target_dataset'].replace('/', '__')
+        ref_dataset = dqm_pair['reference_dataset'].replace('/', '__')
+        tar_file = f'DQM_V0001_R000{tar_run}{tar_dataset}.root'
+        ref_file = f'DQM_V0001_R000{ref_run}{ref_dataset}.root'
 
         wget_options = r'--no-check-certificate '
         wget_options += r'-nd --certificate=${HOME}/.globus/usercert.pem '
         wget_options += r'--certificate-type=PEM '
         wget_options += r'--private-key=${HOME}/.globus/userkey.pem '
         wget_options += r'--private-key-type=PEM '
-        target_prefix = f'-P "{target_dataset}" ' + wget_options
-        ref_prefix = f'-P "{reference_dataset}" ' + wget_options
+        tar_prefix   = f'-P "{tar_dataset}" ' + wget_options
+        ref_prefix   = f'-P "{ref_dataset}" ' + wget_options
 
-        stript_cmssw = '_'.join(cmssw_version.split('_')[:3]+['x/'])
+        stript_cmssw_tar = '_'.join(cmssw_version.split('_')[:3]+['x/'])
         stript_cmssw_ref = '_'.join(ref_cmssw.split('_')[:3]+['x/'])
-        target_path = data_url + stript_cmssw + target_file
-        ref_path = data_url+ stript_cmssw_ref + ref_file
+        tar_path = data_url + stript_cmssw_tar + tar_file
+        ref_path = data_url + stript_cmssw_ref + ref_file
 
         #Set home for accessing ssl certs (in Singularity)
         command = [f'export HOME=/afs/cern.ch/user/a/alcauser']
-        command += ['wget -nv -N ' + target_prefix + target_path]
+        command += ['set -e']
+        command += ['wget -nv -N ' + tar_prefix + tar_path]
         command += ['wget -nv -N ' + ref_prefix + ref_path]
 
-        tar = target_dataset + '/' + target_file
-        ref = reference_dataset + '/' + ref_file
-        newtar_file = f'DQM_V0001_R000{target_run}{target_pair[0]}.root'
+        tar = tar_dataset + '/' + tar_file
+        ref = ref_dataset + '/' + ref_file
+        newtar_file = f'DQM_V0001_R000{tar_run}{target_pair[0]}.root'
         newref_file = f'DQM_V0001_R000{ref_run}{target_pair[1]}.root'
         command += [f'./compareHistograms.py -p {tar} -b {ref} --new-target {target_pair[0]} --ref-target {target_pair[1]}']
 
@@ -154,41 +164,27 @@ class DQMRequestSubmitter(BaseSubmitter):
         reference_prepid = relvalR.get_prepid()
         self.logger.debug('Will try to acquire lock for %s and %s' %(target_prepid, reference_prepid))
         with Locker().get_lock('+'.join([target_prepid, reference_prepid])):
-            # with Locker().get_lock():
-            relval_db = Database('relvals')
             self.logger.info('Locked %s+%s for submission', target_prepid, reference_prepid)
+            dqm_script_commands = run_commands_in_cmsenv(command, cmssw_version, scram_arch)
+            self.logger.debug('Compare DQM dataset pair command:\n%s', dqm_script_commands)
 
-            self.logger.debug('Compare DQM dataset pair command:\n%s', '\n'.join(command))
-            try:
-                with SSHExecutor('lxplus.cern.ch', credentials_file) as ssh_executor:
-                    start_cmd = [f'mkdir -p {remote_directory}']
-                    stdout, stderr, exit_code = ssh_executor.execute_command(start_cmd)
-                    if exit_code != 0:
-                        self.logger.error('Error creating %s:\nstdout:%s\nstderr:%s',
-                                          remote_directory,
-                                          stdout,
-                                          stderr)
-                        raise Exception(f'Error creting remote directory: {stderr}')
+            ssh = SSHExecutor('lxplus.cern.ch', credentials_file)
+            stdout = ssh.execute_command_new([
+                                            f'mkdir -p {remote_directory}',
+                                            f'cd {remote_directory}', 
+                                            dqm_script_commands
+                                            ])
+            chunk = ''; dummy = True
+            while dummy:
+                line = stdout.readline()
+                chunk += line
+                print(line, end='')
+                if not line: dummy = False
+            exit_code = stdout.channel.recv_exit_status()
+            ssh.close_connections()
 
-                    # Fixing CMSSW runtime env to CMSSW_12_3_3
-                    dqm_script_commands = run_commands_in_cmsenv(command, 'CMSSW_12_3_3', scram_arch)
-                    stdout, stderr, exit_code = ssh_executor.execute_command([f'cd {remote_directory}', dqm_script_commands])
-                    if exit_code != 0:
-                        self.logger.error('Error creating comparison plots:\nstdout:%s\nstderr:%s',
-                                          stdout,
-                                          stderr)
-                        raise Exception(f'Error creating comparison plots: {stderr}')
-
-                iterables = zip([dqm_pair['target_dataset'], dqm_pair['reference_dataset']], [relvalT, relvalR])
-                for dataset, relval in iterables:
-                    dqm = relval.get('dqm_comparison')
-                    dqm[-1]['status'] = 'compared'
-                    relval.set('dqm_comparison', dqm)
-                    relval_db.save(relval.get_json())
-
-            except Exception as ex:
-                self.__handle_error(relvalT, relvalR, str(ex))
-                return
-
-            # self.__handle_success(relvalT, relvalR)
-        return target_run, ref_run
+            if exit_code:
+                self.__handle_error(relvalT, relvalR, chunk, exit_code)
+            else:
+                self.__handle_success(relvalT, relvalR, chunk)
+        return tar_run, ref_run
