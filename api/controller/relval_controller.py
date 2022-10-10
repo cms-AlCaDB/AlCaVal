@@ -1080,6 +1080,9 @@ class RelValController(ControllerBase):
                         source = bool(item['source'] == dqm_pair[f'{a}_dataset'])
                         compared_with = bool(item['compared_with'] == dqm_pair[f'{b}_dataset'])
                         if source and compared_with:
+                            self.logger.error('This pair is already compared. Not repeating the task. %s', 
+                                        item['source'], 
+                                        item['compared_with'])
                             return []
 
                     old_ver = dqm_pair[f'{a}_dataset'].split("/")[-2].split("-")[-1].strip('v')

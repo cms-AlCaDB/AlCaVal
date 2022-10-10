@@ -46,6 +46,7 @@ class RelvalTestSubmitter(BaseSubmitter):
     Novice way to store std output to db. 
     if exit_code is other that 'None' then status is set to 'done'
     """
+    if (not stdout) and type(exit_code)!=int: return
     test_db = Database('relval-tests')
     dbdoc = test_db.get(relval.get_prepid())
     if not dbdoc:
@@ -70,10 +71,16 @@ class RelvalTestSubmitter(BaseSubmitter):
     with Locker().get_lock(prepid):
       start_time = time.time()
       relval_db = Database('relvals')
-      ssh = SSHExecutor('lxplus.cern.ch', credentials_file)
-      self.prepare_workspace(relval, controller, ssh, workspace_dir)
-      exit_code = self.perform_local_tests(ssh, relval, workspace_dir)
-      ssh.close_connections()
+      def execute_scripts():
+        ssh = SSHExecutor('lxplus.cern.ch', credentials_file)
+        self.prepare_workspace(relval, controller, ssh, workspace_dir)
+        exit_code = self.perform_local_tests(ssh, relval, workspace_dir)
+        ssh.close_connections()
+        return exit_code
+      exit_code = execute_scripts()
+      # Repeat failures with following exit codes
+      minor_codes = [1, 255]
+      while exit_code in minor_codes: exit_code = execute_scripts()
       if exit_code:
         for step in relval.get('steps'):
           step.set('resolved_globaltag', '')
@@ -112,7 +119,7 @@ class RelvalTestSubmitter(BaseSubmitter):
     command = [f'rm -rf {workspace_dir}/{prepid}',
                 f'mkdir -p {workspace_dir}/{prepid}',
                 f'cd {workspace_dir}/{prepid}',
-                'voms-proxy-init -voms cms --valid 4:00 --out $(pwd)/proxy.txt']
+                'voms-proxy-init --rfc -voms cms --valid 1:00 --vomslife 1:00 --verify --out $(pwd)/proxy.txt']
     ssh_executor.execute_command(command)
 
     # Upload config generation script - cmsDrivers
@@ -133,7 +140,8 @@ class RelvalTestSubmitter(BaseSubmitter):
                 'chmod +x config_test_generate.sh',
                 'export X509_USER_PROXY=$(pwd)/proxy.txt',
                 'echo "$X509_USER_PROXY"',
-                './config_test_generate.sh']
+                './config_test_generate.sh',
+                f'rm -rf {workspace_dir}/{prepid}']
     start_time = time.time()
     stdout = ssh.execute_command_new(command)
     chunk = ''; x = True; iTime=start_time

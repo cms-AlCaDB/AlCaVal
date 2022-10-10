@@ -8,7 +8,7 @@ from core_lib.utils.locker import Locker
 from database.database import Database
 from core_lib.utils.connection_wrapper import ConnectionWrapper
 from core_lib.utils.submitter import Submitter as BaseSubmitter
-from core_lib.utils.common_utils import clean_split, refresh_workflows_in_stats
+from core_lib.utils.common_utils import clean_split
 from core_lib.utils.global_config import Config
 from ..utils.emailer import Emailer
 from resources.smart_tricks import askfor
@@ -50,7 +50,7 @@ class RequestSubmitter(BaseSubmitter):
                  f'{service_url}/relvals?prepid={prepid}\n')
         body += f'Error message:\n\n{error_message}'
         recipients = emailer.get_recipients(relval)
-        self.__send_email(repr(subject), repr(body), recipients)
+        emailer.send_with_mime(subject, body, recipients)
 
     def __handle_success(self, relval):
         """
@@ -66,39 +66,27 @@ class RequestSubmitter(BaseSubmitter):
         cmsweb_url = Config.get('cmsweb_url')
         self.logger.info('Submission of %s succeeded', prepid)
         service_url = Config.get('service_url')
-        emailer = Emailer()
-        subject = f'RelVal {prepid} submission succeeded'
+        subject = f'[Success] RelVal {prepid} submission'
         if ticket_prepid:
-            subject = f'RelVal submission for ticket {ticket_prepid} succeeded'
-        body = f'Hello,\n\nSubmission of relval {prepid} succeeded.\n'
+            subject = f'[Success] RelVal submission for ticket {ticket_prepid} succeeded'
+        body = f'Hello,\nSubmission of relval {prepid} succeeded.\n'
         body += (f'You can find this relval at '
-                 f'{service_url}/relvals?prepid={prepid}\n')
+                 f'<a href="{service_url}/relvals?prepid={prepid}">{prepid}</a>\n')
         if ticket_prepid:
+            ticket = f'{service_url}/tickets?prepid={ticket_prepid}'
             body += (f'Ticket for this relval is at: '
-                     f'{service_url}/tickets?prepid={ticket_prepid}\n')
+                    f'<a href="{ticket}">{ticket_prepid}</a>\n')
         else:
             body += 'There is no ticket associated with this relval.\n'
-        body += f'Workflow in ReqMgr2 {cmsweb_url}/reqmgr2/fetch?rid={last_workflow}'
+        ReqMgr2 = f'<a href="{cmsweb_url}/reqmgr2/fetch?rid={last_workflow}">{last_workflow}</a>'
+        body += f'Workflow in ReqMgr2: {ReqMgr2}'
         if Config.get('development'):
             body += '\nNOTE: This was submitted from a development instance of RelVal machine '
             body += 'and this job will never start running in computing!\n'
 
+        emailer = Emailer()
         recipients = emailer.get_recipients(relval)
-        self.__send_email(repr(subject), repr(body), recipients)
-
-    def __send_email(self, subject, body, recipients):
-        credentials_file = Config.get('credentials_file')
-        remote_directory = Config.get('remote_path').rstrip('/')
-        with SSHExecutor('lxplus.cern.ch', credentials_file) as ssh:
-            ssh.upload_file('./core_lib/utils/emailer.py', f'{remote_directory}/emailer.py')
-            command = [f'cd {remote_directory}']
-            command.append(f"""python3 -c "from emailer import Emailer; emailer = Emailer(); \
-                        emailer.send(str({subject}), str({body}), {recipients})" || exit $? """)
-            stdout, stderr, exit_code = ssh.execute_command(command)
-            if exit_code != 0:
-                self.logger.error('Error sending email:\nstdout:%s\nstderr:%s',
-                                  stdout,
-                                  stderr)
+        emailer.send_with_mime(subject, body, recipients)
 
     def prepare_workspace(self, relval, controller, ssh_executor, workspace_dir):
         """
