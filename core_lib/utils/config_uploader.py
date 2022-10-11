@@ -3,11 +3,8 @@ Module containing the functions necessary to interact with the wma.
 Credit and less than optimal code has to be spreaded among lots of people.
 '''
 import os
-#pylint: disable=deprecated-module
-import imp
-#pylint: enable=deprecated-module
+import importlib
 import argparse
-#pylint: disable=import-error
 from tweak_maker_lite import TweakMakerLite
 from config_cache_lite import ConfigCacheLite
 #pylint: enable=import-error
@@ -20,11 +17,7 @@ def load_config_file(file_path):
     print('Importing the config, this may take a while...')
     config_base_name = os.path.basename(file_path).replace(".py", "")
     config_dir_name = os.path.dirname(file_path)
-    module_path = imp.find_module(config_base_name, [config_dir_name])
-    loaded_config = imp.load_module(config_base_name,
-                                    module_path[0],
-                                    module_path[1],
-                                    module_path[2])
+    loaded_config = importlib.import_module(config_base_name, package=config_dir_name)
     print('Imported %s' % (file_path))
     return loaded_config
 
