@@ -321,8 +321,8 @@ class RelVal(ModelBase):
         Get processing string of a step
         """
         step = self.get('steps')[step_index]
-        resolved_globaltag = step.get('resolved_globaltag')
-        if not resolved_globaltag:
+        wf_string = self.get_prepid().split('-')[1]+'_'+self.get('batch_name')
+        if not wf_string:
             return ''
 
         driver = step.get('driver')
@@ -338,7 +338,7 @@ class RelVal(ModelBase):
             prefix = ''
 
         suffix = self.get_relval_string_suffix()
-        processing_string = f'{prefix}{resolved_globaltag}_{suffix}'
+        processing_string = f'{prefix}{wf_string}_{suffix}'
         processing_string = processing_string.strip('_')
         return processing_string
 
