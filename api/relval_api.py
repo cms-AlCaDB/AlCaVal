@@ -368,9 +368,9 @@ class CreateDQMComparisonPlotsAPI(APIBase):
         if isinstance(dqm_json['Set'], list):
             results = []
             for dqm_pair in dqm_json['Set']:
-                relvalT = relval_controller.get(dqm_pair.get('target_prepid'))
-                relvalR = relval_controller.get(dqm_pair.get('reference_prepid'))
-                result = relval_controller.compare_dqm_datasets(relvalT, relvalR, dqm_pair)
+                relvalT = relval_controller.get(dqm_pair.get('tar_relval'))
+                relvalR = relval_controller.get(dqm_pair.get('ref_relval'))
+                result = relval_controller.compare_dqm_datasets(relvalT, relvalR)
                 results.append(result)
         else:
             raise Exception('Expected a single list of pair of dataset dicts')                

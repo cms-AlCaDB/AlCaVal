@@ -128,22 +128,17 @@ class SFieldList(FieldList):
         super().__init__(unbound_field, separator=separator, **kwargs)
         self.last_index = last_index
 
-# class SFormField(FormField):
-#     widget = TableWidget()
-
-
 label_kw   = {'class': 'col-form-label-sm', 'style': 'font-weight: normal; margin-bottom: 0px;'}
 classDict   = {'class': 'form-control form-control-sm'}
 class datasetForm(Form):
-    target_dataset = SSelectField('Target Dataset', choices=[["", "Select one of the following dataset"]],
+    tar_relval = SSelectField('Target Relval', choices=[["", "Select one of the following relvals"]],
                                validators=[InputRequired()],
                                widget=CustomSelect(),
                                default='',
                                 render_kw = classDict,
                                 label_rkw = label_kw
                                )
-    # target_dataset = MultiCheckboxField('Target Dataset', coerce=int, choices=[["", "Select one of the following dataset"]])
-    reference_dataset = SSelectField('Reference Dataset', choices=[["", "Select one of the following dataset"]],
+    ref_relval = SSelectField('Reference Relval', choices=[["", "Select one of the following relvals"]],
                                validators=[InputRequired()],
                                widget=CustomSelect(),
                                default='',

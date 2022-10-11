@@ -62,10 +62,10 @@ def compare_dqm():
         query_string = 'jira_ticket='+form.data['jira_ticket']+'&status=submitted|done'
         response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
         relvals = response['response']['results']
-        choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
+        choices = [[v[1], v[1]] for v in get_dataset_choices(relvals) if v[2] in good_status]
         for myset in form.Set:
-            myset.form.target_dataset.choices += choices
-            myset.form.reference_dataset.choices += choices
+            myset.form.tar_relval.choices += choices
+            myset.form.ref_relval.choices += choices
 
     if form.validate_on_submit():
         data = form.data
@@ -74,11 +74,6 @@ def compare_dqm():
         Set = form.data['Set']
         Set = [i for n, i in enumerate(Set) if i not in Set[n + 1:]]
         data['Set'] = Set
-        for dqm_set in data['Set']:
-            res = askfor.get('api/search?db_name=relvals&output_datasets='+ dqm_set['target_dataset']).json()
-            dqm_set['target_prepid'] = res['response']['results'][0]['prepid']
-            res = askfor.get('api/search?db_name=relvals&output_datasets='+ dqm_set['reference_dataset']).json()
-            dqm_set['reference_prepid'] = res['response']['results'][0]['prepid']
         response = askfor.post('api/relvals/compare_dqm_plots',
                                 data=json.dumps(data),
                                 headers=request.headers
@@ -166,12 +161,6 @@ def update_workflows_for_jira(jira):
     status = update_workflows(relvals)
     return jsonify(status[0])
 
-@dqm_blueprint.route('/just/update_workflows/<prepid>')
-@oidc.check
-def update_workflows_temp(prepid):
-    response = askfor.post('api/relvals/update_workflows', data=json.dumps({'prepid': prepid}), headers=request.headers).json()
-    return jsonify(response)
-
 @dqm_blueprint.route('/dqm/add_set', methods=['GET', 'PUT'])
 @oidc.check
 def add_set():
@@ -188,10 +177,10 @@ def add_set():
     query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
-    choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
+    choices = [[v[1], v[1]] for v in get_dataset_choices(relvals) if v[2] in good_status]
     for myset in form.Set:
-        myset.form.target_dataset.choices += choices
-        myset.form.reference_dataset.choices += choices
+        myset.form.tar_relval.choices += choices
+        myset.form.ref_relval.choices += choices
 
     return jsonify({'response': str(form.Set()), 
         'message': "These are the sets in the dqm form. \
@@ -205,7 +194,7 @@ def add_defualt_pairs(jira_ticket):
     query_string = 'jira_ticket='+jira_ticket+'&status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
-    choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
+    choices = [[v[1], v[1]] for v in get_dataset_choices(relvals) if v[2] in good_status]
 
     prepids = set([p[1] for p in choices])
     dsets = set([d.split('-')[2].strip() for d in prepids])
@@ -216,15 +205,15 @@ def add_defualt_pairs(jira_ticket):
             refid = [p for p in prepids if cond+'Ref-'+dname in p]
             newid.sort(); refid.sort()
             if not (len(newid) and len(refid)): continue
-            pair = {'target_dataset': [v[0] for v in choices if v[1]==newid[0]][0],
-                    'reference_dataset': [v[0] for v in choices if v[1]==refid[0]][0]}
+            pair = {'tar_relval': [v[1] for v in choices if v[1]==newid[0]][0],
+                    'ref_relval': [v[1] for v in choices if v[1]==refid[0]][0]}
             default_pairs.append(pair)
     inputjson = dict()
     inputjson['Set'] = default_pairs
     form = SetForm(Set=inputjson['Set'])
     for myset in form.Set:
-        myset.form.target_dataset.choices += choices
-        myset.form.reference_dataset.choices += choices
+        myset.form.tar_relval.choices += choices
+        myset.form.ref_relval.choices += choices
 
     return jsonify({
         'response': str(form.Set()),
@@ -246,10 +235,10 @@ def delete_set(setid):
     query_string = 'jira_ticket='+copiedjson['jira_ticket']+'&status=submitted|done'
     response = askfor.get('api/search?db_name=relvals' +'&'+ query_string).json()
     relvals = response['response']['results']
-    choices = [v[:2] for v in get_dataset_choices(relvals) if v[2] in good_status]
+    choices = [[v[1], v[1]] for v in get_dataset_choices(relvals) if v[2] in good_status]
     for myset in form.Set:
-        myset.form.target_dataset.choices += choices
-        myset.form.reference_dataset.choices += choices
+        myset.form.tar_relval.choices += choices
+        myset.form.ref_relval.choices += choices
 
     return jsonify({'response': str(form.Set()),
         'inputdata': jsonset,
