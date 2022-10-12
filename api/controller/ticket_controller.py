@@ -9,7 +9,6 @@ from database.database import Database
 from core_lib.controller.controller_base import ControllerBase
 from core_lib.utils.ssh_executor import SSHExecutor
 from core_lib.utils.common_utils import (clean_split,
-                                        cmssw_setup,
                                         get_scram_arch,
                                         dbs_datasetlist,
                                         run_commands_in_cmsenv)
@@ -18,7 +17,7 @@ from ..model.ticket import Ticket
 from ..model.relval import RelVal
 from ..model.relval_step import RelValStep
 from ..controller.relval_controller import RelValController
-
+from core_lib.utils.emailer import Emailer
 
 class TicketController(ControllerBase):
     """
@@ -48,6 +47,23 @@ class TicketController(ControllerBase):
             ticket = super().create(json_data)
 
         return ticket
+
+    def after_create(self, obj):
+        """
+        Actions to be performed after object is created
+        """
+        prepid = obj.get_prepid()
+        service_url = Config.get('service_url')
+        ticket_link = f'<a href="{service_url}/tickets?prepid={prepid}">{prepid}</a>'
+        emailer = Emailer()
+        recipients = emailer.get_recipients(obj)
+        users = ",".join([r.split("@")[0] for r in recipients])
+        subject = f'AlCaDB | New FTV ticket is created by {users}'
+        body =  f'Hi {users},\n'
+        body += 'Thank you for submitting a request.\n'
+        body += f'Here is your ticket: {ticket_link}\n'
+        body += f'\nRegards,\nAlCaDB Team'
+        emailer.send_with_mime(subject, body, recipients)
 
     def get_editing_info(self, obj):
         editing_info = super().get_editing_info(obj)

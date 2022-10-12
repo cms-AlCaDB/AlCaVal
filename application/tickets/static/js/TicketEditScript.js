@@ -1,20 +1,30 @@
 function showModal(e){
   e.preventDefault();
-  $('.event-content-modal').modal({show: true})
+  $('#event-content-modal').modal({show: true})
+}
+
+function showRunsModal(e){
+  e.preventDefault();
+  $('#suggested-runs-modal').modal({show: true})
 }
 
 function addnEventCalculator(){
+  suggestRuns = '<button class="btn btn-sm btn-outline-info" onclick="showRunsModal(event);">Suggested Runs</button>';
   nEventButton = '<button class="btn btn-sm btn-outline-info" onclick="showModal(event);">Get Events</button>';
-  document.getElementById("input_runs").insertAdjacentHTML('afterend', nEventButton);
+  document.getElementById("input_runs").insertAdjacentHTML('afterend', `<div style="display:grid">${nEventButton}${suggestRuns}</div>`);
 }
 
 function addHelpIcons(){
-  var nstreams_help = '<tr class="small-footers"><td></td><td><small style="color: gray"><i class="bi bi-arrow-up-circle"></i> If number of streams is 0, default value will be used</small></td></tr>'
+  grayHelper = '<tr class="small-footers"><td></td><td><small style="color: gray"><i class="bi bi-arrow-up-circle"></i>'
+  var nstreams_help = `${grayHelper} If number of streams is 0, default value will be used</small></td></tr>`
   document.getElementById("n_streams").parentNode.parentNode.insertAdjacentHTML('afterend', nstreams_help)
 
   var common_gt_help = "Common Prompt GT is usually same as target prompt GT. This field is required if you are using HLT GTs. It will be used in RECO stage of the HLT workflow"
   common_gt_help = '<span id="commong-gt-help-icon" class="help-icons" data-toggle="popover" data-content="'+common_gt_help+'"><i class="bi bi-question-circle-fill"></i></span>'
   document.getElementById("common_prompt_gt").insertAdjacentHTML('afterend', common_gt_help)
+
+  var widHelp = `${grayHelper} This is handled by FTV managers, please ignore if you are not the one</small></td></tr>`
+  document.getElementById("workflow_ids").parentNode.parentNode.insertAdjacentHTML('afterend', widHelp)
 }
 
 function track_matrix_select() {
@@ -40,7 +50,7 @@ function validate_cmssw(id) {
   var release = document.getElementById('cmssw_release_error_id')
   if (release) release.parentNode.parentNode.remove()
   value = document.getElementById(id).value
-  fetch('https://api.github.com/repos/cms-sw/cmssw/releases/tags/'+value).then(res => {
+  fetch(`https://api.github.com/repos/cms-sw/cmssw/releases/tags/${value}`).then(res => {
     if (res.status == 200) {
       var el = '<td></td><td style="padding-top: unset;"><small id="cmssw_release_error_id" style="color: green">Valid CMSSW release</small></td>'
       document.getElementById(id).parentNode.parentNode.insertAdjacentHTML('afterend', el)
@@ -122,6 +132,33 @@ $(document).ready(function(){
     then(res => res.json()).
     then(data => {
       modal.find('#event-modal-content').html(data.response)
+    })
+  })
+
+
+  $('#suggested-runs-modal').on('show.bs.modal', (event)=>{
+    var modal = $(this)
+    $("#suggested-runs").html('Loading...')
+    fetch('/api/search?db_name=relvals&status=submitted&limit=100').
+    then(res => res.json()).
+    then(data => {
+      data = data.response.results
+      output = {}
+      data.forEach(relval => {
+        dataset = relval.steps[0].input.dataset
+        run1 = relval.steps[0].input.lumisection
+        run2 = relval.steps[0].input.run
+        run = Object.keys(run1).concat(run2)
+        output[dataset] = output[dataset]? output[dataset].concat(run): run
+      });
+      datasetList = Object.keys(output); datasetList.sort();
+      text = '<table class="table" width=100%>'
+      text += '<thead><tr><th>Dataset</th><th>Runs</th></tr></thead>'
+      text += '<tbody>'
+      datasetList.forEach(key => {text += `<tr><td>${key}</td><td>${[...new Set(output[key])].join(', ')}</td></tr>`})
+      text += '</tdoby></table>'
+      console.log(text)
+      modal.find('#suggested-runs').html(text)
     })
   })
 

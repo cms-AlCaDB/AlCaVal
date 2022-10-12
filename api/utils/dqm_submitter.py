@@ -1,29 +1,23 @@
 """
 Module that has all classes used for request submission to computing
 """
-import os
 import json
-import time
 from uuid import uuid4
 from core_lib.utils.ssh_executor import SSHExecutor
 from core_lib.utils.locker import Locker
 from database.database import Database
 from core_lib.utils.submitter import Submitter as BaseSubmitter
-from core_lib.utils.common_utils import (clean_split,
-                                        cmssw_setup,
-                                        dbs_dataset_runs,
-                                        get_scram_arch,
+from core_lib.utils.common_utils import (get_scram_arch,
                                         run_commands_in_cmsenv)
 from core_lib.utils.global_config import Config
 from core_lib.utils.emailer import Emailer
-
 
 class DQMRequestSubmitter(BaseSubmitter):
     """
     Subclass of base submitter that is tailored for RelVal submission
     """
 
-    def add(self, relvalT, relvalR, dqm_pair, relval_controller, target_pair):
+    def add(self, relvalT, relvalR, dqm_pair, target_pair):
         """
         Add a RelVal to the submission queue
         """
@@ -34,7 +28,6 @@ class DQMRequestSubmitter(BaseSubmitter):
                          relvalT=relvalT,
                          relvalR=relvalR,
                          dqm_pair=dqm_pair,
-                         controller=relval_controller,
                          target_pair=target_pair)
 
     def __handle_error(self, relvalT, relvalR, error_message, error_code):
@@ -110,7 +103,7 @@ class DQMRequestSubmitter(BaseSubmitter):
         recipients = emailer.get_recipients(relvalT)
         emailer.send_with_mime(subject, body, recipients, attachment=attachment)
 
-    def create_dqm_comparison(self, relvalT, relvalR, dqm_pair, controller, target_pair):
+    def create_dqm_comparison(self, relvalT, relvalR, dqm_pair, target_pair):
         """
         Method that is used by submission workers. This is where the actual DQM submission happens
         """
@@ -118,15 +111,15 @@ class DQMRequestSubmitter(BaseSubmitter):
         credentials_file = Config.get('credentials_file')
         # Remember to set WORK directory in worker node
         remote_directory = r'${WORK}/dqm_comparison_submission'
-        cmssw_version = dqm_pair['target_dataset'].split('/')[2].split('-')[0]
-        ref_cmssw = dqm_pair['reference_dataset'].split('/')[2].split('-')[0]
+        cmssw_version = dqm_pair['tar_dataset'].split('/')[2].split('-')[0]
+        ref_cmssw = dqm_pair['ref_dataset'].split('/')[2].split('-')[0]
         scram_arch = get_scram_arch(cmssw_version)
 
         data_url = 'https://cmsweb.cern.ch/dqm/relval/data/browse/ROOT/RelValData/'
-        tar_run = dbs_dataset_runs(dqm_pair['target_dataset'])[0]
-        ref_run = dbs_dataset_runs(dqm_pair['reference_dataset'])[0]
-        tar_dataset = dqm_pair['target_dataset'].replace('/', '__')
-        ref_dataset = dqm_pair['reference_dataset'].replace('/', '__')
+        tar_run = dqm_pair['tar_run'][0]
+        ref_run = dqm_pair['ref_run'][0]
+        tar_dataset = dqm_pair['tar_dataset'].replace('/', '__')
+        ref_dataset = dqm_pair['ref_dataset'].replace('/', '__')
         tar_file = f'DQM_V0001_R000{tar_run}{tar_dataset}.root'
         ref_file = f'DQM_V0001_R000{ref_run}{ref_dataset}.root'
 

@@ -159,13 +159,13 @@ class ControllerBase():
 
     def before_create(self, obj):
         """
-        Actions to be performed before object is updated
+        Actions to be performed before object is created
         """
         return
 
     def after_create(self, obj):
         """
-        Actions to be performed after object is updated
+        Actions to be performed after object is created
         """
         return
 

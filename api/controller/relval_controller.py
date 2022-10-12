@@ -17,12 +17,12 @@ from core_lib.utils.common_utils import (clean_split,
                                          get_workflows_from_reqmgr2_for_prepid,
                                          run_commands_in_cmsenv,
                                          dbs_dataset_runs)
+from resources.smart_tricks import check_if_dataset_exists
 from ..utils.submitter import RequestSubmitter
 from ..utils.dqm_submitter import DQMRequestSubmitter
 from ..model.ticket import Ticket
 from ..model.relval import RelVal
 from ..model.relval_step import RelValStep
-from core_lib.utils.exceptions import ObjectNotFound
 
 
 DEAD_WORKFLOW_STATUS = {'rejected', 'aborted', 'failed', 'rejected-archived',
@@ -1031,44 +1031,52 @@ class RelValController(ControllerBase):
                                      sort_keys=True))
         return output_datasets
 
-    def check_if_dataset_exists(self, urlpart):
-        """Verify if dataset file exists in cmsweb dev instance"""
-        grid_cert = Config.get('grid_user_cert')
-        grid_key = Config.get('grid_user_key')
-        url = 'https://cmsweb.cern.ch/dqm/dev/data/browse/ROOT/RelValData/'
-        url += urlpart
-        ret = requests.head(url, cert=(grid_cert, grid_key), verify=False)
-        if ret.status_code != 200:
-            return False
-        else:
-            return True
-
-    def get_new_dataset_version(self, dataset):
+    def get_new_dataset_version(self, dataset, run):
+        """Get new version for the dataset to avoid overwrite issue"""
         version = int(dataset.split("/")[-2].split("-")[-1].strip('v'))
         cmssw_version = dataset.split('/')[2].split('-')[0]
         stript_cmssw = '_'.join(cmssw_version.split('_')[:3]+['x/'])
-        run = dbs_dataset_runs(dataset)[0]
         dataset_name = dataset.replace('/', '__')
 
         while True:
-            file = f'DQM_V0001_R000{run}{dataset_name}.root'
+            file = f'DQM_V0001_R000{run[0]}{dataset_name}.root'
             urlpart = stript_cmssw + file
-            data_exists = self.check_if_dataset_exists(urlpart)
+            data_exists = check_if_dataset_exists(urlpart)
             if data_exists:
                 dataset_name = dataset_name.replace(f'-v{version}__', f'-v{version+1}__')
-                version = version + 1 
+                version = version + 1
             else:
-                return version, run
+                return version
 
-    def compare_dqm_datasets(self, relvalT, relvalR, dqm_pair):
+    def compare_dqm_datasets(self, relvalT, relvalR):
         """Compare DQM dataset pair and save info to database"""
+        def get_dqm_pair(relvalT, relvalR):
+            """Returns DQM dataset pair for the relvals"""
+            # Get run numbers
+            in_dataT = relvalT.get('steps')[0].get('input')
+            in_dataR = relvalR.get('steps')[0].get('input')
+            runT = in_dataT.get('lumisection') or in_dataT.get('run')
+            runR = in_dataR.get('lumisection') or in_dataR.get('run')
+            runT = list(runT.keys()) if isinstance(runT, dict) else runT
+            runR = list(runR.keys()) if isinstance(runR, dict) else runR
+
+            dqm_pair = {}
+            dqm_pair['tar_run'] = runT
+            dqm_pair['ref_run'] = runR
+            for dataset in [i for i in relvalT.get('output_datasets') if 'DQMIO' in i]:
+                dqm_pair['tar_dataset'] = dataset
+            for dataset in [i for i in relvalR.get('output_datasets') if 'DQMIO' in i]:
+                dqm_pair['ref_dataset'] = dataset
+            return dqm_pair
+        dqm_pair = get_dqm_pair(relvalT, relvalR)
+
         results = []
         lock_key = '+'.join([relvalR.get_prepid(), relvalT.get_prepid()])
         with self.locker.get_nonblocking_lock(lock_key):
             relval_db = Database('relvals')
             target_pair = []
-            for dqmtype, relval in zip(['target', 'reference'], [relvalT, relvalR]):
-                a, b = (dqmtype, 'reference') if dqmtype == 'target' else (dqmtype, 'target')
+            for dqmtype, relval in zip(['tar', 'ref'], [relvalT, relvalR]):
+                a, b = (dqmtype, 'ref') if dqmtype == 'tar' else (dqmtype, 'tar')
                 batch_name = relval.get('batch_name')
                 cmssw_release = relval.get('cmssw_release')
                 locker_key = f'compare-dqm-plots-bin-by-bin-{cmssw_release}__{batch_name}'
@@ -1077,20 +1085,21 @@ class RelValController(ControllerBase):
                     dqm = relval.get_json().get('dqm_comparison')
                     if not isinstance(dqm, list): dqm = []
                     for item in dqm:
+                        # Check if pair is already compared
                         source = bool(item['source'] == dqm_pair[f'{a}_dataset'])
                         compared_with = bool(item['compared_with'] == dqm_pair[f'{b}_dataset'])
                         if source and compared_with:
-                            self.logger.error('This pair is already compared. Not repeating the task. %s', 
+                            self.logger.error('This pair is already compared. Not repeating the task. %s and %s', 
                                         item['source'], 
                                         item['compared_with'])
                             return []
 
                     old_ver = dqm_pair[f'{a}_dataset'].split("/")[-2].split("-")[-1].strip('v')
-                    version, run_number = self.get_new_dataset_version(dqm_pair[f'{a}_dataset'])
+                    version = self.get_new_dataset_version(dqm_pair[f'{a}_dataset'], dqm_pair[f'{a}_run'])
                     target_data = dqm_pair[f'{a}_dataset'].replace(f'-v{old_ver}/', f'-v{version}/').replace('/', '__')
 
                     old_ver = dqm_pair[f'{b}_dataset'].split("/")[-2].split("-")[-1].strip('v')
-                    version, run_number = self.get_new_dataset_version(dqm_pair[f'{b}_dataset'])
+                    version = self.get_new_dataset_version(dqm_pair[f'{b}_dataset'], dqm_pair[f'{b}_run'])
                     reference_data = dqm_pair[f'{b}_dataset'].replace(f'-v{old_ver}/', f'-v{version}/')
 
                     target_pair.append(target_data)
@@ -1100,9 +1109,11 @@ class RelValController(ControllerBase):
                             'target': target_data.replace('__', '/'),
                             'reference': reference_data,
                             'status': 'comparing',
-                            'run_number': run_number
+                            'run_number': dqm_pair['tar_run'],
+                            'tar_run': dqm_pair[f'{a}_run'],
+                            'ref_run': dqm_pair[f'{b}_run']
                             }
                     relval.set('dqm_comparison', dqm+[info])
                     relval_db.save(relval.get_json())
-            DQMRequestSubmitter().add(relvalT, relvalR, dqm_pair, self, target_pair)
+            DQMRequestSubmitter().add(relvalT, relvalR, dqm_pair, target_pair)
         return results

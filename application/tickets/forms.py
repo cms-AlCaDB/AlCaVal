@@ -3,17 +3,18 @@ import ast
 import json
 import logging
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, SelectField, StringField, FieldList, TextAreaField, IntegerField
-from wtforms.validators import DataRequired, InputRequired, ValidationError, StopValidation, Length, NumberRange
-from wtforms.widgets import TextArea
-from wtforms import widgets
+from wtforms import SubmitField
+from wtforms.validators import DataRequired, ValidationError, StopValidation, NumberRange
 
-from markupsafe import Markup
-from wtforms.widgets.core import html_params
-from wtforms.fields.core import Label as BaseLabel
 from core_lib.utils.global_config import Config
 from core_lib.utils.common_utils import ConnectionWrapper
 import requests
+from resources.custom_form_fields import (CustomSelect,
+                                          SIntegerField,
+                                          SSelectField,
+                                          SStringField,
+                                          STextAreaField
+                                         )
 from resources.oms_api import OMSAPI
 import urllib3
 
@@ -21,29 +22,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 grid_cert = Config.get('grid_user_cert')
 grid_key = Config.get('grid_user_key')
 cmsweb_url = 'https://cmsweb.cern.ch'
-
-class CustomSelect:
-    """
-    Borrowed from: https://stackoverflow.com/questions/44379016/disabling-one-of-the-options-in-wtforms-selectfield/61762617
-    """
-
-    def __init__(self, multiple=False):
-        self.multiple = multiple
-
-    def __call__(self, field, option_attr=None, **kwargs):
-        if option_attr is None:
-            option_attr = {}
-        kwargs.setdefault("id", field.id)
-        if self.multiple:
-            kwargs["multiple"] = True
-        if "required" not in kwargs and "required" in getattr(field, "flags", []):
-            kwargs["required"] = True
-        html = ["<select %s>" % html_params(name=field.name, **kwargs)]
-        for option in field:
-            attr = option_attr.get(option.id, {})
-            html.append(option(**attr))
-        html.append("</select>")
-        return Markup("".join(html))
 
 class GTDataRequired(object):
     """Validator for Common Prompt GT
@@ -66,43 +44,6 @@ class GTDataRequired(object):
 
         field.errors[:] = []
         raise StopValidation(message)
-
-class Label(BaseLabel):
-    """
-    An HTML form label.
-    """
-    def __init__(self, field_id, text, label_rkw={}):
-        super().__init__(field_id, text)
-        self.label_rkw = label_rkw
-
-    def __call__(self, text=None, **kwargs):
-        kwargs.update(**self.label_rkw)
-        return super().__call__(text=None, **kwargs)
-
-def SetLabel(myid, label, name, label_rkw):
-    return Label(myid,
-                label if label is not None else self.gettext(name.replace("_", " ").title()),
-                label_rkw=label_rkw)
-
-class SSelectField(SelectField):
-    def __init__(self, label=None, label_rkw={}, **kw):
-        super().__init__(label=label, **kw)
-        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
-
-class SStringField(StringField):
-    def __init__(self, label=None, label_rkw={}, **kw):
-        super().__init__(label=label, **kw)
-        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
-
-class STextAreaField(TextAreaField):
-    def __init__(self, label=None, label_rkw={}, **kw):
-        super().__init__(label=label, **kw)
-        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
-
-class SIntegerField(IntegerField):
-    def __init__(self, label=None, label_rkw={}, **kw):
-        super().__init__(label=label, **kw)
-        self.label = SetLabel(self.id, label, kw['name'], label_rkw)
 
 class TicketForm(FlaskForm):
     label_rkw = {'class': 'col-form-label-sm'}
@@ -232,7 +173,7 @@ class TicketForm(FlaskForm):
     workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
                         default='6.51, 6.52',
                         render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
-                        label_rkw = {'class': 'col-form-label-sm required'}
+                        label_rkw = {'class': 'col-form-label-sm'}
                         )
     notes = STextAreaField('Notes',  
                            render_kw = classDict | {
