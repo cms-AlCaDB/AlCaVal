@@ -63,8 +63,10 @@ class Emailer():
         credentials = json.loads(open(Config.get('credentials_file')).read())
         smtp.login(*list(credentials.values()))
         self.logger.debug('Sending email %s to %s', self.message['Subject'], self.message['To'])
-        text = self.message.as_string()
-        smtp.sendmail(self.message['From'], recipients, text)
+        try:
+            smtp.send_message(self.message)
+        except Exception as e:
+            raise e
         smtp.quit()
 
     def send(self, subject, body, recipients, attachment=None):
