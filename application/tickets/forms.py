@@ -173,7 +173,7 @@ class TicketForm(FlaskForm):
     workflow_ids = SStringField('Workflow IDs', validators=[DataRequired()],
                         default='6.51, 6.52',
                         render_kw = classDict | {'placeholder': 'Workflow IDs separated by comma. E.g. 1.1,1.2'},
-                        label_rkw = {'class': 'col-form-label-sm required'}
+                        label_rkw = {'class': 'col-form-label-sm'}
                         )
     notes = STextAreaField('Notes',  
                            render_kw = classDict | {
