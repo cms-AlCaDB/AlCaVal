@@ -71,13 +71,14 @@ class DQMRequestSubmitter(BaseSubmitter):
 
         def get_dqm_link(tar, ref, path='relval'):
             dqm_new = relvalT.get('dqm_comparison')[-1]
-            run_number = dqm_new['run_number']
+            tar_run = dqm_new['tar_run'][0]
+            ref_run = dqm_new['ref_run'][0]
             tar_data = dqm_new[tar]
             ref_data = dqm_new[ref]
-            s1 = f'https://cmsweb.cern.ch/dqm/{path}/start?runnr={run_number};'
+            s1 = f'https://cmsweb.cern.ch/dqm/{path}/start?runnr={tar_run};'
             s2 = f'dataset={tar_data};'
             s3 = 'sampletype=offline_data;filter=all;referencepos=overlay;referenceshow=all;referencenorm=False;'
-            s4 = f'referenceobj1=other%3A{run_number}%3A{ref_data}%3AReference%3A;'
+            s4 = f'referenceobj1=other%3A{ref_run}%3A{ref_data}%3AReference%3A;'
             s5 = 'striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;'
             link = s1 + s2 + s3 + s4 + s5
             title = f"Target: {tar_data} Reference: {ref_data}"
