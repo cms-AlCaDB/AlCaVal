@@ -9,7 +9,7 @@ class DQMLinkCol(Col):
     def td_contents(self, item, attr_list):
         return self.td_format(self.from_attr_list(item, attr_list), item)
     def td_format(self, content, item):
-        s1 = 'https://cmsweb.cern.ch/dqm/dev/start?runnr=%s;' % item['run_number']
+        s1 = 'https://cmsweb.cern.ch/dqm/dev/start?runnr=%s;' % item['run_number'][0]
         s2 = 'dataset=%s;' % item['dataset']
         s3 = 'sampletype=offline_data;filter=all;referencepos=overlay;referenceshow=customise;referencenorm=True;search=;striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;size=M;root=;focus=;zoom=no;'
         link = s1 + s2 + s3
@@ -20,10 +20,10 @@ class OverlayLinkCol(Col):
     def td_contents(self, item, attr_list):
         return self.td_format(self.from_attr_list(item, attr_list), item)
     def td_format(self, content, item):
-        s1 = 'https://cmsweb.cern.ch/dqm/dev/start?runnr=%s;' % item['run_number']
+        s1 = 'https://cmsweb.cern.ch/dqm/dev/start?runnr=%s;' % item['run_number'][0]
         s2 = 'dataset=%s;' % item['dataset']
         s3 = 'sampletype=offline_data;filter=all;referencepos=overlay;referenceshow=all;referencenorm=False;'
-        s4 = f'referenceobj1=other%3A{item["run_number"]}%3A{item["reference"]}%3AReference%3A;'
+        s4 = f'referenceobj1=other%3A{item["run_number"][0]}%3A{item["reference"]}%3AReference%3A;'
         s5 = 'referenceobj2=none;referenceobj3=none;referenceobj4=none;search=;striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;size=M;root=;focus=;zoom=no;'
         link = s1 + s2 + s3 + s4 + s5
         title = f"Target: {item['dataset']}\nReference: {item.get('reference')}"
@@ -51,7 +51,7 @@ class OriginalLinkCol(Col):
             return self.name
 
     def td_contents(self, item, attr_list):
-        s1 = 'https://cmsweb.cern.ch/dqm/relval/start?runnr=%s;' % item['run_number']
+        s1 = 'https://cmsweb.cern.ch/dqm/relval/start?runnr=%s;' % item['run_number'][0]
         s2 = 'dataset=%s;' % item['source']
         s5 = 'referenceobj2=none;referenceobj3=none;referenceobj4=none;search=;striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;size=M;root=;focus=;zoom=no;'
         link = s1 + s2 + s5
@@ -63,10 +63,10 @@ class OriginalLinkCol(Col):
 
 class OriginalOverlayLinkCol(OriginalLinkCol):
     def td_contents(self, item, attr_list):
-        s1 = 'https://cmsweb.cern.ch/dqm/relval/start?runnr=%s;' % item['run_number']
+        s1 = 'https://cmsweb.cern.ch/dqm/relval/start?runnr=%s;' % item['run_number'][0]
         s2 = 'dataset=%s;' % item['source']
         s3 = 'sampletype=offline_data;filter=all;referencepos=overlay;referenceshow=all;referencenorm=False;'
-        s4 = f'referenceobj1=other%3A{item["run_number"]}%3A{item["compared_with"]}%3AReference%3A;'
+        s4 = f'referenceobj1=other%3A{item["run_number"][0]}%3A{item["compared_with"]}%3AReference%3A;'
         s5 = 'referenceobj2=none;referenceobj3=none;referenceobj4=none;search=;striptype=object;stripruns=;stripaxis=run;stripomit=none;workspace=Everything;size=M;root=;focus=;zoom=no;'
         link = s1 + s2 + s3 + s4 + s5
         attrs = {'target':'_blank', 'rel':'noopener noreferrer', 'href':f'{link}',
