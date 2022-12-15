@@ -51,5 +51,5 @@ class GetJiraTicketsAPI(APIBase):
         obj = jira_controller.get()
         issues = []
         for issue in obj:
-	        issues.append((issue.key, issue.key+': '+issue.fields.summary))
+            issues.append((issue.key, issue.key+': '+issue.fields.summary))
         return self.output_text({'response': issues, 'success': True, 'message': ''})
