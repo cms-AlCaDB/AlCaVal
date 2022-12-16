@@ -11,8 +11,6 @@ from flask_cors import CORS
 from database.database import Database
 from core_lib.utils.global_config import Config
 from core_lib.utils.username_filter import UsernameFilter
-from flask_oidc import OpenIDConnect
-oidc = OpenIDConnect()
 
 from resources.smart_tricks import askfor
 def get_userinfo():
@@ -24,7 +22,8 @@ def get_userinfo():
 
     # Refresh user credentials when system restarts
     refresh = bool(uptime > session_uptime)
-    if not (g.oidc_id_token and 'user' in session.keys()) or refresh:
+    token = request.headers.get('X-Forwarded-User')
+    if not (token and 'user' in session.keys()) or refresh:
         logger = logging.getLogger()
         logger.warning('Refreshing user credentials in client session')
         userinfo = askfor.get('api/system/user_info',
@@ -81,7 +80,6 @@ def create_app():
 
     app = Flask(__name__)
     app.config.from_object('config')
-    oidc.init_app(app)
 
     # Add API resources
     from api.ticket_api import (CreateTicketAPI,

@@ -1,5 +1,5 @@
 import json
-from copy import deepcopy, copy
+from copy import copy
 from flask import (Blueprint,
                     request,
                     render_template,
@@ -11,7 +11,7 @@ from flask import (Blueprint,
                     url_for
                   )
 from werkzeug.datastructures import MultiDict
-from .. import oidc, get_userinfo
+from .. import get_userinfo
 from resources.smart_tricks import askfor
 from .Table import RelvalTable
 from .relval_forms import RelvalForm, StepsForm
@@ -20,7 +20,6 @@ relval_blueprint = Blueprint('relvals', __name__, url_prefix='/relvals', templat
 
 
 @relval_blueprint.route('', strict_slashes=False, methods=['GET'])
-@oidc.check
 def get_relval():
     user = get_userinfo()
     response = askfor.get('api/search?db_name=relvals' +'&'+ request.query_string.decode()).json()
@@ -115,7 +114,6 @@ def applyEditingInfo(form, edit_all = False):
     return form
 
 @relval_blueprint.route('/edit', methods=['GET', 'PUT', 'POST'])
-@oidc.check
 def create_relval():
     user = get_userinfo()
     edit = bool(request.args.get('prepid'))
@@ -228,7 +226,6 @@ def getValidJSON(jsonstep):
     return copiedjson
 
 @relval_blueprint.route('/add_step', methods=['GET', 'PUT'])
-@oidc.check
 def add_step():
     """Dynamically adding new steps to the relval form"""
     user = get_userinfo()
@@ -252,7 +249,6 @@ def add_step():
 
 
 @relval_blueprint.route('/delete_step/<int:stepid>', methods=['PUT'])
-@oidc.check
 def delete_step(stepid):
     """Dynamically deleting new steps from the relval form"""
     user = get_userinfo()
@@ -273,7 +269,6 @@ def delete_step(stepid):
         Can be use for dynamically deleting any step"})
 
 @relval_blueprint.route('/local_test_result/<prepid>', methods=['GET'])
-@oidc.check
 def get_relvals_react(prepid):
     """Display local test result of a relval"""
     return render_template('LocalTest.html.jinja',
