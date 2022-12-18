@@ -2,28 +2,26 @@ import React from 'react';
 import { useTable, useSortBy } from 'react-table';
 import ReactTable from '../components/Table';
 import TableWrapper from '../components/TableWrapper';
+import reducer, { initialState } from './reducer';
 
 export const RelvalTable = () => {
-  const [data, setData] = React.useState([]);
-  const [totalRows, setTotalRows] = React.useState([]);
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(100);
+  const [state, dispatch] = React.useReducer(reducer, initialState);
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
-    return [...data]},
-  [data]);
+    return [...state.data]},
+  [state.data]);
 
   const columns = React.useMemo(() => 
-    data[0]
-    ? Object.keys(data[0])
-        .filter((key) => typeof(data[0][key]) == "string")
+    state.data[0]
+    ? Object.keys(state.data[0])
+        .filter((key) => typeof(state.data[0][key]) == "string")
         .map((key) => {
           const header = key.split("_").map(l=> l.charAt(0).toUpperCase()+l.slice(1)).join(' ')
           return { Header: header, accessor: key };
         })
     : [],
-    [data]);
+    [state.data]);
 
   const tableInstance = useTable(
     { columns: columns,
@@ -37,17 +35,21 @@ export const RelvalTable = () => {
 
   React.useEffect(() => {
     let url = 'api/search?db_name=relvals';
-    url += `&limit=${pageSize}&page=${currentPage}`
+    url += `&limit=${state.pageSize}&page=${state.currentPage}`;
     fetch(url)
     .then(res => res.json())
     .then(
       data => {
         console.log("Fetched data: ", data.response.results);
-        setData(data.response.results);
-        setTotalRows(data.response.total_rows);
+        dispatch({
+          type: "SET_DATA", 
+          data: data.response.results,
+          totalRows: data.response.total_rows
+        })
     })
     .catch(err => console.log('Error fetching data' + err));
-  }, [currentPage, pageSize]);
+
+  }, [state.currentPage, state.pageSize]);
 
   return (
     <TableWrapper>
