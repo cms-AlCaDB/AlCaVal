@@ -1,8 +1,9 @@
 import React from 'react';
-import { useTable, useSortBy } from 'react-table';
+import { useTable, useSortBy, useRowSelect } from 'react-table';
 import ReactTable from '../components/Table';
 import TableWrapper from '../components/TableWrapper';
 import reducer, { initialState } from './reducer';
+import checkboxHook from '../components/Checkbox';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
@@ -21,7 +22,7 @@ export const RelvalTable = () => {
           return { Header: header, accessor: key };
         })
     : [],
-    [state.data]);
+  [state.data]);
 
   const tableInstance = useTable(
     { columns: columns,
@@ -31,6 +32,8 @@ export const RelvalTable = () => {
       autoResetPage: false,
     },
     useSortBy,
+    useRowSelect,
+    checkboxHook,
   );
 
   React.useEffect(() => {
@@ -54,6 +57,16 @@ export const RelvalTable = () => {
   return (
     <TableWrapper>
       <ReactTable tableProps={tableInstance} />
+      <pre>
+        <code>
+          {
+            JSON.stringify({
+              Selected: Object.values(tableInstance.selectedFlatRows).flat()
+                        .map(el => el.values._id),
+            }, null, 2)
+          }
+        </code>
+      </pre>
     </TableWrapper>
   );
 }
