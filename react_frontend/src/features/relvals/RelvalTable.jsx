@@ -1,28 +1,22 @@
 import React from 'react';
 import { useTable, useSortBy, useRowSelect } from 'react-table';
+import { useSearchParams } from 'react-router-dom'
 import ReactTable from '../components/Table';
 import TableWrapper from '../components/TableWrapper';
 import reducer, { initialState } from './reducer';
 import checkboxHook from '../components/Checkbox';
+import * as actions from './actions';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
     return [...state.data]},
   [state.data]);
 
-  const columns = React.useMemo(() => 
-    state.data[0]
-    ? Object.keys(state.data[0])
-        .filter((key) => typeof(state.data[0][key]) == "string")
-        .map((key) => {
-          const header = key.split("_").map(l=> l.charAt(0).toUpperCase()+l.slice(1)).join(' ')
-          return { Header: header, accessor: key };
-        })
-    : [],
-  [state.data]);
+  const columns = React.useMemo(() => actions.fetchColumns(state.data[0]), [state.data]);
 
   const tableInstance = useTable(
     { columns: columns,
@@ -37,6 +31,8 @@ export const RelvalTable = () => {
   );
 
   React.useEffect(() => {
+    actions.updateQueryString(state, searchParams, setSearchParams);
+
     let url = 'api/search?db_name=relvals';
     url += `&limit=${state.pageSize}&page=${state.currentPage}`;
     fetch(url)
@@ -57,6 +53,7 @@ export const RelvalTable = () => {
   return (
     <TableWrapper>
       <ReactTable tableProps={tableInstance} />
+      <button className='btn btn-secondary' onClick={()=>dispatch(actions.changePage(2))}>Change Page</button>
       <pre>
         <code>
           {
