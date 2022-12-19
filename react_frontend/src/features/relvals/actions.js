@@ -20,3 +20,7 @@ export const updateQueryString = (state, searchParams, setSearchParams) => {
 export const changePage = (page) => {
   return {type: "CHANGE_PAGE", payload: page};
 }
+
+export const setPageSize = (size) => {
+  return {type: "SET_PAGE_SIZE", payload: size};
+}

@@ -1,4 +1,3 @@
-import { actions } from "react-table";
 
   // Need query params for setting first data request
   var urlParams = new URLSearchParams(window.location.search);
@@ -27,6 +26,8 @@ function reducer(state=initialState, action) {
       return {...state};
     case "CHANGE_PAGE":
       return {...state, currentPage: action.payload};
+    case "SET_PAGE_SIZE":
+      return {...state, pageSize: action.payload};
     default:
       throw new Error();
   }
