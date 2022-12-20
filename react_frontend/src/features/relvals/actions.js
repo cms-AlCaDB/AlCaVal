@@ -24,3 +24,9 @@ export const changePage = (page) => {
 export const setPageSize = (size) => {
   return {type: "SET_PAGE_SIZE", payload: size};
 }
+
+export const setSelectedItems = (state, tableInstance) => {
+  const newSelectedItems = {...state.selectedItems};
+  newSelectedItems[state.currentPage] = [...tableInstance.selectedFlatRows];
+  return {type: "SET_SELECTED_ITEMS", payload: newSelectedItems};
+}

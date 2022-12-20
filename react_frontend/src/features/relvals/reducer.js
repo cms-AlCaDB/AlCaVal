@@ -28,6 +28,8 @@ function reducer(state=initialState, action) {
       return {...state, currentPage: action.payload};
     case "SET_PAGE_SIZE":
       return {...state, pageSize: action.payload};
+    case "SET_SELECTED_ITEMS":
+      return {...state, selectedItems: action.payload};
     default:
       throw new Error();
   }

@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import reducer, { initialState } from './reducer';
 import * as actions from './actions';
 import ReactTable from '../components/Table';
-import checkboxHook from '../components/Checkbox';
+import checkboxHook, {ColumnSelector} from '../components/Checkbox';
 import Pagination from '../components/Paginator';
 import './RelvalTable.css';
 
@@ -19,12 +19,17 @@ export const RelvalTable = () => {
 
   const columns = React.useMemo(() => actions.fetchColumns(state.data[0]), [state.data]);
 
+  const getRowId = React.useCallback(row => {
+    return row._id
+  }, []);
+
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
       manualPagination: true,
       autoResetSelectedRows: true,
       autoResetPage: false,
+      getRowId,
     },
     useSortBy,
     useRowSelect,
@@ -51,17 +56,46 @@ export const RelvalTable = () => {
 
   }, [state.currentPage, state.pageSize]);
 
+  // Retain selected rows when page changes
+  React.useEffect(() => {
+    if (state.selectedItems[state.currentPage]){
+      console.log('Toggle rows')
+      state.selectedItems[state.currentPage].map(
+        rowid => 
+        {tableInstance.toggleRowSelected(rowid.id, true);}
+        );
+    }
+    tableInstance.toggleHideColumn('prepid', true)
+  }, [state.data]);
+
+  // Update selectedItems when row is checked/unchecked
+  React.useEffect(() => {
+    dispatch(actions.setSelectedItems(state, tableInstance));
+  }, [tableInstance.selectedFlatRows]);
+
+  // Reset selectedItems when page-size changes
+  React.useEffect(() => {
+    console.log('PageSize changed')
+    dispatch({type: "SET_SELECTED_ITEMS", payload: {}});
+  }, [state.pageSize]);
+  
   return (
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
         <div style={{flex: '1 1 auto'}}>
+
+          <div style={{width: 'calc(100vw - 32px)', position: 'sticky', left: '16px'}}>
+            <h1 className='page-title'>RelVals</h1>
+            <ColumnSelector tableProps={tableInstance}></ColumnSelector>
+          </div>
+
           <ReactTable tableProps={tableInstance} />
           <button className='btn btn-secondary' onClick={()=>dispatch(actions.changePage(2))}>Change Page</button>
           <pre>
             <code>
               {
                 JSON.stringify({
-                  Selected: Object.values(tableInstance.selectedFlatRows).flat()
+                  Selected: Object.values(state.selectedItems).flat()
                             .map(el => el.values._id),
                 }, null, 2)
               }

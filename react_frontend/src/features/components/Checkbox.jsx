@@ -36,4 +36,25 @@ const checkboxHook = hooks => (
   ])
 );
 
+export const ColumnSelector = (props) => {
+  const {allColumns, getToggleHideAllColumnsProps} = props.tableProps;
+  return (
+    <div className="row" style={{margin: '5px', boxShadow: '0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12)'}}>
+      <h4>Columns</h4>
+      <div className="col-sm-6 col-md-3 col-lg-2 col-12">
+        <IndeterminateCheckbox {...getToggleHideAllColumnsProps()} /> Toggle All
+      </div>
+      {allColumns.filter(m => typeof(m.Header) == "string" && m.id !== "_id").map(column => (
+        <div key={column.id} className="col-sm-6 col-md-3 col-lg-2 col-12">
+          <label>
+            <input type="checkbox" {...column.getToggleHiddenProps()} />{' '}
+            {column.Header}
+          </label>
+        </div>
+        ))}
+      <br />
+    </div>
+  );
+}
+
 export default checkboxHook;
