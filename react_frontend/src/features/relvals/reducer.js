@@ -1,17 +1,20 @@
 
   // Need query params for setting first data request
   var urlParams = new URLSearchParams(window.location.search);
+  const shown = urlParams.get('shown')? urlParams.get('shown'): 32640;
   const pageValid =  Number(urlParams.get('page')) >= 0
   const pageSizeValid = Number(urlParams.get('limit')) > 0
   const initPageNumber = pageValid? Number(urlParams.get('page')): 0
   const initPageSize = pageSizeValid? Number(urlParams.get('limit')): 50
+
 
 export const initialState = {
   data: [],
   totalRows: "",
   currentPage: initPageNumber,
   pageSize: initPageSize,
-  selectedItems: {}
+  selectedItems: {},
+  shown: shown
 };
 
 function reducer(state=initialState, action) {
@@ -30,6 +33,8 @@ function reducer(state=initialState, action) {
       return {...state, pageSize: action.payload};
     case "SET_SELECTED_ITEMS":
       return {...state, selectedItems: action.payload};
+    case "UPDATE_SHOWN":
+      return {...state, shown: action.payload};
     default:
       throw new Error();
   }

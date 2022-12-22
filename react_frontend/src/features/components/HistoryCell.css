@@ -1,0 +1,14 @@
+
+.history, .history td, .history th {
+  border: 1px solid rgba(0, 0, 0, 0.87) !important;
+  border-collapse: collapse;
+  padding: 4px !important;
+}
+.history {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+}
+tr, td, th {
+  height: 14px !important;
+}

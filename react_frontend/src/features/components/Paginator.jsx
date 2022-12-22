@@ -20,7 +20,7 @@ const Pagination = (props) => {
   const onNextPage = () => dispatch(actions.changePage(currentPage + 1));
   const onPrevPage = () => dispatch(actions.changePage(currentPage - 1));
 
-  const pageStart = totalRows == 0 ? 0 : currentPage * pageSize + 1;
+  const pageStart = totalRows === 0 ? 0 : currentPage * pageSize + 1;
   const pageEnd = Math.min(totalRows, currentPage * pageSize + pageSize); 
 
   // Disable previous and next buttons in the first and last page
@@ -43,7 +43,7 @@ const Pagination = (props) => {
           <ul className="pagination" key="1" style={{marginRight: '5px'}}>
             {
               [50, 100, 200].map(limit => (
-              <li className={`page-item ${limit==pageSize?'active': ''}`}
+              <li className={`page-item ${limit===pageSize?'active': ''}`}
                 key={limit}
               >
                 <button className="page-link" onClick={()=>dispatch(actions.setPageSize(limit))}>{limit}</button>

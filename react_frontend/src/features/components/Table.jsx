@@ -10,7 +10,7 @@ const ReactTable = (props) => {
   } = props.tableProps;
 
   return (
-    <Table hover bordered {...getTableProps({style: {whiteSpace: 'nowrap', height: 'calc(100vh - 118px)', overflow: 'auto'}})}>
+    <Table hover size="sm" {...getTableProps({style: {whiteSpace: 'nowrap', height: 'calc(100vh - 118px)', overflow: 'auto'}})}>
       <thead>
         {headerGroups.map(headerGroup => (
           <tr {...headerGroup.getHeaderGroupProps()}>

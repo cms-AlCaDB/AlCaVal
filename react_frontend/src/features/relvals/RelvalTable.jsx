@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTable, useSortBy, useRowSelect } from 'react-table';
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom';
 import reducer, { initialState } from './reducer';
 import * as actions from './actions';
 import ReactTable from '../components/Table';
@@ -17,7 +17,7 @@ export const RelvalTable = () => {
     return [...state.data]},
   [state.data]);
 
-  const columns = React.useMemo(() => actions.fetchColumns(state.data[0]), [state.data]);
+  const columns = React.useMemo(() => actions.fetchColumns(), []);
 
   const getRowId = React.useCallback(row => {
     return row._id
@@ -26,6 +26,7 @@ export const RelvalTable = () => {
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
+      initialState: { hiddenColumns: actions.getHiddenColumns(state.shown) },
       manualPagination: true,
       autoResetSelectedRows: true,
       autoResetPage: false,
@@ -37,8 +38,11 @@ export const RelvalTable = () => {
   );
 
   React.useEffect(() => {
-    actions.updateQueryString(state, searchParams, setSearchParams);
-
+    dispatch(
+      actions.updateQueryString(
+        state, tableInstance, searchParams, setSearchParams
+      )
+    );
     let url = 'api/search?db_name=relvals';
     url += `&limit=${state.pageSize}&page=${state.currentPage}`;
     fetch(url)
@@ -47,7 +51,7 @@ export const RelvalTable = () => {
       data => {
         console.log("Fetched data: ", data.response.results);
         dispatch({
-          type: "SET_DATA", 
+          type: "SET_DATA",
           data: data.response.results,
           totalRows: data.response.total_rows
         })
@@ -61,16 +65,15 @@ export const RelvalTable = () => {
     if (state.selectedItems[state.currentPage]){
       console.log('Toggle rows')
       state.selectedItems[state.currentPage].map(
-        rowid => 
-        {tableInstance.toggleRowSelected(rowid.id, true);}
+        rowid =>
+        tableInstance.toggleRowSelected(rowid.id, true)
         );
     }
-    tableInstance.toggleHideColumn('prepid', true)
   }, [state.data]);
 
   // Update selectedItems when row is checked/unchecked
   React.useEffect(() => {
-    dispatch(actions.setSelectedItems(state, tableInstance));
+    dispatch(actions.setSelectedItems(state, tableInstance.selectedFlatRows));
   }, [tableInstance.selectedFlatRows]);
 
   // Reset selectedItems when page-size changes
@@ -78,7 +81,16 @@ export const RelvalTable = () => {
     console.log('PageSize changed')
     dispatch({type: "SET_SELECTED_ITEMS", payload: {}});
   }, [state.pageSize]);
-  
+
+  React.useEffect(() => {
+    const shown = actions.updateShownFromVisible(tableInstance.allColumns);
+    searchParams.set('shown', parseInt(shown, 2));
+    const query = Object.fromEntries(searchParams);
+    setSearchParams(query);
+    dispatch({type: "UPDATE_SHOWN", payload: query.shown});
+    console.log('handleChange UPDATED');
+  }, [tableInstance.visibleColumns]);
+
   return (
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
@@ -86,7 +98,9 @@ export const RelvalTable = () => {
 
           <div style={{width: 'calc(100vw - 32px)', position: 'sticky', left: '16px'}}>
             <h1 className='page-title'>RelVals</h1>
-            <ColumnSelector tableProps={tableInstance}></ColumnSelector>
+            <ColumnSelector
+              tableProps={tableInstance}
+              ></ColumnSelector>
           </div>
 
           <ReactTable tableProps={tableInstance} />
@@ -96,7 +110,7 @@ export const RelvalTable = () => {
               {
                 JSON.stringify({
                   Selected: Object.values(state.selectedItems).flat()
-                            .map(el => el.values._id),
+                            .map(el => el.id),
                 }, null, 2)
               }
             </code>
