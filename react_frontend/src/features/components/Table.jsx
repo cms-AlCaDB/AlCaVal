@@ -10,7 +10,7 @@ const ReactTable = (props) => {
   } = props.tableProps;
 
   return (
-    <Table hover size="sm" {...getTableProps({style: {whiteSpace: 'nowrap', height: 'calc(100vh - 118px)', overflow: 'auto'}})}>
+    <Table hover size="sm" {...getTableProps({style: {whiteSpace: 'nowrap', overflow: 'auto'}})}>
       <thead>
         {headerGroups.map(headerGroup => (
           <tr {...headerGroup.getHeaderGroupProps()}>
@@ -29,7 +29,8 @@ const ReactTable = (props) => {
         ))}
       </thead>
       <tbody {...getTableBodyProps()}>
-        {rows.map((row, i) => {
+        {rows.length
+        ? rows.map((row, i) => {
           prepareRow(row)
           return (
             <tr {...row.getRowProps()}>
@@ -38,7 +39,15 @@ const ReactTable = (props) => {
               })}
             </tr>
           )
-        })}
+        })
+        : <tr>
+            <td colSpan={props.tableProps.columns.length}
+             style={{textAlign: 'center', color: 'rgba(0, 0, 0, 0.38)'}}
+            >
+              {props.loading? 'Loading items...': 'No data available'}
+            </td>
+          </tr>
+        }
       </tbody>
     </Table>
   );

@@ -38,6 +38,7 @@ export const RelvalTable = () => {
   React.useEffect(() => {
     let url = 'api/search?db_name=relvals';
     url += actions.getQueryString(state, true);
+    dispatch({type: "TOGGLE_LOADING_STATE", payload: true});
     fetch(url)
     .then(res => res.json())
     .then(
@@ -47,7 +48,8 @@ export const RelvalTable = () => {
           type: "SET_DATA",
           data: data.response.results,
           totalRows: data.response.total_rows
-        })
+        });
+        dispatch({type: "TOGGLE_LOADING_STATE", payload: false});
     })
     .catch(err => console.log('Error fetching data' + err));
 
@@ -87,6 +89,11 @@ export const RelvalTable = () => {
     window.history.replaceState({}, '', `/relvals?${queryString.slice(1)}`);
   }, [state.shown, state.currentPage, state.pageSize]);
 
+  // // Update loading state
+  // React.useEffect(() => {
+
+  // }, [state.loadingData]);
+
   return (
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
@@ -99,7 +106,7 @@ export const RelvalTable = () => {
               ></ColumnSelector>
           </div>
 
-          <ReactTable tableProps={tableInstance} />
+          <ReactTable tableProps={tableInstance} loading={state.loadingData}/>
           <button className='btn btn-secondary' onClick={()=>dispatch(actions.changePage(2))}>Change Page</button>
           <pre>
             <code>

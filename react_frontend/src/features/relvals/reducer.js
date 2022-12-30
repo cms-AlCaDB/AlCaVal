@@ -14,7 +14,8 @@ export const initialState = {
   currentPage: initPageNumber,
   pageSize: initPageSize,
   selectedItems: {},
-  shown: shown
+  shown: shown,
+  loadingData: false
 };
 
 function reducer(state=initialState, action) {
@@ -35,6 +36,8 @@ function reducer(state=initialState, action) {
       return {...state, selectedItems: action.payload};
     case "UPDATE_SHOWN":
       return {...state, shown: action.payload};
+    case "TOGGLE_LOADING_STATE":
+      return {...state, loadingData: action.payload};
     default:
       throw new Error();
   }
