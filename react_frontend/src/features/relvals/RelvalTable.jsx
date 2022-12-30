@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTable, useSortBy, useRowSelect } from 'react-table';
-import { useSearchParams } from 'react-router-dom';
 import reducer, { initialState } from './reducer';
 import * as actions from './actions';
 import ReactTable from '../components/Table';
@@ -10,7 +9,6 @@ import './RelvalTable.css';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
@@ -38,13 +36,8 @@ export const RelvalTable = () => {
   );
 
   React.useEffect(() => {
-    dispatch(
-      actions.updateQueryString(
-        state, tableInstance, searchParams, setSearchParams
-      )
-    );
     let url = 'api/search?db_name=relvals';
-    url += `&limit=${state.pageSize}&page=${state.currentPage}`;
+    url += actions.getQueryString(state, true);
     fetch(url)
     .then(res => res.json())
     .then(
@@ -83,13 +76,15 @@ export const RelvalTable = () => {
   }, [state.pageSize]);
 
   React.useEffect(() => {
-    const shown = actions.updateShownFromVisible(tableInstance.allColumns);
-    searchParams.set('shown', parseInt(shown, 2));
-    const query = Object.fromEntries(searchParams);
-    setSearchParams(query);
-    dispatch({type: "UPDATE_SHOWN", payload: query.shown});
+    const shown = actions.updateShownFromVisible(tableInstance.columns);
+    dispatch({type: "UPDATE_SHOWN", payload: shown});
     console.log('handleChange UPDATED');
   }, [tableInstance.visibleColumns]);
+
+  React.useEffect(() => {
+    const queryString = actions.getQueryString(state);
+    window.history.replaceState({}, '', `/relvals?${queryString.slice(1)}`);
+  }, [state.shown]);
 
   return (
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
