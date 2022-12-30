@@ -81,10 +81,11 @@ export const RelvalTable = () => {
     console.log('handleChange UPDATED');
   }, [tableInstance.visibleColumns]);
 
+  // Update query string
   React.useEffect(() => {
     const queryString = actions.getQueryString(state);
     window.history.replaceState({}, '', `/relvals?${queryString.slice(1)}`);
-  }, [state.shown]);
+  }, [state.shown, state.currentPage, state.pageSize]);
 
   return (
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>

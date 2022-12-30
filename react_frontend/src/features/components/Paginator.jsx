@@ -32,7 +32,7 @@ const Pagination = (props) => {
 
   return (
     <>
-      {noOfPages > 1 ? (
+      {noOfPages >= 0 ? (
         <div className="pagination" style={{float: "right"}}>
           <div className="" style={{alignSelf: 'center', marginRight: '5px'}}>
             Showing {pageStart} - {pageEnd} of {totalRows}
