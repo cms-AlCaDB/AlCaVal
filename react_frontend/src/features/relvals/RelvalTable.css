@@ -15,3 +15,15 @@ footer {
   align-items: center;
   display: flex;
 }
+
+.actions > a:not(:last-of-type)::after {
+  color: rgba(0,0,0,.87);
+  content: "|";
+  margin-left: 3px;
+  margin-right: 3px;
+  display: inline-block;
+}
+
+.action-button{
+  color: #0d6efd;
+}

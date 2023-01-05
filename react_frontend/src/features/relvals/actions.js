@@ -1,4 +1,5 @@
 import HistoryCell from "../components/HistoryCell";
+import './RelvalTable.css';
 
 export const columnsProps = [
   {'dbName': 'prepid', 'displayName': 'PrepID', 'visible': 1, 'sortable': true,
@@ -37,7 +38,7 @@ export const columnsProps = [
 ];
 
 const nonStringColumns = [
-  '_actions',
+  // '_actions',
   '_workflow',
   '_gpu',
   // 'history',
@@ -62,7 +63,85 @@ export const getHiddenColumns = (Shown) => {
 }
 
 // Fetching column headers
-export const fetchColumns = () => {
+export const fetchColumns = (reducer) => {
+  const [state, dispatch] = reducer;
+  let dialog = {
+    visible: false,
+    title: '',
+    description: '',
+    cancel: undefined,
+    ok: undefined,
+  };
+
+  const showError = (title, description) => {
+    let ddd = {
+      visible: true,
+      title: title,
+      description: description,
+      cancel: undefined,
+      ok: undefined,
+    };
+    dispatch({type: "TOGGLE_MODAL_DIALOG", payload: ddd});
+  }
+
+  const handleDelete = (itemsTobeDeleted) => {
+    dialog.visible = true;
+    dialog.title = `Delete ${itemsTobeDeleted.length} relvals?`;
+    dialog.description = `Are you sure you want to delete ${itemsTobeDeleted} ticket?"`;
+    dialog.ok = function() {
+        fetch('api/relvals/delete', {
+          method: 'DELETE', 
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: itemsTobeDeleted
+        })
+        .then(res => res.json())
+        .then(data => {
+          dispatch({type: "REFRESH_DATA", payload: true});
+        })
+        .catch(err => {
+          showError('Error deleting relvals', err.toString());
+        });
+        dispatch({type: "TOGGLE_MODAL_DIALOG", payload: {visible: false}});
+      };
+    dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
+  }
+
+  const handlePrevious = (itemsTobeDeleted) => {
+    dialog.visible = true;
+    dialog.title = `Move ${itemsTobeDeleted.length} relvals to previous state?`;
+    dialog.description = `Are you sure you want to move ${itemsTobeDeleted} relval to previous status?"`;
+    dialog.ok = function() {
+        fetch('api/relvals/previous_status', {
+          method: 'POST', 
+          body: JSON.stringify(itemsTobeDeleted)
+        })
+        .then(res => res.json())
+        .then(data => dispatch({type: "REFRESH_DATA", payload: true}))
+        .catch(err => showError('Error moving relvals to previous status', err.toString())); 
+        dispatch({type: "TOGGLE_MODAL_DIALOG", payload: {visible: false}});
+      };
+    dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
+  }
+
+  const handleNext = (itemsTobeDeleted) => {
+    dialog.visible = true;
+    dialog.title = `Move ${itemsTobeDeleted.length} relvals to next state?`;
+    dialog.description = `Are you sure you want to move ${itemsTobeDeleted} relval to next status?"`;
+    dialog.ok = function() {
+        fetch('api/relvals/next_status', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: itemsTobeDeleted
+        })
+        .then(res => res.json())
+        .then(data => dispatch({type: "REFRESH_DATA", payload: true}))
+        .catch(err => showError('Error moving relvals to next status', err.toString())); 
+        dispatch({type: "TOGGLE_MODAL_DIALOG", payload: {visible: false}});
+      };
+    dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
+  }
+  
+
   return columnsProps.filter(column => !nonStringColumns.includes(column.dbName))
   .map((item) => {
       if (item.dbName === 'history') {
@@ -72,6 +151,22 @@ export const fetchColumns = () => {
                   return (<HistoryCell row={row.original}></HistoryCell>);
                  }
                };
+      } else if(item.dbName === '_actions') {
+        return { Header: item.displayName,
+                 accessor: item.dbName,
+                 Cell: ({row}) => 
+                 <div className="actions">
+                  <a href={`relvals/edit?prepid=${row.original.prepid}`}>Edit</a>
+                  <a className="action-button" role="button" onClick={()=>handleDelete([row.original.prepid])}>Delete</a>
+                  <a href={`relvals/edit?clone=${row.original.prepid}`} title="Clone RelVal">Clone</a>
+                  <a href={`api/relvals/get_cmsdriver/${row.original.prepid}`} title="Show cmsDriver.py command for this RelVal">cmsDriver</a>
+                  <a href={`api/relvals/get_dict/${row.original.prepid}`} title="Show JSON dictionary for ReqMgr2">Job dict</a>
+                  <a className="action-button" role="button" onClick={()=>handlePrevious([row.original.prepid])} title="Move to previous status">Previous</a>
+                  <a className="action-button" role="button" onClick={()=>handleNext([row.original.prepid])} title="Move to next status">Next</a>
+                  <a target={'_blank'} href={`https://cms-pdmv.cern.ch/stats?prepid=${row.original.prepid}`} title="Show workflows of this RelVal in Stats2">Stats2</a>
+                  <a href={`tickets?created_relvals=${row.original.prepid}`} title="Show ticket that was used to create this RelVal">Ticket</a>
+                 </div>
+               }
       } else {
         return {
           Header: item.displayName,
@@ -88,10 +183,6 @@ export const fetchColumns = () => {
       }
     }
   );
-}
-
-export const changePage = (page) => {
-  return {type: "CHANGE_PAGE", payload: page};
 }
 
 export const setPageSize = (size) => {
@@ -126,4 +217,8 @@ export const getQueryString = (state, forData=false) => {
     queryString += '&' + k + '=' + value;
   });
   return queryString;
+}
+
+export const changePage = (page) => {
+  return {type: "CHANGE_PAGE", payload: page};
 }

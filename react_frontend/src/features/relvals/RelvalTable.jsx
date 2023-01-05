@@ -6,6 +6,7 @@ import ReactTable from '../components/Table';
 import checkboxHook, {ColumnSelector} from '../components/Checkbox';
 import Pagination from '../components/Paginator';
 import './RelvalTable.css';
+import CustomModal from '../components/Modal';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
@@ -15,7 +16,7 @@ export const RelvalTable = () => {
     return [...state.data]},
   [state.data]);
 
-  const columns = React.useMemo(() => actions.fetchColumns(), []);
+  const columns = React.useMemo(() => actions.fetchColumns([state, dispatch]), []);
 
   const getRowId = React.useCallback(row => {
     return row._id
@@ -35,10 +36,10 @@ export const RelvalTable = () => {
     checkboxHook,
   );
 
-  React.useEffect(() => {
+  function fetchData(){
+    dispatch({type: "TOGGLE_LOADING_STATE", payload: true});
     let url = 'api/search?db_name=relvals';
     url += actions.getQueryString(state, true);
-    dispatch({type: "TOGGLE_LOADING_STATE", payload: true});
     fetch(url)
     .then(res => res.json())
     .then(
@@ -49,11 +50,26 @@ export const RelvalTable = () => {
           data: data.response.results,
           totalRows: data.response.total_rows
         });
+        dispatch({type: "REFRESH_DATA", payload: false});
         dispatch({type: "TOGGLE_LOADING_STATE", payload: false});
     })
-    .catch(err => console.log('Error fetching data' + err));
+    .catch(err => {
+      console.log('Error fetching data' + err);
+      dispatch({type: "TOGGLE_LOADING_STATE", payload: false});
+      let dialog = {
+        visible: true,
+        title: 'Error fetching data',
+        description: `${err}`,
+        cancel: undefined,
+        ok: undefined,
+      };
+      dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog})
+    });
+  }
 
-  }, [state.currentPage, state.pageSize]);
+  React.useEffect(() => {
+    fetchData();
+  }, [state.currentPage, state.pageSize, state.refreshData]);
 
   // Retain selected rows when page changes
   React.useEffect(() => {
@@ -88,11 +104,6 @@ export const RelvalTable = () => {
     const queryString = actions.getQueryString(state);
     window.history.replaceState({}, '', `/relvals?${queryString.slice(1)}`);
   }, [state.shown, state.currentPage, state.pageSize]);
-
-  // // Update loading state
-  // React.useEffect(() => {
-
-  // }, [state.loadingData]);
 
   return (
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
@@ -131,6 +142,11 @@ export const RelvalTable = () => {
         }
         <Pagination tableProps={tableInstance} reducer={[state, dispatch]}/>
       </footer>
+      <CustomModal
+        show={state.dialog.visible}
+        onHide={() => dispatch({type: "TOGGLE_MODAL_DIALOG", payload: {visible: false}})}
+        dialog={state.dialog}
+      />
     </div>
   );
 }

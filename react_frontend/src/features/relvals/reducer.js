@@ -1,7 +1,7 @@
 
   // Need query params for setting first data request
   var urlParams = new URLSearchParams(window.location.search);
-  const shown = urlParams.get('shown')? urlParams.get('shown'): 111111110000000;
+  const shown = urlParams.get('shown')? urlParams.get('shown'): 1111111100000000;
   const pageValid =  Number(urlParams.get('page')) >= 0
   const pageSizeValid = Number(urlParams.get('limit')) > 0
   const initPageNumber = pageValid? Number(urlParams.get('page')): 0
@@ -15,7 +15,15 @@ export const initialState = {
   pageSize: initPageSize,
   selectedItems: {},
   shown: shown,
-  loadingData: false
+  loadingData: false,
+  refreshData: false,
+  dialog: {
+    visible: false,
+    title: 'Test title',
+    description: '',
+    cancel: undefined,
+    ok: undefined,
+  }
 };
 
 function reducer(state=initialState, action) {
@@ -26,6 +34,8 @@ function reducer(state=initialState, action) {
         data: action.data,
         totalRows: action.totalRows
       };
+    case "REFRESH_DATA":
+      return {...state, refreshData: action.payload}
     case "DO_NOTHING":
       return {...state};
     case "CHANGE_PAGE":
@@ -38,6 +48,8 @@ function reducer(state=initialState, action) {
       return {...state, shown: action.payload};
     case "TOGGLE_LOADING_STATE":
       return {...state, loadingData: action.payload};
+    case "TOGGLE_MODAL_DIALOG":
+      return {...state, dialog: {...state.dialog, ...action.payload}};
     default:
       throw new Error();
   }
