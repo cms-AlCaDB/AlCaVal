@@ -7,16 +7,18 @@ import checkboxHook, {ColumnSelector} from '../components/Checkbox';
 import Pagination from '../components/Paginator';
 import './RelvalTable.css';
 import CustomModal from '../components/Modal';
+import useUserRole from '../utils/UserRole';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const userUtil = useUserRole();
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
     return [...state.data]},
   [state.data]);
 
-  const columns = React.useMemo(() => actions.fetchColumns([state, dispatch]), []);
+  const columns = React.useMemo(() => actions.fetchColumns(dispatch, userUtil), []);
 
   const getRowId = React.useCallback(row => {
     return row._id
