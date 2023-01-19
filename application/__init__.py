@@ -8,6 +8,7 @@ from colorlog import ColoredFormatter
 from flask import Flask, render_template, request, session, g
 from flask_restful import Api
 from flask_cors import CORS
+from jinja2.exceptions import TemplateNotFound
 from database.database import Database
 from core_lib.utils.global_config import Config
 from core_lib.utils.username_filter import UsernameFilter
@@ -78,7 +79,10 @@ def create_app():
     # Set paramiko logging to warning
     logging.getLogger('paramiko').setLevel(logging.WARNING)
 
-    app = Flask(__name__)
+    app = Flask(__name__,
+                static_folder='../react_frontend/build/static',
+                template_folder='../react_frontend/build'
+                )
     app.config.from_object('config')
 
     # Add API resources
@@ -168,6 +172,19 @@ def create_app():
                     method_dict['role'] = getattr(method, '__role__')
 
         return render_template('api_documentation.html.jinja', docs=docs)
+
+    @app.route('/', defaults={'_path': ''})
+    @app.route('/<path:_path>')
+    def catch_all(_path):
+        """
+        Return index.html for all paths except API
+        """
+        try:
+            return render_template('index.html')
+        except TemplateNotFound:
+            response = '<script>setTimeout(function() {location.reload();}, 5000);</script>'
+            response += 'Webpage is starting, please wait a few minutes...'
+            return response
 
     api.add_resource(CreateTicketAPI, '/api/tickets/create')
     api.add_resource(DeleteTicketAPI, '/api/tickets/delete')

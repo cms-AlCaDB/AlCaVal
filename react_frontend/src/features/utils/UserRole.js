@@ -3,31 +3,32 @@ import React from 'react';
 
 // Hook for fetching current user info
 const useUserRole = () => {
-  const userInfo =  React.useRef(undefined);
+  const [userInfo, setUserInfo] =  React.useState(null);
   React.useEffect(() => fetchUserInfo(), []);
 
   const fetchUserInfo = () => {
     axios.get('api/system/user_info').then(response => {
-      userInfo.current = response.data.response;
+      setUserInfo(response.data.response);
+      console.log('fetched userInfo')
     });
   }
 
   const role  = (roleName) => {
-    if (!userInfo.current) {
+    if (!userInfo) {
       return false;
     }
     if (roleName === 'user') {
       return true
     } else if (roleName === 'manager') {
-      return userInfo.current.role_index >= 1;
+      return userInfo.role_index >= 1;
     } else if (roleName === 'administrator') {
-      return userInfo.current.role_index >= 2;
+      return userInfo.role_index >= 2;
     }
   }
 
   const getUserInfo = () => {
-    return userInfo.current;
-  }
+    return userInfo;
+  };
 
   return {role, getUserInfo};
 }

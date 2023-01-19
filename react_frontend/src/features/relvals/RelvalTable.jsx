@@ -8,17 +8,20 @@ import Pagination from '../components/Paginator';
 import './RelvalTable.css';
 import CustomModal from '../components/Modal';
 import useUserRole from '../utils/UserRole';
+import { useColumns, getHiddenColumns } from './useActionsColumn';
+import NavBar from '../components/NavBar';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
   const userUtil = useUserRole();
+  const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(userUtil, dispatch);
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
     return [...state.data]},
   [state.data]);
 
-  const columns = React.useMemo(() => actions.fetchColumns(dispatch, userUtil), []);
+  const columns = React.useMemo(() => tableColumns, []);
 
   const getRowId = React.useCallback(row => {
     return row._id
@@ -27,7 +30,7 @@ export const RelvalTable = () => {
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
-      initialState: { hiddenColumns: actions.getHiddenColumns(state.shown) },
+      initialState: { hiddenColumns: getHiddenColumns(state.shown) },
       manualPagination: true,
       autoResetSelectedRows: true,
       autoResetPage: false,
@@ -108,6 +111,8 @@ export const RelvalTable = () => {
   }, [state.shown, state.currentPage, state.pageSize]);
 
   return (
+    <>
+    {/* <NavBar/> */}
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
         <div style={{flex: '1 1 auto'}}>
@@ -139,7 +144,14 @@ export const RelvalTable = () => {
         >
         {
         Object.values(state.selectedItems).flat().length > 0
-        ? <div className='footer-item'>Selected ({Object.values(state.selectedItems).flat().length }) items</div>
+        ? <div className='footer-item'>
+          <div>Selected ({Object.values(state.selectedItems).flat().length }) items: </div>
+          <div className='actions' style={{paddingLeft: '5px'}}>
+            {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handleDelete(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Delete selected RelVals">Delete</a>: null}
+            {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to previous status">Previous</a>: null}
+            {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handleNext(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to next status">Next</a>: null}
+          </div>
+        </div>
         : <div className='footer-item'><a href="relvals/edit">New Relval</a></div>
         }
         <Pagination tableProps={tableInstance} reducer={[state, dispatch]}/>
@@ -150,5 +162,6 @@ export const RelvalTable = () => {
         dialog={state.dialog}
       />
     </div>
+    </>
   );
 }

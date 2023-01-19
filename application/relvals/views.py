@@ -19,7 +19,7 @@ from .relval_forms import RelvalForm, StepsForm
 relval_blueprint = Blueprint('relvals', __name__, url_prefix='/relvals', template_folder='templates', static_folder='static')
 
 
-@relval_blueprint.route('', strict_slashes=False, methods=['GET'])
+# @relval_blueprint.route('', strict_slashes=False, methods=['GET'])
 def get_relval():
     user = get_userinfo()
     response = askfor.get('api/search?db_name=relvals' +'&'+ request.query_string.decode()).json()
