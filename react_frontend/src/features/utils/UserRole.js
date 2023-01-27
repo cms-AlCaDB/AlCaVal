@@ -20,7 +20,7 @@ const useUserRole = () => {
     });
   }
 
-  const roler  = (roleName) => {
+  const role  = (roleName) => {
     if (!userInfo) {
       return false;
     }
@@ -32,13 +32,6 @@ const useUserRole = () => {
       return userInfo.role_index >= 2;
     }
   }
-  const role = React.useMemo(() => {
-    return roler;
-  }, [userInfo]);
-
-  const getUserInfo = () => {
-    return userInfo;
-  };
 
   return { userInfo, role };
 }

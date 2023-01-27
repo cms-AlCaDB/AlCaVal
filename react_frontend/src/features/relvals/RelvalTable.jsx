@@ -13,15 +13,15 @@ import NavBar from '../components/NavBar';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const {role} = useUserRole();
-  const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(dispatch);
+  const {role, userInfo} = useUserRole();
+  const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(role, dispatch);
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
     return [...state.data]},
   [state.data]);
 
-  const columns = React.useMemo(() => tableColumns, []);
+  const columns = React.useMemo(() => tableColumns, [userInfo]);
 
   const getRowId = React.useCallback(row => {
     return row._id

@@ -1,6 +1,5 @@
 import HistoryCell from "../components/HistoryCell";
 import './RelvalTable.css';
-import useUserRole from "../utils/UserRole";
 
 export const columnsProps = [
   {'dbName': 'prepid', 'displayName': 'PrepID', 'visible': 1, 'sortable': true,
@@ -64,7 +63,7 @@ export const getHiddenColumns = (Shown) => {
 }
 
 // Fetching column headers also returning formatted cells alongwith handle methods
-export const useColumns = (dispatch) => {
+export const useColumns = (role, dispatch) => {
   let dialog = {
     visible: false,
     title: '',
@@ -109,7 +108,7 @@ export const useColumns = (dispatch) => {
   const handlePrevious = (itemsTobeDeleted) => {
     dialog.visible = true;
     dialog.title = `Move ${itemsTobeDeleted.length}`+(itemsTobeDeleted.length>1? " relvals": " relval")+" to previous state?";
-    dialog.description = "Are you sure you want to move "+ (itemsTobeDeleted.length>1?("selected "+itemsTobeDeleted.length+ " relvals"): itemsTobeDeleted+ " relval?")+" to previous status?";
+    dialog.description = "Are you sure you want to move "+ (itemsTobeDeleted.length>1?("selected "+itemsTobeDeleted.length+ " relvals"): itemsTobeDeleted+ " relval")+" to previous status?";
     dialog.ok = function() {
         fetch('api/relvals/previous_status', {
           method: 'POST', 
@@ -126,7 +125,7 @@ export const useColumns = (dispatch) => {
   const handleNext = (itemsTobeDeleted) => {
     dialog.visible = true;
     dialog.title = `Move ${itemsTobeDeleted.length}` +(itemsTobeDeleted.length>1? " relvals": " relval")+ " to next state?";
-    dialog.description = "Are you sure you want to move "+ (itemsTobeDeleted.length>1?("selected "+itemsTobeDeleted.length+ " relvals"): itemsTobeDeleted+ " relval")+" relval to next status?";
+    dialog.description = "Are you sure you want to move "+ (itemsTobeDeleted.length>1?("selected "+itemsTobeDeleted.length+ " relvals"): itemsTobeDeleted+ " relval")+" to next status?";
     dialog.ok = function() {
         fetch('api/relvals/next_status', {
           method: 'POST',
@@ -157,7 +156,8 @@ export const useColumns = (dispatch) => {
                                     row={row}
                                     handlePrevious={handlePrevious}
                                     handleDelete={handleDelete}
-                                    handleNext={handleNext}/>
+                                    handleNext={handleNext}
+                                    role={role}/>
                }
       } else if(item.dbName === 'status'){
         return { Header: item.displayName,
@@ -194,8 +194,7 @@ export const useColumns = (dispatch) => {
 }
 
 const ActionsCell = (props) => {
-  const {role} = useUserRole();
-  const {row, handleDelete, handleNext, handlePrevious} = props;
+  const {row, handleDelete, handleNext, handlePrevious, role} = props;
   return (
     <div className="actions">
       {role('manager')?<a href={`relvals/edit?prepid=${row.original.prepid}`}>Edit</a>: null}
