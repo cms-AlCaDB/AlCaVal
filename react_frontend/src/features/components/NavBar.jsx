@@ -24,7 +24,7 @@ const NavBar = () => {
           </Nav>
 
           <Navbar.Text className='ms-auto'>
-            Signed in as: <a href="/api/get/user_info">{userInfo.fullname}</a>
+            Signed in as: <a href="/api/system/user_info">{userInfo.fullname}</a>
           </Navbar.Text>
         </Navbar.Collapse>
       </Container>
