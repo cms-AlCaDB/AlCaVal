@@ -3,7 +3,14 @@ import React from 'react';
 
 // Hook for fetching current user info
 const useUserRole = () => {
-  const [userInfo, setUserInfo] =  React.useState(null);
+  const [userInfo, setUserInfo] =  React.useState({
+    "fullname": "Loading...",
+    "lastname": "test",
+    "name": "test",
+    "role": "user",
+    "role_index": 0,
+    "username": "test"
+  });
   React.useEffect(() => fetchUserInfo(), []);
 
   const fetchUserInfo = () => {
@@ -13,7 +20,7 @@ const useUserRole = () => {
     });
   }
 
-  const role  = (roleName) => {
+  const roler  = (roleName) => {
     if (!userInfo) {
       return false;
     }
@@ -25,12 +32,15 @@ const useUserRole = () => {
       return userInfo.role_index >= 2;
     }
   }
+  const role = React.useMemo(() => {
+    return roler;
+  }, [userInfo]);
 
   const getUserInfo = () => {
     return userInfo;
   };
 
-  return {role, getUserInfo};
+  return { userInfo, role };
 }
 
 export default useUserRole;

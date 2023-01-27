@@ -1,5 +1,6 @@
 import HistoryCell from "../components/HistoryCell";
 import './RelvalTable.css';
+import useUserRole from "../utils/UserRole";
 
 export const columnsProps = [
   {'dbName': 'prepid', 'displayName': 'PrepID', 'visible': 1, 'sortable': true,
@@ -63,7 +64,7 @@ export const getHiddenColumns = (Shown) => {
 }
 
 // Fetching column headers also returning formatted cells alongwith handle methods
-export const useColumns = (userUtil, dispatch) => {
+export const useColumns = (dispatch) => {
   let dialog = {
     visible: false,
     title: '',
@@ -156,8 +157,7 @@ export const useColumns = (userUtil, dispatch) => {
                                     row={row}
                                     handlePrevious={handlePrevious}
                                     handleDelete={handleDelete}
-                                    handleNext={handleNext}
-                                    userUtil={userUtil}/>
+                                    handleNext={handleNext}/>
                }
       } else if(item.dbName === 'status'){
         return { Header: item.displayName,
@@ -194,16 +194,17 @@ export const useColumns = (userUtil, dispatch) => {
 }
 
 const ActionsCell = (props) => {
-  const {row, handleDelete, handleNext, handlePrevious, userUtil} = props;
+  const {role} = useUserRole();
+  const {row, handleDelete, handleNext, handlePrevious} = props;
   return (
     <div className="actions">
-      {userUtil.role('manager')?<a href={`relvals/edit?prepid=${row.original.prepid}`}>Edit</a>: null}
-      {(row.original.status === 'new' && userUtil.role('manager'))?<a className="action-button" role="button" onClick={()=>handleDelete([row.original.prepid])}>Delete</a>:null}
-      {userUtil.role('manager')?<a href={`relvals/edit?clone=${row.original.prepid}`} title="Clone RelVal">Clone</a>: null}
+      {role('manager')?<a href={`relvals/edit?prepid=${row.original.prepid}`}>Edit</a>: null}
+      {(row.original.status === 'new' && role('manager'))?<a className="action-button" role="button" onClick={()=>handleDelete([row.original.prepid])}>Delete</a>:null}
+      {role('manager')?<a href={`relvals/edit?clone=${row.original.prepid}`} title="Clone RelVal">Clone</a>: null}
       <a href={`api/relvals/get_cmsdriver/${row.original.prepid}`} title="Show cmsDriver.py command for this RelVal">cmsDriver</a>
       <a href={`api/relvals/get_dict/${row.original.prepid}`} title="Show JSON dictionary for ReqMgr2">Job dict</a>
-      {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious([row.original.prepid])} title="Move to previous status">Previous</a>: null}
-      {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handleNext([row.original.prepid])} title="Move to next status">Next</a>: null}
+      {role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious([row.original.prepid])} title="Move to previous status">Previous</a>: null}
+      {role('manager')?<a className="action-button" role="button" onClick={()=>handleNext([row.original.prepid])} title="Move to next status">Next</a>: null}
       {(row.original.status === 'submitted' || row.original.status === 'done' || row.original.status === 'archived')?<a target={'_blank'} href={`https://cms-pdmv.cern.ch/stats?prepid=${row.original.prepid}`} title="Show workflows of this RelVal in Stats2">Stats2</a>: null}
       <a href={`tickets?created_relvals=${row.original.prepid}`} title="Show ticket that was used to create this RelVal">Ticket</a>
     </div>

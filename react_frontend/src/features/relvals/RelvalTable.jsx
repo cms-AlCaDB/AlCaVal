@@ -13,8 +13,8 @@ import NavBar from '../components/NavBar';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const userUtil = useUserRole();
-  const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(userUtil, dispatch);
+  const {role} = useUserRole();
+  const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(dispatch);
 
   const tableData = React.useMemo(() => {
     console.log("tableData useMemo executed")
@@ -112,7 +112,7 @@ export const RelvalTable = () => {
 
   return (
     <>
-    {/* <NavBar/> */}
+    <NavBar/>
     <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
         <div style={{flex: '1 1 auto'}}>
@@ -147,9 +147,9 @@ export const RelvalTable = () => {
         ? <div className='footer-item'>
           <div>Selected ({Object.values(state.selectedItems).flat().length }) items: </div>
           <div className='actions' style={{paddingLeft: '5px'}}>
-            {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handleDelete(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Delete selected RelVals">Delete</a>: null}
-            {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to previous status">Previous</a>: null}
-            {userUtil.role('manager')?<a className="action-button" role="button" onClick={()=>handleNext(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to next status">Next</a>: null}
+            {role('manager')?<a className="action-button" role="button" onClick={()=>handleDelete(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Delete selected RelVals">Delete</a>: null}
+            {role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to previous status">Previous</a>: null}
+            {role('manager')?<a className="action-button" role="button" onClick={()=>handleNext(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to next status">Next</a>: null}
           </div>
         </div>
         : <div className='footer-item'><a href="relvals/edit">New Relval</a></div>
