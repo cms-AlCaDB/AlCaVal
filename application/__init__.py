@@ -173,19 +173,6 @@ def create_app():
 
         return render_template('api_documentation.html.jinja', docs=docs)
 
-    @app.route('/', defaults={'_path': ''})
-    @app.route('/<path:_path>')
-    def catch_all(_path):
-        """
-        Return index.html for all paths except API
-        """
-        try:
-            return render_template('index.html')
-        except TemplateNotFound:
-            response = '<script>setTimeout(function() {location.reload();}, 5000);</script>'
-            response += 'Webpage is starting, please wait a few minutes...'
-            return response
-
     api.add_resource(CreateTicketAPI, '/api/tickets/create')
     api.add_resource(DeleteTicketAPI, '/api/tickets/delete')
     api.add_resource(UpdateTicketAPI, '/api/tickets/update')
@@ -242,10 +229,23 @@ def create_app():
     from .dashboard.dashboard_view import dashboard_blueprint
 
     app.register_blueprint(relval_blueprint)
-    app.register_blueprint(home_blueprint, url_prefix='/')
+    app.register_blueprint(home_blueprint)
     app.register_blueprint(ticket_blueprint)
     app.register_blueprint(dqm_blueprint, url_prefix='/')
     app.register_blueprint(dashboard_blueprint)
+
+    @app.route('/', defaults={'_path': '/'})
+    @app.route('/<path:_path>')
+    def catch_all(_path):
+        """
+        Return index.html for all paths except API
+        """
+        try:
+            return render_template('index.html')
+        except TemplateNotFound:
+            response = '<script>setTimeout(function() {location.reload();}, 5000);</script>'
+            response += 'Webpage is starting, please wait a few minutes...'
+            return response
 
     CORS(app,
      allow_headers=['Content-Type',
