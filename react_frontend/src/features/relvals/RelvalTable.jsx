@@ -125,17 +125,6 @@ export const RelvalTable = () => {
           </div>
 
           <ReactTable tableProps={tableInstance} loading={state.loadingData}/>
-          <button className='btn btn-secondary' onClick={()=>dispatch(actions.changePage(2))}>Change Page</button>
-          <pre>
-            <code>
-              {
-                JSON.stringify({
-                  Selected: Object.values(state.selectedItems).flat()
-                            .map(el => el.id),
-                }, null, 2)
-              }
-            </code>
-          </pre>
         </div>
       </div>
       <footer

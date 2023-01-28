@@ -21,10 +21,15 @@ export const columnsProps = [
   },
   {'dbName': 'cpu_cores', 'displayName': 'CPU Cores', 'visible': 1, 'sortable': true, title: ''},
   {'dbName': 'matrix', 'displayName': 'Matrix', 'visible': 1, 'sortable': true, title: ''},
-  {'dbName': 'memory', 'displayName': 'Memory', 'visible': 1, 'sortable': true, title: ''},
-  {'dbName': 'notes', 'displayName': 'Notes', 'visible': 1, title: ''},
+  {'dbName': 'memory', 'displayName': 'Memory', 'visible': 1, 'sortable': true,
+   title: 'Filter with this Memory value',
+   href: '/relvals?memory=KEYNAME'
+  },
   {'dbName': '_workflow', 'displayName': 'Workflow', 'visible': 1, 'sortable': true, title: ''},
-  {'dbName': 'campaign_timestamp', 'displayName': 'Campaign', 'visible': 0, 'sortable': true, title: 'Show relvals with this campaign ID'},
+  {'dbName': 'campaign_timestamp', 'displayName': 'Campaign', 'visible': 0, 'sortable': true,
+   title: 'Show relvals with this campaign ID',
+   href: '/relvals?campaign_timestamp=KEYNAME'
+  },
   {'dbName': 'fragment', 'displayName': 'Fragment', 'visible': 0, title: ''},
   {'dbName': '_gpu', 'displayName': 'GPU', 'visible': 0, title: ''},
   {'dbName': 'history', 'displayName': 'History', 'visible': 0, 'sortable': true, title: ''},
@@ -35,6 +40,7 @@ export const columnsProps = [
   {'dbName': 'steps', 'displayName': 'Steps', 'visible': 0, title: ''},
   {'dbName': 'time_per_event', 'displayName': 'Time per Event', 'visible': 0, 'sortable': true, title: ''},
   {'dbName': 'workflows', 'displayName': 'Workflows (jobs in ReqMgr2)', 'visible': 0, title: ''},
+  {'dbName': 'notes', 'displayName': 'Notes', 'visible': 1, title: ''},
 ];
 
 const nonStringColumns = [
@@ -89,7 +95,7 @@ export const useColumns = (role, dispatch) => {
     dialog.description = "Are you sure you want to delete " + (itemsTobeDeleted.length>1?("selected "+itemsTobeDeleted.length+ " relvals?"): itemsTobeDeleted+ " relval?");
     dialog.ok = function() {
         fetch('api/relvals/delete', {
-          method: 'DELETE', 
+          method: 'DELETE',
           headers: {'Content-Type': 'application/x-www-form-urlencoded'},
           body: itemsTobeDeleted
         })
@@ -111,12 +117,12 @@ export const useColumns = (role, dispatch) => {
     dialog.description = "Are you sure you want to move "+ (itemsTobeDeleted.length>1?("selected "+itemsTobeDeleted.length+ " relvals"): itemsTobeDeleted+ " relval")+" to previous status?";
     dialog.ok = function() {
         fetch('api/relvals/previous_status', {
-          method: 'POST', 
+          method: 'POST',
           body: JSON.stringify(itemsTobeDeleted)
         })
         .then(res => res.json())
         .then(data => dispatch({type: "REFRESH_DATA", payload: true}))
-        .catch(err => showError('Error moving relvals to previous status', err.toString())); 
+        .catch(err => showError('Error moving relvals to previous status', err.toString()));
         dispatch({type: "TOGGLE_MODAL_DIALOG", payload: {visible: false}});
       };
     dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
@@ -134,7 +140,7 @@ export const useColumns = (role, dispatch) => {
         })
         .then(res => res.json())
         .then(data => dispatch({type: "REFRESH_DATA", payload: true}))
-        .catch(err => showError('Error moving relvals to next status', err.toString())); 
+        .catch(err => showError('Error moving relvals to next status', err.toString()));
         dispatch({type: "TOGGLE_MODAL_DIALOG", payload: {visible: false}});
       };
     dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
@@ -152,7 +158,7 @@ export const useColumns = (role, dispatch) => {
       } else if(item.dbName === '_actions') {
         return { Header: item.displayName,
                  accessor: item.dbName,
-                 Cell: ({row}) => <ActionsCell 
+                 Cell: ({row}) => <ActionsCell
                                     row={row}
                                     handlePrevious={handlePrevious}
                                     handleDelete={handleDelete}
@@ -162,7 +168,7 @@ export const useColumns = (role, dispatch) => {
       } else if(item.dbName === 'status'){
         return { Header: item.displayName,
                  accessor: item.dbName,
-                 Cell: ({row}) => 
+                 Cell: ({row}) =>
                   <span>
                     <a
                       href={item.href?item.href.replace('KEYNAME', row.original[item.dbName]):''}
@@ -173,7 +179,31 @@ export const useColumns = (role, dispatch) => {
                     <a style={{marginLeft: '2px'}} href={`/relvals/local_test_result/${row.id}`} rel="noreferrer noopener" target="_blank"><i className="bi bi-link-45deg"></i></a>
                   </span>
                }
-      } else {
+      } else if(item.dbName === 'campaign_timestamp') {
+        return {
+          Header: item.displayName,
+          accessor: item.dbName,
+          Cell: ({row}) =>
+          !row.original[item.dbName]? <span>Not set</span>
+          :<a
+            href={item.href?item.href.replace('KEYNAME', row.original[item.dbName]):''}
+            title={item.title.replace("KEY_NAME", row.original[item.dbName])}
+          >
+            {row.original.prepid+'-'+row.original[item.dbName]}
+          </a>,
+          visible: item.visible
+        };
+      } else if(item.dbName === 'notes') {
+        return {
+          Header: item.displayName,
+          accessor: item.dbName,
+          Cell: ({row}) =>
+            <pre>
+              {row.original[item.dbName]}
+            </pre>,
+          visible: item.visible
+        };
+      } else if(['prepid', 'batch_name', 'cmssw_release', 'memory', 'campaign_timestamp'].includes(item.dbName)) {
         return {
           Header: item.displayName,
           accessor: item.dbName,
@@ -184,6 +214,14 @@ export const useColumns = (role, dispatch) => {
           >
             {row.original[item.dbName]}
           </a>,
+          visible: item.visible,
+          disableFilters:true
+        };
+      } else {
+        return {
+          Header: item.displayName,
+          accessor: item.dbName,
+          Cell: ({row}) => row.original[item.dbName],
           visible: item.visible
         };
       }
