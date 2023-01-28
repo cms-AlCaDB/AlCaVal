@@ -79,9 +79,9 @@ class UpdateRelValAPI(APIBase):
         """
         Update a with the provided JSON content
         """
-        # data = flask.request.data
+        data = flask.request.data
         # relval_json = json.loads(data.decode('utf-8'))
-        data = list(flask.request.form.keys())[0]
+        # data = list(flask.request.form.keys())[0]
         relval_json = json.loads(data)
         if isinstance(relval_json, dict):
             results = relval_controller.update(relval_json)
