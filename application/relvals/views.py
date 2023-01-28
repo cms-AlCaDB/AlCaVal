@@ -176,7 +176,7 @@ def create_relval():
             for index in range(stepNumbers):
                 data['steps'][index] = session['relvaldata']['steps'][index] | data['steps'][index] 
             #------------------------------------------------------------------
-            res = askfor.post('api/relvals/update', data=json.dumps(data), headers=request.headers).json()
+            res = askfor.post('api/relvals/update', data=json.dumps(data), headers={'X-Forwarded-Access-Token': request.headers['X-Forwarded-Access-Token']}).json()
             if res['success']: flash(u'Success! RelVal updated!', 'success')
 
         if res['success']:
