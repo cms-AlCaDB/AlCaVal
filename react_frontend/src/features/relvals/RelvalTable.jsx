@@ -113,7 +113,7 @@ export const RelvalTable = () => {
   return (
     <>
     <NavBar/>
-    <div style={{height: 'calc(100vh - 52px)', overflow: 'auto'}}>
+    <div style={{paddingBottom: '52px', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
         <div style={{flex: '1 1 auto'}}>
 
