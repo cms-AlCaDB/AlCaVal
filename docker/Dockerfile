@@ -1,18 +1,24 @@
-# docker build -f docker/Dockerfile -t alcaval_app .
-# docker run -it -p 8080:8080 alcaval_app
+FROM python:3.9
 
-FROM pkalbhor/ubuntu-with-python:latest
-USER root
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - &&\
-sudo apt-get install -y nodejs
+WORKDIR /usr/src/app
 
-USER pritam
-COPY . ${HOME}
-RUN pip install -r requirements.txt
-RUN cd react_fronend/ && npm i && npm run build && cd ../
+COPY requirements.txt ./
+RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV NODE_VERSION=16.19.1
+ENV NVM_DIR=/root/.nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN node --version
+RUN npm --version
+
+COPY . .
+RUN cd react_frontend/ && npm install ; npm run build && cp -r ../application/static/* build/static/;  cd ../ 
 
 EXPOSE 8080
-ENTRYPOINT ["tini", "-g", "--"]
+# ENTRYPOINT ["tini", "-g", "--"]
 CMD [ "waitress-serve", "--port=8080", "run:app"]
