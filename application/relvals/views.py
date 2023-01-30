@@ -174,11 +174,11 @@ def create_relval():
             for index in range(stepNumbers):
                 data['steps'][index] = session['relvaldata']['steps'][index] | data['steps'][index] 
             #------------------------------------------------------------------
-            res = askfor.post('api/relvals/update', data=json.dumps(data), headers={'Cookie': request.headers['Cookie']}).json()
-            if res['success']: flash(u'Success! RelVal updated!', 'success')
+            res = askfor.post('api/relvals/update', data=json.dumps(data), headers={'X-Forwarded-Access-Token': request.headers['X-Forwarded-Access-Token']}).json()
+            # if res['success']: flash(u'Success! RelVal updated!', 'success')
 
         if res['success']:
-            return redirect(url_for('relvals.get_relval', prepid=res['response'].get('prepid')))
+            return redirect('/relvals?prepid='+res['response'].get('prepid'))
         else:
             flash(res['message'], 'danger')
 
