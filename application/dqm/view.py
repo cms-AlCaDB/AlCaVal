@@ -1,16 +1,13 @@
 import json
-from pprint import pprint
-from copy import deepcopy, copy
+from copy import copy
 from flask import (Blueprint,
                     render_template,
                     redirect,
                     request,
                     flash,
                     url_for,
-                    session,
-                    make_response, 
                     jsonify)
-from .. import oidc, get_userinfo
+from .. import get_userinfo
 from resources.smart_tricks import askfor
 from .ComparisonForm import ComparisonForm, SetForm
 
@@ -19,7 +16,6 @@ dqm_blueprint = Blueprint('dqm', __name__, template_folder='templates', static_f
 good_status = {'normal-archived', 'announced'}
 
 @dqm_blueprint.route('/dqm')
-@oidc.check
 def index():
     user = get_userinfo()
     return render_template('DQMHome.html.jinja')
@@ -45,7 +41,6 @@ def get_dataset_choices(relvals):
     return choices
 
 @dqm_blueprint.route('/dqm/compare', methods=['GET', 'PUT', 'POST'])
-@oidc.check
 def compare_dqm():
     user = get_userinfo()
     query_string = 'status=submitted|done'
@@ -88,7 +83,6 @@ def compare_dqm():
 from .DQMTable import DQMTable
 
 @dqm_blueprint.route('/dqm/plots', methods=['GET'])
-@oidc.check
 def dqm_plots():
     user = get_userinfo()
     response = askfor.get('api/search?db_name=relvals&status=submitted|done'+'&'+ request.query_string.decode()).json()
@@ -146,7 +140,6 @@ def getValidJSON(jsonset):
     return copiedjson
 
 @dqm_blueprint.route('/dqm/get_submitted_dataset/<jira>')
-@oidc.check
 def get_submitted_dataset(jira):
     response = askfor.get('api/search?db_name=relvals&status=submitted|done' +'&jira_ticket='+jira).json()
     relvals = response['response']['results']
@@ -154,7 +147,6 @@ def get_submitted_dataset(jira):
     return jsonify({'datasets': choices})
 
 @dqm_blueprint.route('/dqm/update_workflows/<jira>')
-@oidc.check
 def update_workflows_for_jira(jira):
     response = askfor.get('api/search?db_name=relvals&status=submitted|done' +'&jira_ticket='+jira).json()
     relvals = response['response']['results']
@@ -162,7 +154,6 @@ def update_workflows_for_jira(jira):
     return jsonify(status[0])
 
 @dqm_blueprint.route('/dqm/add_set', methods=['GET', 'PUT'])
-@oidc.check
 def add_set():
     """Dynamically adding new dataset pair to the dqm comparison form"""
     user = get_userinfo()
@@ -187,7 +178,6 @@ def add_set():
         Can be use for dynamically adding new pair of dataset"})
 
 @dqm_blueprint.route('/dqm/add_defualt_pairs/<jira_ticket>', methods=['GET'])
-@oidc.check
 def add_defualt_pairs(jira_ticket):
     """Endpoint for getting list of default pairs in html form"""
 
@@ -221,7 +211,6 @@ def add_defualt_pairs(jira_ticket):
         })
 
 @dqm_blueprint.route('/dqm/delete_set/<int:setid>', methods=['PUT'])
-@oidc.check
 def delete_set(setid):
     """Dynamically deleting Set from the dqm form"""
     user = get_userinfo()

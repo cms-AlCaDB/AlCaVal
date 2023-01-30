@@ -727,6 +727,8 @@ AlCa/DB Team
             compt = compt.union({'Tracker', 'Tracking',})
         if ticket.get('batch_name') in existing_comp:
             compt.add(ticket.get('batch_name'))
+        if 'ECAL' in ticket.get('batch_name') or 'EGamma' in ticket.get('batch_name'):
+            compt = compt.union({'EGamma'})      
         result['components'] = list(compt)
         result['labels'] = ticket.get('batch_name')
         return result

@@ -8,11 +8,10 @@ from colorlog import ColoredFormatter
 from flask import Flask, render_template, request, session, g
 from flask_restful import Api
 from flask_cors import CORS
+from jinja2.exceptions import TemplateNotFound
 from database.database import Database
 from core_lib.utils.global_config import Config
 from core_lib.utils.username_filter import UsernameFilter
-from flask_oidc import OpenIDConnect
-oidc = OpenIDConnect()
 
 from resources.smart_tricks import askfor
 def get_userinfo():
@@ -24,7 +23,8 @@ def get_userinfo():
 
     # Refresh user credentials when system restarts
     refresh = bool(uptime > session_uptime)
-    if not (g.oidc_id_token and 'user' in session.keys()) or refresh:
+    token = request.headers.get('X-Forwarded-User')
+    if not (token and 'user' in session.keys()) or refresh:
         logger = logging.getLogger()
         logger.warning('Refreshing user credentials in client session')
         userinfo = askfor.get('api/system/user_info',
@@ -79,9 +79,11 @@ def create_app():
     # Set paramiko logging to warning
     logging.getLogger('paramiko').setLevel(logging.WARNING)
 
-    app = Flask(__name__)
+    app = Flask(__name__,
+                static_folder='../react_frontend/build/static',
+                template_folder='../react_frontend/build'
+                )
     app.config.from_object('config')
-    oidc.init_app(app)
 
     # Add API resources
     from api.ticket_api import (CreateTicketAPI,
@@ -227,10 +229,23 @@ def create_app():
     from .dashboard.dashboard_view import dashboard_blueprint
 
     app.register_blueprint(relval_blueprint)
-    app.register_blueprint(home_blueprint, url_prefix='/')
+    app.register_blueprint(home_blueprint)
     app.register_blueprint(ticket_blueprint)
     app.register_blueprint(dqm_blueprint, url_prefix='/')
     app.register_blueprint(dashboard_blueprint)
+
+    @app.route('/', defaults={'_path': '/'})
+    @app.route('/<path:_path>')
+    def catch_all(_path):
+        """
+        Return index.html for all paths except API
+        """
+        try:
+            return render_template('index.html')
+        except TemplateNotFound:
+            response = '<script>setTimeout(function() {location.reload();}, 5000);</script>'
+            response += 'Webpage is starting, please wait a few minutes...'
+            return response
 
     CORS(app,
      allow_headers=['Content-Type',

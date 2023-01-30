@@ -1,0 +1,29 @@
+h1.page-title {
+  text-align: center;
+  margin: 8px 16px;
+}
+
+footer {
+  padding: 7px 12px;
+  justify-content: space-between;
+  display: flex;
+  box-shadow: -1px 0px 7px 1px gray;
+  background-color: azure;
+}
+
+.footer-item {
+  align-items: center;
+  display: flex;
+}
+
+.actions > a:not(:last-of-type)::after {
+  color: rgba(0,0,0,.87);
+  content: "|";
+  margin-left: 3px;
+  margin-right: 3px;
+  display: inline-block;
+}
+
+.action-button{
+  color: #0d6efd;
+}

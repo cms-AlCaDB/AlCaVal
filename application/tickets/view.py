@@ -1,7 +1,6 @@
 import ast
 import json
 import re
-import requests
 from flask import (Blueprint, 
                     render_template, 
                     redirect, 
@@ -18,7 +17,7 @@ from core_lib.utils.connection_wrapper import ConnectionWrapper
 from core_lib.utils.global_config import Config
 from resources.oms_api import OMSAPI
 from .forms import TicketForm
-from .. import oidc, get_userinfo
+from .. import get_userinfo
 
 from resources.smart_tricks import askfor, DictObj
 
@@ -31,7 +30,6 @@ cmsweb_url = 'https://cmsweb.cern.ch'
 ticket_blueprint = Blueprint('tickets', __name__, url_prefix='/tickets', template_folder='templates', static_folder='static')
 
 @ticket_blueprint.route('/edit', methods=['GET', 'PUT', 'POST'])
-@oidc.check
 def create_ticket():
     user = get_userinfo()
     edit = bool(request.args.get('prepid'))
@@ -123,7 +121,6 @@ def create_ticket():
 from .Table import ItemTable
 
 @ticket_blueprint.route('', strict_slashes=False, methods=['GET'])
-@oidc.check
 def tickets():
     user = get_userinfo()
     response = askfor.get('api/search?db_name=tickets' +'&'+ request.query_string.decode()).json()

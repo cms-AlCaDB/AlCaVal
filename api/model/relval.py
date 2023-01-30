@@ -187,8 +187,7 @@ class RelVal(ModelBase):
                  f' to be used for step {step_index + 1}:'
         command = 'git cms-addpkg HLTrigger/Configuration -q\n'
         command += 'cd $CMSSW_SRC && scramv1 b && cd $ORG_PWD\n'
-        command += "hltGetConfiguration --unprescale --cff --offline" + \
-                   f" {menu}" + \
+        command += "hltGetConfiguration" + f" {menu}" + \
         " > ${CMSSW_BASE}/src/HLTrigger/Configuration/python/HLT_Custom_cff.py\n"
 
         outputfile = f'step_{step_index+1}_cfg.py'
