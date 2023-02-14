@@ -23,10 +23,6 @@ function addHelpIcons(){
   common_gt_help = '<span id="commong-gt-help-icon" class="help-icons" data-toggle="popover" data-content="'+common_gt_help+'"><i class="bi bi-question-circle-fill"></i></span>'
   document.getElementById("common_prompt_gt").insertAdjacentHTML('afterend', common_gt_help)
 
-  var CMSSW_release_help = "You need to use latest version of CMSSW"
-  CMSSW_release_help = '<span id="CMSSW_release_help-icon" class="help-icons" data-toggle="popover" data-content="'+CMSSW_release_help+'"><i class="bi bi-question-circle-fill"></i></span>'
-  document.getElementById("CMSSW_release_help").insertAdjacentHTML('afterend', CMSSW_release_help)
-
   var widHelp = `${grayHelper} This is handled by FTV managers, please ignore if you are not the one</small></td></tr>`
   document.getElementById("workflow_ids").parentNode.parentNode.insertAdjacentHTML('afterend', widHelp)
 }
@@ -107,6 +103,18 @@ $(document).mouseup(function (e) {
  });
 
 function cancel(){window.location = '/tickets';}
+
+const add_default_cmssw_value = () => {
+   T0APIurl = '/tickets/test_t0api'
+   fetch(T0APIurl).then(res => res.json()).then(data =>
+      if (!document.getElementById('cmssw_release').value) {
+          document.getElementById('notes').innerHTML = data.value_of_cmssw_release
+      }
+  )
+}
+$(document).ready(function(){
+  add_default_cmssw_value()
+})
 
 $(document).ready(function(){
   addHelpIcons()
