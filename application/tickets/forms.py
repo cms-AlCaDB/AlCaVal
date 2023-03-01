@@ -16,7 +16,7 @@ from resources.custom_form_fields import (CustomSelect,
                                           STextAreaField
                                          )
 from resources.oms_api import OMSAPI
-import urllib
+import urllib, urllib3
 import os
 import logging
 
