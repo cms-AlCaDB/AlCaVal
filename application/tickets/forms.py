@@ -16,19 +16,9 @@ from resources.custom_form_fields import (CustomSelect,
                                           STextAreaField
                                          )
 from resources.oms_api import OMSAPI
-import urllib3
-
-#import t0wmadatasvcApi_
-
+import urllib
 import os
 import logging
-import requests
-
-#import logger as logs
-
-import os
-import logging.config
-
 
 class Tier0Api(object):
     def __init__(self):
@@ -40,52 +30,35 @@ class Tier0Api(object):
         request = requests.Request('GET', self.express_url)  # URL will be overwritten anyway
         self.request = self.session.prepare_request(request)
         requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-        #logs.setup_logging()
         self.logger = logging.getLogger(__name__)
 
     def process_request(self, url):
         self.request.url = url
-
         # at the moment the authorization is not required, but it might be in the future
         # this is the way to handle it
         cert = os.getenv('X509_USER_PROXY')
         response = self.session.send(self.request, verify=False, cert=(cert, cert))
-        # print str(response.json())
         # if there is a problem with the service (usually 503) print the reason
         response.raise_for_status()
-
         return response.json()
 
-  
     def get_run_prompt_config(self):
-        #url = "{}?run={}".format(self.prompt_url, run_number)
         url = 'https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config'
         t0_configs = self.process_request(url)
         ret = t0_configs['result']
-
-        #if not ret or len(ret) == 0:
-            #self.logger.error('Tier-0 Prompt config not available for run {}'.format(run_number))
-            #return None
         return ret[0]
-        # returned here rather than in except part
-        # because we want to handle the case when the for loop passes without return
-
-
 
     def get_run_info(self):
- 
+        """Get latest cmssw version in production"""
         tier0_config = self.get_run_prompt_config()
         result = dict()
         result['cmssw'] = tier0_config['cmssw']
         return result
 
-
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 grid_cert = Config.get('grid_user_cert')
 grid_key = Config.get('grid_user_key')
 cmsweb_url = 'https://cmsweb.cern.ch'
-
 
 
 class GTDataRequired(object):
@@ -114,12 +87,10 @@ class TicketForm(FlaskForm):
     label_rkw = {'class': 'col-form-label-sm'}
     classDict = {'class': 'form-control form-control-sm'}
 
-
+    # Get CMSSW info
     t0api = Tier0Api()
     t0config = t0api.get_run_info()
 
-    #print(t0config)
-    
     prepid = SStringField(
                 render_kw=classDict | {'disabled':''},
                 label="Prep ID",
