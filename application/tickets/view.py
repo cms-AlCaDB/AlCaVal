@@ -291,13 +291,3 @@ def validate_input_runs(runstring, datasets=[]):
         return resp
     return {'response': msg, 'success': True}
     
-
-@ticket_blueprint.route('/test_t0api')
-def test_t0api():
-  url = 'https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config'
-  print(grid_cert, grid_key)
-  result = {}
-  with ConnectionWrapper(cmsweb_url, grid_cert, grid_key) as dbs_conn:
-    result  = dbs_conn.api('GET', url)
-    
-  return {'response': result, 'message': 'success'}
