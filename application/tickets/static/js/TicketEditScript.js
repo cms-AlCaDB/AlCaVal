@@ -104,18 +104,6 @@ $(document).mouseup(function (e) {
 
 function cancel(){window.location = '/tickets';}
 
-const add_default_cmssw_value = () => {
-   T0APIurl = '/tickets/test_t0api'
-   fetch(T0APIurl).then(res => res.json()).then(data =>
-      if (!document.getElementById('cmssw_release').value) {
-          document.getElementById('notes').innerHTML = data.value_of_cmssw_release
-      }
-  )
-}
-$(document).ready(function(){
-  add_default_cmssw_value()
-})
-
 $(document).ready(function(){
   addHelpIcons()
   addnEventCalculator()
