@@ -16,12 +16,50 @@ from resources.custom_form_fields import (CustomSelect,
                                           STextAreaField
                                          )
 from resources.oms_api import OMSAPI
-import urllib3
+import urllib
+import os
+import logging
+
+class Tier0Api(object):
+    def __init__(self):
+        self.express_url = 'https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config'
+        self.prompt_url = 'https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config'
+        self.stream_done_url = "https://cmsweb.cern.ch/t0wmadatasvc/prod/run_stream_done"
+        self.fcsr_url = "https://cmsweb.cern.ch/t0wmadatasvc/prod/firstconditionsaferun"
+        self.session = requests.Session()
+        request = requests.Request('GET', self.express_url)  # URL will be overwritten anyway
+        self.request = self.session.prepare_request(request)
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+        self.logger = logging.getLogger(__name__)
+
+    def process_request(self, url):
+        self.request.url = url
+        # at the moment the authorization is not required, but it might be in the future
+        # this is the way to handle it
+        cert = os.getenv('X509_USER_PROXY')
+        response = self.session.send(self.request, verify=False, cert=(cert, cert))
+        # if there is a problem with the service (usually 503) print the reason
+        response.raise_for_status()
+        return response.json()
+
+    def get_run_prompt_config(self):
+        url = 'https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config'
+        t0_configs = self.process_request(url)
+        ret = t0_configs['result']
+        return ret[0]
+
+    def get_run_info(self):
+        """Get latest cmssw version in production"""
+        tier0_config = self.get_run_prompt_config()
+        result = dict()
+        result['cmssw'] = tier0_config['cmssw']
+        return result
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 grid_cert = Config.get('grid_user_cert')
 grid_key = Config.get('grid_user_key')
 cmsweb_url = 'https://cmsweb.cern.ch'
+
 
 class GTDataRequired(object):
     """Validator for Common Prompt GT
@@ -48,6 +86,11 @@ class GTDataRequired(object):
 class TicketForm(FlaskForm):
     label_rkw = {'class': 'col-form-label-sm'}
     classDict = {'class': 'form-control form-control-sm'}
+
+    # Get CMSSW info
+    t0api = Tier0Api()
+    t0config = t0api.get_run_info()
+
     prepid = SStringField(
                 render_kw=classDict | {'disabled':''},
                 label="Prep ID",
@@ -58,11 +101,14 @@ class TicketForm(FlaskForm):
                 render_kw = classDict | {"placeholder":"Subsystem name or DPG/POG. e.g. Tracker"},
                 label_rkw = {'class': 'col-form-label-sm required'}
                 )
+    
     cmssw_release = SStringField('CMSSW Release',
+                default=t0config['cmssw'],
                 validators=[DataRequired(message="Please provide correct CMSSW release")],
                 render_kw = classDict | {"placeholder":"E.g CMSSW_12_3_..."},
                 label_rkw = {'class': 'col-form-label-sm required'}
                 )
+            
     jira_ticket = SSelectField('Jira Ticket', 
                 choices=[["", "Select Jira ticket to associated with this"], ["None", "Select nothing for a moment"]],
                 validators=[DataRequired(message="Please select Jira ticket out of given list. Or choose to create new")],
@@ -137,6 +183,8 @@ class TicketForm(FlaskForm):
                         },
                         label_rkw = label_rkw
                         )
+    
+
 
     # command = SStringField('Command (--command)',
     #             render_kw = classDict | {"placeholder":"Arguments that will be added to all cmsDriver commands"},
