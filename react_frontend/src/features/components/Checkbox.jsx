@@ -1,4 +1,5 @@
 import React from 'react';
+import { Form } from 'react-bootstrap';
 
 export const IndeterminateCheckbox = React.forwardRef(
   ({ indeterminate, ...rest }, ref) => {
@@ -11,7 +12,7 @@ export const IndeterminateCheckbox = React.forwardRef(
 
     return (
       <React.Fragment>
-        <input type="checkbox" ref={resolvedRef} {...rest} />
+        <Form.Check type="checkbox" ref={resolvedRef} {...rest} />
       </React.Fragment>
     )
   }
@@ -22,12 +23,12 @@ const checkboxHook = hooks => (
     {
       id: 'selection',
       Header: ({ getToggleAllRowsSelectedProps }) => (
-        <div>
+        <div style={{textAlign: 'center'}}>
           <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
         </div>
       ),
       Cell: ({ row }) => (
-        <div>
+        <div style={{textAlign: 'center'}}>
           <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
         </div>
       ),
@@ -39,12 +40,13 @@ const checkboxHook = hooks => (
 export const ColumnSelector = (props) => {
   const {allColumns, setHiddenColumns, getToggleHideAllColumnsProps} = props.tableProps;
 
-  // Custom onChange method to make prepID and checkbox column always visible
+  // Custom onChange method to make some column always visible
+  const columnsToIgnoreToggle = ['selection', 'prepid'];
   const customHiddenColumnProps = getToggleHideAllColumnsProps({
     onChange: ()=>
       setHiddenColumns(
         oldcol => !oldcol.length
-          ? allColumns.filter(m=>!['prepid', 'selection'].includes(m.id)).map(item=>item.id)
+          ? allColumns.filter(m=>!columnsToIgnoreToggle.includes(m.id)).map(item=>item.id)
           : []
       )
   });
@@ -53,14 +55,11 @@ export const ColumnSelector = (props) => {
     <div className="row" style={{margin: '5px', boxShadow: '0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12)'}}>
       <h4>Columns</h4>
       <div className="col-sm-6 col-md-3 col-lg-2 col-12">
-        <IndeterminateCheckbox {...customHiddenColumnProps} /> Toggle All
+        <IndeterminateCheckbox {...customHiddenColumnProps} label="Toggle All"/>
       </div>
-      {allColumns.filter(m => typeof(m.Header) == "string" && m.id !== "prepid").map(column => (
+      {allColumns.filter(m => !columnsToIgnoreToggle.includes(m.id)).map(column => (
         <div key={column.id} className="col-sm-6 col-md-3 col-lg-2 col-12">
-          <label>
-            <input type="checkbox" {...column.getToggleHiddenProps()}/>{' '}
-            {column.Header}
-          </label>
+          <IndeterminateCheckbox {...column.getToggleHiddenProps()} label={column.Header} />
         </div>
         ))}
       <br />
