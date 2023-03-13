@@ -17,7 +17,7 @@ RUN node --version
 RUN npm --version
 
 COPY . .
-RUN cd react_frontend/ && npm install ; npm run build && cp -r ../application/static/* build/static/;  cd ../ 
+RUN cd react_frontend/ && npm install ; npm run build && cd ../ 
 
 EXPOSE 8080
 # ENTRYPOINT ["tini", "-g", "--"]
