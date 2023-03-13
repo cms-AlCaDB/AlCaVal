@@ -1,71 +1,19 @@
 import HistoryCell from "../components/HistoryCell";
 import './RelvalTable.css';
 
-export const columnsProps = [
-  {'dbName': 'prepid', 'displayName': 'PrepID', 'visible': 1, 'sortable': true,
-   title: 'Show only this relval',
-   href: '/relvals?prepid=KEYNAME'
-  },
-  {'dbName': '_actions', 'displayName': 'Actions', 'visible': 1},
-  {'dbName': 'status', 'displayName': 'Status', 'visible': 1, 'sortable': true,
-   title: 'Show all relval with status KEY_NAME',
-   href: '/relvals?status=KEYNAME'
-  },
-  {'dbName': 'batch_name', 'displayName': 'Batch Name', 'visible': 1, 'sortable': true,
-   title: 'Show all relvals with KEY_NAME batch name',
-   href: '/relvals?batch_name=KEYNAME'
-  },
-  {'dbName': 'cmssw_release', 'displayName': 'CMSSW Release', 'visible': 1, 'sortable': true,
-   title: 'Show all relvals with KEY_NAME release',
-   href: '/relvals?cmssw_release=KEYNAME'
-  },
-  {'dbName': 'cpu_cores', 'displayName': 'CPU Cores', 'visible': 1, 'sortable': true, title: ''},
-  {'dbName': 'matrix', 'displayName': 'Matrix', 'visible': 1, 'sortable': true, title: ''},
-  {'dbName': 'memory', 'displayName': 'Memory', 'visible': 1, 'sortable': true,
-   title: 'Filter with this Memory value',
-   href: '/relvals?memory=KEYNAME'
-  },
-  {'dbName': '_workflow', 'displayName': 'Workflow', 'visible': 1, 'sortable': true, title: ''},
-  {'dbName': 'campaign_timestamp', 'displayName': 'Campaign', 'visible': 0, 'sortable': true,
-   title: 'Show relvals with this campaign ID',
-   href: '/relvals?campaign_timestamp=KEYNAME'
-  },
-  {'dbName': 'fragment', 'displayName': 'Fragment', 'visible': 0, title: ''},
-  {'dbName': '_gpu', 'displayName': 'GPU', 'visible': 0, title: ''},
-  {'dbName': 'history', 'displayName': 'History', 'visible': 0, 'sortable': true, title: ''},
-  {'dbName': 'label', 'displayName': 'Label', 'visible': 0, 'sortable': true, title: ''},
-  {'dbName': 'output_datasets', 'displayName': 'Output Datasets', 'visible': 0, title: ''},
-  {'dbName': 'sample_tag', 'displayName': 'Sample Tag', 'visible': 0, 'sortable': true, title: ''},
-  {'dbName': 'size_per_event', 'displayName': 'Size per Event', 'visible': 0, 'sortable': true, title: ''},
-  {'dbName': 'steps', 'displayName': 'Steps', 'visible': 0, title: ''},
-  {'dbName': 'time_per_event', 'displayName': 'Time per Event', 'visible': 0, 'sortable': true, title: ''},
-  {'dbName': 'workflows', 'displayName': 'Workflows (jobs in ReqMgr2)', 'visible': 0, title: ''},
-  {'dbName': 'notes', 'displayName': 'Notes', 'visible': 1, title: ''},
-];
 
-const nonStringColumns = [
-  // '_actions',
-  '_workflow',
-  '_gpu',
-  // 'history',
-  'output_datasets',
-  'steps',
-  'workflows'
-];
-
-export const getHiddenColumns = (Shown) => {
-  let shown = Shown.toString();
-  return columnsProps
-  .filter(column => !nonStringColumns.includes(column.dbName))
+export const getHiddenColumns = (Shown, tableColumns) => {
+  let shown = Shown.toString().slice(1);
+  return tableColumns
   .filter((item, idx) => {
-    if (shown[idx] === "0"){
-      return true;
-    } else if (!item.dbName === 'prepid') {
+    if (item.accessor === 'prepid') {
       return false;
+    } else if (item.visible === 1) {
+      return false
     } else {
-      return false;
+      return true;
     }
-  }).map(item => item.dbName);
+  }).map(item => item.accessor);
 }
 
 // Fetching column headers also returning formatted cells alongwith handle methods
@@ -146,87 +94,175 @@ export const useColumns = (role, dispatch) => {
     dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
   }
 
-  const tableColumns = columnsProps.filter(column => !nonStringColumns.includes(column.dbName))
-  .map((item) => {
-      if (item.dbName === 'history') {
-        return { Header: item.displayName,
-                 accessor: item.dbName,
-                 Cell: ({ row }) => {
-                  return (<HistoryCell row={row.original}></HistoryCell>);
-                 }
-               };
-      } else if(item.dbName === '_actions') {
-        return { Header: item.displayName,
-                 accessor: item.dbName,
-                 Cell: ({row}) => <ActionsCell
-                                    row={row}
-                                    handlePrevious={handlePrevious}
-                                    handleDelete={handleDelete}
-                                    handleNext={handleNext}
-                                    role={role}/>
-               }
-      } else if(item.dbName === 'status'){
-        return { Header: item.displayName,
-                 accessor: item.dbName,
-                 Cell: ({row}) =>
-                  <span>
-                    <a
-                      href={item.href?item.href.replace('KEYNAME', row.original[item.dbName]):''}
-                      title={item.title.replace("KEY_NAME", row.original[item.dbName])}
-                    >
-                    {row.original[item.dbName]}
-                    </a>
-                    <a style={{marginLeft: '2px'}} href={`/relvals/local_test_result/${row.id}`} rel="noreferrer noopener" target="_blank"><i className="bi bi-link-45deg"></i></a>
-                  </span>
-               }
-      } else if(item.dbName === 'campaign_timestamp') {
-        return {
-          Header: item.displayName,
-          accessor: item.dbName,
-          Cell: ({row}) =>
-          !row.original[item.dbName]? <span>Not set</span>
-          :<a
-            href={item.href?item.href.replace('KEYNAME', row.original[item.dbName]):''}
-            title={item.title.replace("KEY_NAME", row.original[item.dbName])}
-          >
-            {row.original.prepid+'-'+row.original[item.dbName]}
-          </a>,
-          visible: item.visible
-        };
-      } else if(item.dbName === 'notes') {
-        return {
-          Header: item.displayName,
-          accessor: item.dbName,
-          Cell: ({row}) =>
-            <pre>
-              {row.original[item.dbName]}
-            </pre>,
-          visible: item.visible
-        };
-      } else if(['prepid', 'batch_name', 'cmssw_release', 'memory', 'campaign_timestamp'].includes(item.dbName)) {
-        return {
-          Header: item.displayName,
-          accessor: item.dbName,
-          Cell: ({row}) =>
+  var tableColumns = [
+    {
+      Header: 'Prep ID',
+      accessor: 'prepid',
+      visible: 1,
+      Cell: ({row}) => {
+        let name = 'prepid';
+        return (
           <a
-            href={item.href?item.href.replace('KEYNAME', row.original[item.dbName]):''}
-            title={item.title.replace("KEY_NAME", row.original[item.dbName])}
+            href={`/relvals?${name}=${row.values[name]}`}
+            title={`Show all relvals with Batch Name: ${row.values[name]}`}
           >
-            {row.original[item.dbName]}
-          </a>,
-          visible: item.visible,
-          disableFilters:true
-        };
-      } else {
-        return {
-          Header: item.displayName,
-          accessor: item.dbName,
-          Cell: ({row}) => row.original[item.dbName],
-          visible: item.visible
-        };
+            {row.values[name]}
+          </a>
+        );
+      },
+      aggregate: 'uniqueCount',
+      Aggregated: ({ value }) => `${value} Brands`,
+    },
+    {
+      Header: 'Actions',
+      accessor: '_actions',
+      visible: 1,
+      Cell: ({row}) => 
+        <ActionsCell
+          row={row}
+          handlePrevious={handlePrevious}
+          handleDelete={handleDelete}
+          handleNext={handleNext}
+          role={role}
+        />
+    },
+    {
+      Header: 'Status',
+      accessor: 'status',
+      visible: 1,
+      Cell: ({row}) =>
+        <span>
+          <a
+            href={`/relvals?status=${row.values['status']}`}
+            title={`Show all relval with status ${row.values['status']}`}
+          >
+            {row.values['status']}
+          </a>
+          <a style={{marginLeft: '2px'}} href={`/relvals/local_test_result/${row.id}`} rel="noreferrer noopener" target="_blank"><i className="bi bi-link-45deg"></i></a>
+        </span>
+    },
+    {
+      Header: 'Batch Name',
+      accessor: 'batch_name',
+      visible: 1,
+      Cell: ({row}) => {
+        let name = 'batch_name';
+        return (
+          <a
+            href={`/relvals?${name}=${row.values[name]}`}
+            title={`Show all relvals with Batch Name: ${row.values[name]}`}
+          >
+            {row.values[name]}
+          </a>
+        );
       }
-    }
-  );
+    },
+    {
+      Header: 'CMSSW Release',
+      accessor: 'cmssw_release',
+      visible: 1,
+      Cell: ({row}) => {
+        let name = 'cmssw_release';
+        return (
+          <a
+            href={`/relvals?${name}=${row.values[name]}`}
+            title={`Show all relvals with release: ${row.values[name]}`}
+          >
+            {row.values[name]}
+          </a>
+        );
+      }
+    },
+    {
+      Header: 'Campaign',
+      accessor: 'campaign_timestamp',
+      visible: 1,
+      Cell: ({row}) => {
+        let name = 'campaign_timestamp';
+        return (
+          !row.values[name]? <span>Not set</span>
+          :<a
+            href={`/relvals?campaign_timestamp=${row.values[name]}&cmssw_release=${row.values.prepid}`}
+            title={`Show relvals with campaign`}
+          >
+            {row.values.prepid+'-'+row.values[name]}
+          </a>
+        );
+      }
+    },
+    {
+      Header: 'Cores',
+      accessor: 'cpu_cores',
+      visible: 1,
+      Cell: ({row}) => row.values['cpu_cores']
+    },
+    {
+      Header: 'Matrix',
+      accessor: 'matrix',
+      visible: 1,
+      Cell: ({row}) => row.values['matrix']
+    },
+    {
+      Header: 'Memory',
+      accessor: 'memory',
+      visible: 1,
+      Cell: ({row}) => {
+        let name = 'memory';
+        return (
+          <a
+            href={`/relvals?${name}=${row.values[name]}`}
+            title={`Show all relvals with memory: ${row.values[name]}`}
+          >
+            {row.values[name]}
+          </a>
+        );
+      }
+    },
+    {
+      Header: 'Fragment',
+      accessor: 'fragment',
+      visible: 0,
+      Cell: ({row}) => row.values['fragment']
+    },
+    {
+      Header: 'History',
+      accessor: 'history',
+      visible: 0,
+      Cell: ({row}) => (<HistoryCell row={row.original}></HistoryCell>),
+      aggregate: 'uniqueCount',
+      Aggregated: ({ value }) => `${value} Brands`,
+    },
+    {
+      Header: 'Label',
+      accessor: 'label',
+      visible: 0,
+      Cell: ({row}) => row.values['label']
+    },
+    {
+      Header: 'Size per Event',
+      accessor: 'size_per_event',
+      visible: 0,
+      Cell: ({row}) => row.values['size_per_event']
+    },
+    {
+      Header: 'Time per Event',
+      accessor: 'time_per_event',
+      visible: 0,
+      Cell: ({row}) => row.values['time_per_event']
+    },
+    // steps
+    // workflows
+    // output_datasets
+    {
+      Header: 'Notes',
+      accessor: 'notes',
+      visible: 0,
+      Cell: ({row}) => 
+        <pre>
+          {row.values['notes']}
+        </pre>
+    },
+  ]
 
   return {tableColumns, handleDelete, handleNext, handlePrevious};
 }

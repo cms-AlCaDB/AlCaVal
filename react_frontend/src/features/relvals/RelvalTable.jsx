@@ -30,7 +30,7 @@ export const RelvalTable = () => {
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
-      initialState: { hiddenColumns: getHiddenColumns(state.shown) },
+      initialState: { hiddenColumns: getHiddenColumns(state.shown, tableColumns) },
       manualPagination: true,
       autoResetSelectedRows: true,
       autoResetPage: false,
