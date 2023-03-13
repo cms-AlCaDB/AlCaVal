@@ -7,7 +7,7 @@ const NavBar = () => {
   return (
     <Navbar bg="light" expand="lg" fixed='top' style={{boxShadow: '0px 5px 5px -5px gray', overflow: 'visible'}}>
       <Container fluid>
-        <Navbar.Brand href="/" title="Home" style={{alignContent: 'left'}}><font face = "Wildwest"><strong>AlCa</strong>Val</font></Navbar.Brand>
+        <Navbar.Brand href="/" title="Home" style={{alignContent: 'left'}}><img src='tabicon.png' alt='Logo.svg' height='24'/><font face = "Wildwest"><strong>AlCa</strong>Val</font></Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-2">
