@@ -13,14 +13,32 @@ services:
       - DB_HOST=mongodb
       - DB_PORT=27017
     env_file: secrets/environs.txt
-    depends_on:
-      - database
-      - dbmonitor
     ports:
       - 8080:8080
     volumes:
-      - ${PWD}:/home/pritam
+      - ./api:/usr/src/app/api
+      - ./application:/usr/src/app/application
+      - ./core_lib:/usr/src/app/core_lib
+      - ./database:/usr/src/app/database
+      - ./docker:/usr/src/app/docker
+      - ./openshift:/usr/src/app/openshift
+      - ./react_frontend/build:/usr/src/app/react_frontend/build
     user: root
+    depends_on:
+      - database
+      - dbmonitor
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - 3000:3000
+    volumes:
+      - ./react_frontend/public:/home/node/app/public
+      - ./react_frontend/src:/home/node/app/src
+    depends_on:
+      - app
   database:
     container_name: mongodb
     image: mongo
