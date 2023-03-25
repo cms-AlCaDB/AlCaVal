@@ -1,20 +1,21 @@
 import HistoryCell from "../components/HistoryCell";
+import StepCell from "../components/StepCell";
 import './RelvalTable.css';
 
-
 export const getHiddenColumns = (Shown, tableColumns) => {
-  let shown = Shown.toString().slice(1);
+  let shown = Shown.toString()
   return tableColumns
   .filter((item, idx) => {
-    if (item.accessor === 'prepid') {
-      return false;
-    } else if (item.visible === 1) {
-      return false
-    } else {
+    if (shown[idx] === "0"){
       return true;
+    } else {
+      return false;
     }
   }).map(item => item.accessor);
 }
+
+const makeDASLink = (dataset) =>
+  'https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod%2Fglobal&input=dataset%3D' + dataset;
 
 // Fetching column headers also returning formatted cells alongwith handle methods
 export const useColumns = (role, dispatch) => {
@@ -219,6 +220,30 @@ export const useColumns = (role, dispatch) => {
       }
     },
     {
+      Header: 'Notes',
+      accessor: 'notes',
+      visible: 0,
+      Cell: ({row}) => 
+        <pre>
+          {row.values['notes']}
+        </pre>
+    },
+    {
+      Header: 'Workflow',
+      accessor: 'workflow_id',
+      visible: 0,
+      Cell: ({row}) => (
+      <span>
+        <a
+          href={`/relvals?workflow_id=${row.values['workflow_id']}`}
+          title={`Show all relvals with memory: ${row.values['workflow_id']}`}
+        >
+          {`${row.values['workflow_id']} `}
+        </a>
+        ({row.original.workflow_name})
+      </span>)
+    },
+    {
       Header: 'Fragment',
       accessor: 'fragment',
       visible: 0,
@@ -239,10 +264,32 @@ export const useColumns = (role, dispatch) => {
       Cell: ({row}) => row.values['label']
     },
     {
+      Header: 'Output datasets',
+      accessor: 'output_datasets',
+      visible: 0,
+      Cell: ({row}) => (
+        <ul>
+          {
+          row.original.output_datasets.map(dataset=> (
+            <li key={dataset}>
+              <a target="_blank" title="Open dataset in DAS" href={()=>makeDASLink(dataset)}>{dataset}</a>
+            </li>
+          ))
+          }
+        </ul>
+      ),
+    },
+    {
       Header: 'Size per Event',
       accessor: 'size_per_event',
       visible: 0,
       Cell: ({row}) => row.values['size_per_event']
+    },
+    {
+      Header: 'Steps',
+      accessor: 'steps',
+      visible: 0,
+      Cell: ({row}) => <StepCell row={row}/>,
     },
     {
       Header: 'Time per Event',
@@ -250,17 +297,34 @@ export const useColumns = (role, dispatch) => {
       visible: 0,
       Cell: ({row}) => row.values['time_per_event']
     },
-    // steps
-    // workflows
-    // output_datasets
     {
-      Header: 'Notes',
-      accessor: 'notes',
+      Header: 'Workflows (jobs in ReqMgr2)',
+      accessor: 'workflows',
       visible: 0,
-      Cell: ({row}) => 
-        <pre>
-          {row.values['notes']}
-        </pre>
+      Cell: ({row}) => {
+        return (
+          <ol>
+          {
+            row.original.workflows.map(workflow => 
+              <li key={workflow.name}>
+                <a target="_blank" title="Open workflow in ReqMgr2" href={`https://cmsweb.cern.ch/reqmgr2/fetch?rid=${workflow.name}`}>{workflow.name}</a>
+                <small> open in:</small> <a target="_blank" title="Open workflow in Stats2" href={`https://cms-pdmv.cern.ch/stats?workflow_name=${workflow.name}`}>Stats2</a>
+
+                {
+                  workflow.output_datasets.map(dataset =>
+                    <li key={dataset.name}>
+                      <div>
+                        <small>datatier: </small> {dataset.name.split('/').pop()}
+                        <small style={{letterSpacing: "-0.1px"}}><a target="_blank" title="Open dataset in DAS" href={()=>makeDASLink(dataset.name)}>{dataset.name}</a></small>
+                      </div>
+                    </li>
+                  )
+                }
+              </li>
+            )
+          }
+          </ol>
+        )}
     },
   ]
 
