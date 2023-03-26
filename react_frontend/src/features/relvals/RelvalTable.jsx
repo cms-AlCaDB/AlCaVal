@@ -14,7 +14,7 @@ import NavBar from '../components/NavBar';
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
   const {role, userInfo} = useUserRole();
-  const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(role, dispatch);
+  const {tableColumns, handleDelete, handleNext, handlePrevious, updateWorkflows} = useColumns(role, dispatch);
 
   const tableData = React.useMemo(() => {
     return [...state.data]},
@@ -149,6 +149,7 @@ export const RelvalTable = () => {
             {role('manager')?<a className="action-button" role="button" onClick={()=>handleDelete(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Delete selected RelVals">Delete</a>: null}
             {role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to previous status">Previous</a>: null}
             {role('manager')?<a className="action-button" role="button" onClick={()=>handleNext(Object.values(state.selectedItems).flat().map(item =>item.id))} title="Move to next status">Next</a>: null}
+            {role('manager')?<a className='action-button' role='button' onClick={(e)=>updateWorkflows(e, Object.values(state.selectedItems).flat().map(item =>item.id))}>Update Workflows</a>: null}
           </div>
         </div>
         : <div className='footer-item'><a href="relvals/edit">New Relval</a></div>

@@ -1,6 +1,7 @@
 import HistoryCell from "../components/HistoryCell";
 import StepCell from "../components/StepCell";
 import './RelvalTable.css';
+import axios from "axios";
 
 export const getHiddenColumns = (Shown, tableColumns) => {
   let shown = Shown.toString()
@@ -94,6 +95,13 @@ export const useColumns = (role, dispatch) => {
     dispatch({type: "TOGGLE_MODAL_DIALOG", payload: dialog});
   }
 
+  const updateWorkflows = (e, data) => {
+    e.preventDefault();
+    axios.post('api/relvals/update_workflows', data)
+    .then(res => console.log('workflows updated'))
+    .catch(err => console.log('Error updating workflows: ', err))
+  }
+
   var tableColumns = [
     {
       Header: 'Prep ID',
@@ -123,6 +131,7 @@ export const useColumns = (role, dispatch) => {
           handlePrevious={handlePrevious}
           handleDelete={handleDelete}
           handleNext={handleNext}
+          updateWorkflows={updateWorkflows}
           role={role}
         />
     },
@@ -327,22 +336,46 @@ export const useColumns = (role, dispatch) => {
     },
   ]
 
-  return {tableColumns, handleDelete, handleNext, handlePrevious};
+  return {tableColumns, handleDelete, handleNext, handlePrevious, updateWorkflows};
 }
 
 const ActionsCell = (props) => {
-  const {row, handleDelete, handleNext, handlePrevious, role} = props;
+  const {row, handleDelete, handleNext, handlePrevious, updateWorkflows, role} = props;
   return (
     <div className="actions">
-      {role('manager')?<a href={`relvals/edit?prepid=${row.original.prepid}`}>Edit</a>: null}
-      {(row.original.status === 'new' && role('manager'))?<a className="action-button" role="button" onClick={()=>handleDelete([row.original.prepid])}>Delete</a>:null}
-      {role('manager')?<a href={`relvals/edit?clone=${row.original.prepid}`} title="Clone RelVal">Clone</a>: null}
+      {role('manager')?
+        <a href={`relvals/edit?prepid=${row.original.prepid}`}>Edit</a>
+        : null
+      }
+      {(row.original.status === 'new' && role('manager'))?
+        <a className="action-button" role="button" onClick={()=>handleDelete([row.original.prepid])}>Delete</a>
+        :null
+      }
+      {role('manager')?
+        <a href={`relvals/edit?clone=${row.original.prepid}`} title="Clone RelVal">Clone</a>
+        : null
+      }
       <a href={`api/relvals/get_cmsdriver/${row.original.prepid}`} title="Show cmsDriver.py command for this RelVal">cmsDriver</a>
       <a href={`api/relvals/get_dict/${row.original.prepid}`} title="Show JSON dictionary for ReqMgr2">Job dict</a>
-      {role('manager')?<a className="action-button" role="button" onClick={()=>handlePrevious([row.original.prepid])} title="Move to previous status">Previous</a>: null}
-      {role('manager')?<a className="action-button" role="button" onClick={()=>handleNext([row.original.prepid])} title="Move to next status">Next</a>: null}
-      {(row.original.status === 'submitted' || row.original.status === 'done' || row.original.status === 'archived')?<a target={'_blank'} href={`https://cms-pdmv.cern.ch/stats?prepid=${row.original.prepid}`} title="Show workflows of this RelVal in Stats2">Stats2</a>: null}
+      {role('manager')?
+        <a className="action-button" role="button" onClick={()=>handlePrevious([row.original.prepid])} title="Move to previous status">Previous</a>
+        : null
+      }
+      {role('manager')?
+        <a className="action-button" role="button" onClick={()=>handleNext([row.original.prepid])} title="Move to next status">Next</a>
+        : null
+      }
+      {(row.original.status === 'submitted' || row.original.status === 'done' || row.original.status === 'archived')?
+        <a target={'_blank'} href={`https://cms-pdmv.cern.ch/stats?prepid=${row.original.prepid}`} title="Show workflows of this RelVal in Stats2">Stats2</a>
+        : null
+      }
       <a href={`tickets?created_relvals=${row.original.prepid}`} title="Show ticket that was used to create this RelVal">Ticket</a>
+      {(row.original.status === 'submitted' && role('manager'))?
+        <a onClick={(e)=>updateWorkflows(e, [row.original.prepid])} href="#" title='Update RelVal information from ReqMgr2'>
+          Update Workflows
+        </a>
+        : null
+      }
     </div>
   );
 }
