@@ -17,7 +17,6 @@ export const RelvalTable = () => {
   const {tableColumns, handleDelete, handleNext, handlePrevious} = useColumns(role, dispatch);
 
   const tableData = React.useMemo(() => {
-    console.log("tableData useMemo executed")
     return [...state.data]},
   [state.data]);
 
@@ -30,7 +29,7 @@ export const RelvalTable = () => {
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
-      initialState: { hiddenColumns: getHiddenColumns(state.shown, tableColumns), sortBy: [{id: state.sort, desc: state.sort_asc}] },
+      initialState: { hiddenColumns: getHiddenColumns(state.shown, tableColumns), sortBy: state.sort?[{id: state.sort, desc: state.sort_asc}]: [] },
       manualPagination: true,
       manualSortBy: true,
       autoResetSelectedRows: true,
@@ -51,7 +50,6 @@ export const RelvalTable = () => {
     .then(res => res.json())
     .then(
       data => {
-        console.log("Fetched data: ", data.response.results);
         dispatch({
           type: "SET_DATA",
           data: data.response.results,
@@ -81,7 +79,6 @@ export const RelvalTable = () => {
   // Retain selected rows when page changes
   React.useEffect(() => {
     if (state.selectedItems[state.currentPage]){
-      console.log('Toggle rows')
       state.selectedItems[state.currentPage].map(
         rowid =>
         tableInstance.toggleRowSelected(rowid.id, true)
@@ -96,14 +93,12 @@ export const RelvalTable = () => {
 
   // Reset selectedItems when page-size changes
   React.useEffect(() => {
-    console.log('PageSize changed')
     dispatch({type: "SET_SELECTED_ITEMS", payload: {}});
   }, [state.pageSize]);
 
   React.useEffect(() => {
     const shown = actions.updateShownFromVisible(tableInstance.columns);
     dispatch({type: "UPDATE_SHOWN", payload: shown});
-    console.log('handleChange UPDATED');
   }, [tableInstance.visibleColumns]);
 
   // Dispach action when sortBy state of the tableInstance changes

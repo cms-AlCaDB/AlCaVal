@@ -283,7 +283,7 @@ export const useColumns = (role, dispatch) => {
           {
           row.original.output_datasets.map(dataset=> (
             <li key={dataset}>
-              <a target="_blank" title="Open dataset in DAS" href={()=>makeDASLink(dataset)}>{dataset}</a>
+              <a target="_blank" title="Open dataset in DAS" href={makeDASLink(dataset)}>{dataset}</a>
             </li>
           ))
           }
