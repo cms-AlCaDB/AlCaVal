@@ -14,8 +14,7 @@ export const getHiddenColumns = (Shown, tableColumns) => {
   }).map(item => item.accessor);
 }
 
-const makeDASLink = (dataset) =>
-  'https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod%2Fglobal&input=dataset%3D' + dataset;
+const makeDASLink = (dataset) => (`https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod&global&input=dataset=${dataset}`);
 
 // Fetching column headers also returning formatted cells alongwith handle methods
 export const useColumns = (role, dispatch) => {
@@ -264,6 +263,18 @@ export const useColumns = (role, dispatch) => {
       Cell: ({row}) => row.values['label']
     },
     {
+      Header: 'Size per Event',
+      accessor: 'size_per_event',
+      visible: 0,
+      Cell: ({row}) => row.values['size_per_event']
+    },
+    {
+      Header: 'Time per Event',
+      accessor: 'time_per_event',
+      visible: 0,
+      Cell: ({row}) => row.values['time_per_event']
+    },
+    {
       Header: 'Output datasets',
       accessor: 'output_datasets',
       visible: 0,
@@ -280,22 +291,10 @@ export const useColumns = (role, dispatch) => {
       ),
     },
     {
-      Header: 'Size per Event',
-      accessor: 'size_per_event',
-      visible: 0,
-      Cell: ({row}) => row.values['size_per_event']
-    },
-    {
       Header: 'Steps',
       accessor: 'steps',
       visible: 0,
       Cell: ({row}) => <StepCell row={row}/>,
-    },
-    {
-      Header: 'Time per Event',
-      accessor: 'time_per_event',
-      visible: 0,
-      Cell: ({row}) => row.values['time_per_event']
     },
     {
       Header: 'Workflows (jobs in ReqMgr2)',
