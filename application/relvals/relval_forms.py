@@ -205,11 +205,13 @@ class cmsDriverStepForm(Form):
 
     size_per_event  = SStringField('Size Per Event',
                     render_kw = classDict | {"placeholder":"Size per event"},
-                    label_rkw = label_kw
+                    label_rkw = label_kw,
+                    default='100'
                     )
     time_per_event  = SStringField('Time Per Event',
                     render_kw = classDict | {"placeholder":"Time per event"},
-                    label_rkw = label_kw
+                    label_rkw = label_kw,
+                    default='20'
                     )
 
     events_per_lumi = SStringField('Events per lumi',
