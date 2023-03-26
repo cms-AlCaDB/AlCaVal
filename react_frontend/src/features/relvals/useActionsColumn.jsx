@@ -182,7 +182,7 @@ export const useColumns = (role, dispatch) => {
         return (
           !row.values[name]? <span>Not set</span>
           :<a
-            href={`/relvals?campaign_timestamp=${row.values[name]}&cmssw_release=${row.values.prepid}`}
+            href={`/relvals?campaign_timestamp=${row.values[name]}&cmssw_release=${row.values.cmssw_release}&batch_name=${row.values.batch_name}`}
             title={`Show relvals with campaign`}
           >
             {row.values.prepid+'-'+row.values[name]}
