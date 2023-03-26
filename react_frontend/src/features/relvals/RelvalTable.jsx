@@ -30,8 +30,9 @@ export const RelvalTable = () => {
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
-      initialState: { hiddenColumns: getHiddenColumns(state.shown, tableColumns) },
+      initialState: { hiddenColumns: getHiddenColumns(state.shown, tableColumns), sortBy: [{id: state.sort, desc: state.sort_asc}] },
       manualPagination: true,
+      manualSortBy: true,
       autoResetSelectedRows: true,
       autoResetPage: false,
       getRowId,
@@ -45,6 +46,7 @@ export const RelvalTable = () => {
     dispatch({type: "TOGGLE_LOADING_STATE", payload: true});
     let url = 'api/search?db_name=relvals';
     url += actions.getQueryString(state, true);
+
     fetch(url)
     .then(res => res.json())
     .then(
@@ -74,7 +76,7 @@ export const RelvalTable = () => {
 
   React.useEffect(() => {
     fetchData();
-  }, [state.currentPage, state.pageSize, state.refreshData]);
+  }, [state.currentPage, state.pageSize, state.refreshData, state.sort, state.sort_asc]);
 
   // Retain selected rows when page changes
   React.useEffect(() => {
@@ -104,11 +106,24 @@ export const RelvalTable = () => {
     console.log('handleChange UPDATED');
   }, [tableInstance.visibleColumns]);
 
+  // Dispach action when sortBy state of the tableInstance changes
+  React.useEffect(() => {
+    if (tableInstance.state.sortBy.length){ 
+      dispatch(
+        actions.updateSortState({sort: tableInstance.state.sortBy[0].id, sort_asc: !tableInstance.state.sortBy[0].desc})
+      );
+    } else {
+      dispatch(
+        actions.updateSortState({sort: null, sort_asc: null})
+      );
+    }
+  }, [tableInstance.state.sortBy]);
+
   // Update query string
   React.useEffect(() => {
-    const queryString = actions.getQueryString(state);
-    window.history.replaceState({}, '', `/relvals?${queryString.slice(1)}`);
-  }, [state.shown, state.currentPage, state.pageSize]);
+    const queryString = actions.getQueryString({...state});
+    window.history.replaceState({}, '', `${window.location.pathname}?${queryString.slice(1)}`);
+  }, [state.shown, state.currentPage, state.pageSize, state.sort, state.sort_asc]);
 
   return (
     <>

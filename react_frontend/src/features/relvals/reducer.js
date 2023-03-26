@@ -6,7 +6,8 @@
   const pageSizeValid = Number(urlParams.get('limit')) > 0
   const initPageNumber = pageValid? Number(urlParams.get('page')): 0
   const initPageSize = pageSizeValid? Number(urlParams.get('limit')): 50
-
+  const sort = urlParams.get('sort')? urlParams.get('sort'): null;
+  const sort_asc = urlParams.get('sort_asc')? urlParams.get('sort_asc'): null;
 
 export const initialState = {
   data: [],
@@ -15,6 +16,8 @@ export const initialState = {
   pageSize: initPageSize,
   selectedItems: {},
   shown: shown,
+  sort: sort,
+  sort_asc: sort_asc,
   loadingData: false,
   refreshData: false,
   dialog: {
@@ -50,6 +53,8 @@ function reducer(state=initialState, action) {
       return {...state, loadingData: action.payload};
     case "TOGGLE_MODAL_DIALOG":
       return {...state, dialog: {...state.dialog, ...action.payload}};
+    case "UPDATE_SORT_STATE":
+      return {...state, sort: action.payload.sort, sort_asc: action.payload.sort_asc}
     default:
       throw new Error();
   }
