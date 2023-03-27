@@ -2,7 +2,7 @@ import React from 'react';
 import {Nav, Container, Navbar} from 'react-bootstrap';
 import useUserRole from '../utils/UserRole';
 
-const NavBar = () => {
+const NavBar = ({NavComp, preGlobalFilteredRows, globalFilter, setGlobalFilter}) => {
   const {userInfo} = useUserRole();
   return (
     <Navbar bg="light" expand="lg" fixed='top' style={{boxShadow: '0px 5px 5px -5px gray', overflow: 'visible'}}>
@@ -23,7 +23,8 @@ const NavBar = () => {
             <Nav.Link href="/dashboard" title='Show dashboard'>Dashboard</Nav.Link>
           </Nav>
 
-          <Navbar.Text className='ms-auto'>
+          {NavComp?<NavComp preGlobalFilteredRows={preGlobalFilteredRows} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter}/>: null}
+          <Navbar.Text className='ms-2'>
             Signed in as: <a href="/api/system/user_info">{userInfo.fullname}</a>
           </Navbar.Text>
         </Navbar.Collapse>

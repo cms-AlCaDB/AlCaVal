@@ -34,6 +34,7 @@ export const getQueryString = (state, forData=false) => {
                   page: state.currentPage,
                   sort: state.sort,
                   sort_asc: state.sort_asc,
+                  filter: state.filterData
                 };
   let queryString = '';
   Object.entries({...query, ...object}).forEach(([k, value]) => {

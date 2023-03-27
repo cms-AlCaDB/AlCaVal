@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTable, useSortBy, useRowSelect } from 'react-table';
+import { useTable, useSortBy, useRowSelect, useGlobalFilter } from 'react-table';
 import reducer, { initialState } from './reducer';
 import * as actions from './actions';
 import ReactTable from '../components/Table';
@@ -10,6 +10,7 @@ import CustomModal from '../components/Modal';
 import useUserRole from '../utils/UserRole';
 import { useColumns, getHiddenColumns } from './useActionsColumn';
 import NavBar from '../components/NavBar';
+import GlobalFilter from '../components/GlobalFilter';
 
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
@@ -29,13 +30,19 @@ export const RelvalTable = () => {
   const tableInstance = useTable(
     { columns: columns,
       data: tableData,
-      initialState: { hiddenColumns: getHiddenColumns(state.shown, tableColumns), sortBy: state.sort?[{id: state.sort, desc: state.sort_asc}]: [] },
+      initialState: {
+        hiddenColumns: getHiddenColumns(state.shown, tableColumns),
+        sortBy: state.sort?[{id: state.sort, desc: state.sort_asc}]: [],
+        globalFilter: state.filterData,
+      },
       manualPagination: true,
       manualSortBy: true,
+      manualGlobalFilter: true,
       autoResetSelectedRows: true,
       autoResetPage: false,
       getRowId,
     },
+    useGlobalFilter,
     useSortBy,
     useRowSelect,
     checkboxHook,
@@ -74,7 +81,7 @@ export const RelvalTable = () => {
 
   React.useEffect(() => {
     fetchData();
-  }, [state.currentPage, state.pageSize, state.refreshData, state.sort, state.sort_asc]);
+  }, [state.currentPage, state.pageSize, state.refreshData, state.sort, state.sort_asc, state.filterData]);
 
   // Retain selected rows when page changes
   React.useEffect(() => {
@@ -114,15 +121,25 @@ export const RelvalTable = () => {
     }
   }, [tableInstance.state.sortBy]);
 
+  // Pass state from react-table to reducer
+  React.useEffect(() => {
+    dispatch({type: "FILTER_DATA", payload: tableInstance.state.globalFilter || ''});
+  }, [tableInstance.state.globalFilter]);
+  
   // Update query string
   React.useEffect(() => {
     const queryString = actions.getQueryString({...state});
     window.history.replaceState({}, '', `${window.location.pathname}?${queryString.slice(1)}`);
-  }, [state.shown, state.currentPage, state.pageSize, state.sort, state.sort_asc]);
+  }, [state.shown, state.currentPage, state.pageSize, state.sort, state.sort_asc, state.filterData]);
 
   return (
     <>
-    <NavBar/>
+    <NavBar
+      NavComp={GlobalFilter}
+      preGlobalFilteredRows={tableInstance.preGlobalFilteredRows}
+      globalFilter={tableInstance.state.globalFilter}
+      setGlobalFilter={tableInstance.setGlobalFilter}
+    />
     <div style={{paddingBottom: '52px', overflow: 'auto'}}>
       <div style={{display: 'flex'}}>
         <div style={{flex: '1 1 auto'}}>
