@@ -6,7 +6,7 @@ import time
 import json
 import os
 import re
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import MongoClient, ASCENDING, DESCENDING, TEXT
 
 
 class Database():
@@ -247,7 +247,8 @@ class Database():
                               page=0, limit=20,
                               sort_attr=None, sort_asc=True,
                               include_deleted=False,
-                              ignore_case=False):
+                              ignore_case=False,
+                              wild_filter=False):
         """
         Perform a query in a database
         And operator is &&
@@ -278,6 +279,17 @@ class Database():
                 value_query = self.get_value_query(key, values, ignore_case)
                 if value_query:
                     query_dict['$and'].append(value_query)
+
+        if wild_filter:
+            # Create a list of queries that match the regex against each field
+            query = rf".*{wild_filter}.*"
+            queries = []
+            for field_name in self.collection.find_one().keys():
+                queries.append({field_name: {"$regex": re.compile(str(query))}})
+
+            query = {"$or": queries}
+            self.collection.create_index([("$**", TEXT)])
+            query_dict['$and'].append(query)
 
         if len(query_dict['$and']) == 1:
             query_dict = query_dict['$and'][0]

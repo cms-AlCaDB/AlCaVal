@@ -35,6 +35,7 @@ class SearchAPI(APIBase):
         limit = int(args.pop('limit', 2000))
         sort = args.pop('sort', None)
         sort_asc = args.pop('sort_asc', None)
+        wild_filter = args.pop('filter', False)
 
         # Special cases
         from_ticket = args.pop('ticket', None)
@@ -71,7 +72,8 @@ class SearchAPI(APIBase):
                                                              limit=limit,
                                                              sort_attr=sort,
                                                              sort_asc=sort_asc,
-                                                             ignore_case=True)
+                                                             ignore_case=True,
+                                                             wild_filter=wild_filter)
 
         return self.output_text({'response': {'results': results,
                                               'total_rows': total_rows},
