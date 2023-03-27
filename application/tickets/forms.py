@@ -194,12 +194,12 @@ class TicketForm(FlaskForm):
     #             render_kw = classDict | {"placeholder":"E.g. RAW2DIGI, L1Reco, RECO, DQM"},
     #             label_rkw = {'class': 'col-form-label-sm'}
     #             )
-    cpu_cores = SIntegerField('CPU Cores (-t)', default=8, validators=[NumberRange(min=1, max=16)],
+    cpu_cores = SIntegerField('CPU Cores (-t)', default=4, validators=[NumberRange(min=1, max=16)],
                 render_kw = classDict,
                 label_rkw = {'class': 'col-form-label-sm'}
                 )
 
-    memory = SIntegerField('Memory', default=16000, validators=[NumberRange(min=0, max=30000)],
+    memory = SIntegerField('Memory', default=8000, validators=[NumberRange(min=0, max=30000)],
                 render_kw = classDict | {'step': 1000},
                 label_rkw = {'class': 'col-form-label-sm'}
                 )
