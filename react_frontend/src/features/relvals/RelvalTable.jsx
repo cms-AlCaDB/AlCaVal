@@ -15,7 +15,7 @@ import GlobalFilter from '../components/GlobalFilter';
 export const RelvalTable = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
   const {role, userInfo} = useUserRole();
-  const {tableColumns, handleDelete, handleNext, handlePrevious, updateWorkflows} = useColumns(role, dispatch);
+  const {tableColumns, handleDelete, handleNext, handlePrevious, updateWorkflows} = useColumns({...state}, role, dispatch);
 
   const tableData = React.useMemo(() => {
     return [...state.data]},

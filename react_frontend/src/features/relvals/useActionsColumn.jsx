@@ -2,6 +2,8 @@ import HistoryCell from "../components/HistoryCell";
 import StepCell from "../components/StepCell";
 import './RelvalTable.css';
 import axios from "axios";
+import timeSince from "../utils/timeSince";
+import { Button } from "react-bootstrap";
 
 export const getHiddenColumns = (Shown, tableColumns) => {
   let shown = Shown.toString()
@@ -18,7 +20,7 @@ export const getHiddenColumns = (Shown, tableColumns) => {
 const makeDASLink = (dataset) => (`https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod&global&input=dataset=${dataset}`);
 
 // Fetching column headers also returning formatted cells alongwith handle methods
-export const useColumns = (role, dispatch) => {
+export const useColumns = (state, role, dispatch) => {
   let dialog = {
     visible: false,
     title: '',
@@ -151,6 +153,24 @@ export const useColumns = (role, dispatch) => {
         </span>
     },
     {
+      Header: 'Jira ticket',
+      accessor: 'jira_ticket',
+      visible: 1,
+      Cell: ({row}) => 
+        <span>
+          <a
+            href={`/relvals?jira_ticket=${row.values['jira_ticket']}`}
+            title={`Show all relval with jira ticket- ${row.values['jira_ticket']}`}
+          >
+            {row.values['jira_ticket']!='None'? row.values['jira_ticket']: 'None'}
+          </a>
+          {row.values['jira_ticket']!='None'?
+            <a style={{paddingLeft: '4px'}} href={`https://its.cern.ch/jira/browse/${row.values['jira_ticket']}`} rel="noreferrer noopener" target="_blank"><i className="bi bi-box-arrow-up-right"/></a>
+            : null
+          }
+        </span>
+    },
+    {
       Header: 'Batch Name',
       accessor: 'batch_name',
       visible: 1,
@@ -160,22 +180,6 @@ export const useColumns = (role, dispatch) => {
           <a
             href={`/relvals?${name}=${row.values[name]}`}
             title={`Show all relvals with Batch Name: ${row.values[name]}`}
-          >
-            {row.values[name]}
-          </a>
-        );
-      }
-    },
-    {
-      Header: 'CMSSW Release',
-      accessor: 'cmssw_release',
-      visible: 1,
-      Cell: ({row}) => {
-        let name = 'cmssw_release';
-        return (
-          <a
-            href={`/relvals?${name}=${row.values[name]}`}
-            title={`Show all relvals with release: ${row.values[name]}`}
           >
             {row.values[name]}
           </a>
@@ -195,34 +199,6 @@ export const useColumns = (role, dispatch) => {
             title={`Show relvals with campaign`}
           >
             {row.values.prepid+'-'+row.values[name]}
-          </a>
-        );
-      }
-    },
-    {
-      Header: 'Cores',
-      accessor: 'cpu_cores',
-      visible: 1,
-      Cell: ({row}) => row.values['cpu_cores']
-    },
-    {
-      Header: 'Matrix',
-      accessor: 'matrix',
-      visible: 1,
-      Cell: ({row}) => row.values['matrix']
-    },
-    {
-      Header: 'Memory',
-      accessor: 'memory',
-      visible: 1,
-      Cell: ({row}) => {
-        let name = 'memory';
-        return (
-          <a
-            href={`/relvals?${name}=${row.values[name]}`}
-            title={`Show all relvals with memory: ${row.values[name]}`}
-          >
-            {row.values[name]}
           </a>
         );
       }
@@ -250,6 +226,50 @@ export const useColumns = (role, dispatch) => {
         </a>
         ({row.original.workflow_name})
       </span>)
+    },
+    {
+      Header: 'CMSSW Release',
+      accessor: 'cmssw_release',
+      visible: 0,
+      Cell: ({row}) => {
+        let name = 'cmssw_release';
+        return (
+          <a
+            href={`/relvals?${name}=${row.values[name]}`}
+            title={`Show all relvals with release: ${row.values[name]}`}
+          >
+            {row.values[name]}
+          </a>
+        );
+      }
+    },
+    {
+      Header: 'Cores',
+      accessor: 'cpu_cores',
+      visible: 1,
+      Cell: ({row}) => row.values['cpu_cores']
+    },
+    {
+      Header: 'Memory',
+      accessor: 'memory',
+      visible: 1,
+      Cell: ({row}) => {
+        let name = 'memory';
+        return (
+          <a
+            href={`/relvals?${name}=${row.values[name]}`}
+            title={`Show all relvals with memory: ${row.values[name]}`}
+          >
+            {row.values[name]}
+          </a>
+        );
+      }
+    },
+    {
+      Header: 'Matrix',
+      accessor: 'matrix',
+      visible: 1,
+      Cell: ({row}) => row.values['matrix']
     },
     {
       Header: 'Fragment',
@@ -308,7 +328,7 @@ export const useColumns = (role, dispatch) => {
     {
       Header: 'Workflows (jobs in ReqMgr2)',
       accessor: 'workflows',
-      visible: 0,
+      visible: 1,
       Cell: ({row}) => {
         return (
           <ol>
@@ -316,18 +336,22 @@ export const useColumns = (role, dispatch) => {
             row.original.workflows.map(workflow => 
               <li key={workflow.name}>
                 <a target="_blank" title="Open workflow in ReqMgr2" href={`https://cmsweb.cern.ch/reqmgr2/fetch?rid=${workflow.name}`}>{workflow.name}</a>
-                <small> open in:</small> <a target="_blank" title="Open workflow in Stats2" href={`https://cms-pdmv.cern.ch/stats?workflow_name=${workflow.name}`}>Stats2</a>
-
+                <small style={{color: 'gray'}}> open in:</small> <a target="_blank" title="Open workflow in Stats2" href={`https://cms-pdmv.cern.ch/stats?workflow_name=${workflow.name}`}>Stats2</a>
                 {
                   workflow.output_datasets.map(dataset =>
                     <li key={dataset.name}>
                       <div>
-                        <small>datatier: </small> {dataset.name.split('/').pop()}
+                        <small style={{color: 'gray'}}>datatier: </small> {dataset.name.split('/').pop()}
                         <small style={{letterSpacing: "-0.1px"}}><a target="_blank" title="Open dataset in DAS" href={()=>makeDASLink(dataset.name)}>{dataset.name}</a></small>
                       </div>
                     </li>
                   )
                 }
+                <br/>
+                <small style={{color: 'gray'}}>Last status: </small> <span style={{color: 'brown'}}>{workflow.status_history[workflow.status_history.length - 1].status}</span>
+                <small style={{color: 'gray'}}> was set </small> { timeSince(new Date(workflow.status_history[workflow.status_history.length - 1].time*1000 ))}
+                <small style={{color: 'gray'}}> ({ new Date( workflow.status_history[workflow.status_history.length - 1].time*1000 ).toLocaleString()}) </small>
+                <Button size="sm" variant="outline-dark" onClick={e=>updateWorkflows(e, Object.values(state.selectedItems).flat().map(item =>item.id))}>Update</Button>
               </li>
             )
           }
