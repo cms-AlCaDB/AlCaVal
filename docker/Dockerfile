@@ -2,6 +2,12 @@ FROM python:3.9
 
 WORKDIR /usr/src/app
 
+# Installing krb5 client
+ENV DEBIAN_FRONTEND noninteractive
+COPY docker/krb5.conf /etc/krb5.conf
+RUN apt-get update -y && apt upgrade -y
+RUN apt-get install -y gcc krb5-user libkrb5-dev
+
 COPY requirements.txt ./
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
