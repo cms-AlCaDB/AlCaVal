@@ -242,6 +242,13 @@ class cmsDriverStepForm(Form):
                     )
 
 class RelvalForm(FlaskForm):
+
+    def validate_batch_name(form, field):
+    invalid_chars = ['-', ' ', ';', ':']
+    if any(char in field.data for char in invalid_chars):
+        raise ValidationError("Invalid batch name. Batch name must not contain spaces, hyphens, semicolons, or colons.")
+
+
     matrix_choices  = [
                     ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
                     ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
@@ -253,10 +260,12 @@ class RelvalForm(FlaskForm):
                     label_rkw = {'class': 'col-form-label-sm'}
                     )
     batch_name  = SStringField('Batch Name',
-                    validators=[DataRequired(message="Please provide appropreate batch name")],
+                    validators=[DataRequired(message="Please provide appropreate batch name"), validate_batch_name],
                     render_kw = {'class': 'form-control form-control-sm', "placeholder":"Appropriate batch name"},
                     label_rkw = {'class': 'col-form-label-sm required'}
                     )
+
+
     cmssw_release = SStringField('CMSSW Release',
                     validators=[DataRequired(message="Please provide correct CMSSW release")],
                     render_kw = {'class': 'form-control form-control-sm', "placeholder":"E.g CMSSW_12_3_..."},

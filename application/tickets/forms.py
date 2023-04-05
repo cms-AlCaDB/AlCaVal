@@ -87,6 +87,11 @@ class TicketForm(FlaskForm):
     label_rkw = {'class': 'col-form-label-sm'}
     classDict = {'class': 'form-control form-control-sm'}
 
+    def validate_batch_name(form, field):
+    invalid_chars = ['-', ' ', ';', ':']
+    if any(char in field.data for char in invalid_chars):
+        raise ValidationError("Invalid batch name. Batch name must not contain spaces, hyphens, semicolons, or colons.")
+
     # Get CMSSW info
     t0api = Tier0Api()
     t0config = t0api.get_run_info()
@@ -96,12 +101,13 @@ class TicketForm(FlaskForm):
                 label="Prep ID",
                 label_rkw = label_rkw
                 )
-    batch_name = SStringField('Batch Name',
-                validators=[DataRequired(message="Please provide appropreate batch name")],
-                render_kw = classDict | {"placeholder":"Subsystem name or DPG/POG. e.g. Tracker"},
-                label_rkw = {'class': 'col-form-label-sm required'}
-                )
     
+    batch_name = SStringField('Batch Name',
+                validators=[DataRequired(message="Please provide appropriate batch name"), validate_batch_name],
+                render_kw= classDict | {"placeholder": "Subsystem name or DPG/POG. e.g. Tracker"},
+                label_rkw={'class': 'col-form-label-sm required'}
+                )
+
     cmssw_release = SStringField('CMSSW Release',
                 default=t0config['cmssw'],
                 validators=[DataRequired(message="Please provide correct CMSSW release")],
