@@ -23,7 +23,20 @@ RUN node --version
 RUN npm --version
 
 COPY . .
-RUN cd react_frontend/ && npm install ; npm run build && cd ../ 
+
+# Making sure node.js do not use lot of memory during install/build
+RUN cd react_frontend/ && node \
+  --max_semi_space_size=1 \
+  --max_old_space_size=198 \
+  --max_executable_size=148 \
+  npm install \
+  cd ../
+RUN cd react_frontend/ && node \
+  --max_semi_space_size=1 \
+  --max_old_space_size=198 \
+  --max_executable_size=148 \
+  npm run build \
+  cd ../
 
 EXPOSE 8080
 # ENTRYPOINT ["tini", "-g", "--"]
