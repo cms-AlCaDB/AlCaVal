@@ -246,7 +246,7 @@ class TicketForm(FlaskForm):
         if status_code != 200:
             raise ValidationError('CMSSW release is not valid!')
 
-    def validate_input_datasets_temp(self, field, test=None):
+    def validate_input_datasets(self, field, test=None):
         if not field.data:
             test_datasets = list()
         else:
@@ -277,7 +277,7 @@ class TicketForm(FlaskForm):
         else:
             return False
 
-    def validate_input_runs_temp(self, field):
+    def validate_input_runs(self, field):
         try:
             if not field.data:
                 test_runs = list()

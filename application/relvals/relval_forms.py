@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from resources.wtforms_form import Form as CustomForm
 from wtforms import SubmitField, FormField, Form
-from wtforms.validators import DataRequired, StopValidation, NumberRange
+from wtforms.validators import DataRequired, NumberRange, ValidationError
 from markupsafe import Markup
 from wtforms.widgets.core import html_params
 from resources.custom_form_fields import (ButtonField,
