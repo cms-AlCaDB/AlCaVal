@@ -88,9 +88,9 @@ class TicketForm(FlaskForm):
     classDict = {'class': 'form-control form-control-sm'}
 
     def validate_batch_name(form, field):
-    invalid_chars = ['-', ' ', ';', ':']
-    if any(char in field.data for char in invalid_chars):
-        raise ValidationError("Invalid batch name. Batch name must not contain spaces, hyphens, semicolons, or colons.")
+        invalid_chars = ['-', ' ', ',', ';', ':']
+        if any(char in field.data for char in invalid_chars):
+            raise ValidationError("Invalid batch name. Batch name must not contain spaces, hyphens, semicolons, or colons.")
 
     # Get CMSSW info
     t0api = Tier0Api()
