@@ -244,10 +244,9 @@ class cmsDriverStepForm(Form):
 class RelvalForm(FlaskForm):
 
     def validate_batch_name(form, field):
-    invalid_chars = ['-', ' ', ';', ':']
-    if any(char in field.data for char in invalid_chars):
-        raise ValidationError("Invalid batch name. Batch name must not contain spaces, hyphens, semicolons, or colons.")
-
+        invalid_chars = ['-', ' ', ',', ';', ':']
+        if any(char in field.data for char in invalid_chars):
+            raise ValidationError("Invalid batch name. Batch name must not contain spaces, hyphens, semicolons, or colons.")
 
     matrix_choices  = [
                     ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
