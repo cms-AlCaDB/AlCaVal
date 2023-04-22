@@ -98,7 +98,7 @@ function update_jira_in_relval(relval_json, lastEl) {
     {
       method: 'POST',
       body: JSON.stringify(relval_json),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      headers: {'Content-Type': 'application/json'}
     }
   ).then(res => getresponse(res)).then(data => {
     console.log('relval '+ relval_json.prepid +' is updated with jira ticket.')
