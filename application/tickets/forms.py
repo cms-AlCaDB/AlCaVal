@@ -214,7 +214,7 @@ class TicketForm(FlaskForm):
                 label_rkw = {'class': 'col-form-label-sm'}
                 )
     matrix_choices = [
-        ['alca', 'alca'], ['standard', 'standard'], ['upgrade', 'upgrade'], 
+        ['alca', 'alca'], ['standard', 'standard'], ['production', 'production'], ['upgrade', 'upgrade'], 
         ['generator', 'generator'], ['pileup', 'pileup'], ['premix', 'premix'],
         ['extendedgen', 'extendedgen'], ['gpu', 'gpu']
     ]

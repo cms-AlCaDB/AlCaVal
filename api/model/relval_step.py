@@ -478,8 +478,8 @@ class RelValStep(ModelBase):
                 continue
 
             # AlCa step needs RECO as input
-            if this_is_alca and not step.has_step('RECO'):
-                continue
+            # if this_is_alca and not step.has_step('RECO'):
+            #     continue
 
             return step_index
 
@@ -514,12 +514,12 @@ class RelValStep(ModelBase):
 
             raise Exception(f'No DQM eventcontent in the input step {input_step_eventcontent}')
 
-        if this_is_alca:
-            for eventcontent_index, eventcontent in enumerate(input_step_eventcontent):
-                if eventcontent.startswith('RECO'):
-                    return eventcontent_index, eventcontent
+        # if this_is_alca:
+        #     for eventcontent_index, eventcontent in enumerate(input_step_eventcontent):
+        #         if eventcontent.startswith('RECO'):
+        #             return eventcontent_index, eventcontent
 
-            raise Exception(f'No RECO eventcontent in the input step {input_step_eventcontent}')
+        #     raise Exception(f'No RECO eventcontent in the input step {input_step_eventcontent}')
 
         input_step_eventcontent = [x for x in input_step_eventcontent if not x.startswith('DQM')]
         return len(input_step_eventcontent) - 1, input_step_eventcontent[-1]
