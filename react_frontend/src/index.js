@@ -3,12 +3,30 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { QueryClientProvider, QueryClient } from 'react-query';
+import { persistQueryClient } from 'react-query/persistQueryClient-experimental'
+import { createWebStoragePersistor } from 'react-query/createWebStoragePersistor-experimental'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+      staleTime: 1000 * 60 * 1, // 5 min
+    },
+  },
+});
+const localStoragePersistor = createWebStoragePersistor({storage: window.localStorage})
+persistQueryClient({
+  queryClient,
+  persistor: localStoragePersistor,
+})
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </React.StrictMode>
 );
 

@@ -17,7 +17,7 @@ export const getHiddenColumns = (Shown, tableColumns) => {
   }).map(item => item.accessor);
 }
 
-const makeDASLink = (dataset) => (`https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod&global&input=dataset=${dataset}`);
+const makeDASLink = (dataset) => (`https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset=${dataset}`);
 
 // Fetching column headers also returning formatted cells alongwith handle methods
 export const useColumns = (state, role, dispatch) => {
@@ -357,6 +357,28 @@ export const useColumns = (state, role, dispatch) => {
           }
           </ol>
         )}
+    },
+    {
+      Header: 'DQM Links',
+      accessor: 'test',
+      visible: 0,
+      Cell: ({row}) => (
+        <ul>
+          {
+          row.original.output_datasets.map(dataset=> (
+            <li key={dataset}>
+              <a target="_blank" title="Open dataset in DAS" href={makeDASLink(dataset)}>{dataset}</a>
+            </li>
+          ))
+          }
+        </ul>
+      ),
+    },
+    {
+      Header: 'Steps',
+      accessor: 'steps',
+      visible: 0,
+      Cell: ({row}) => <StepCell row={row}/>,
     },
   ]
 
