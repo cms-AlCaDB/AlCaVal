@@ -101,6 +101,8 @@ class RelvalTestSubmitter(BaseSubmitter):
         relval.set('status', 'approved')
         relval.add_history('approval', 'succeeded', 'automatic')
         print('SUCCESS: ', time.time()-start_time, ' sec')
+      # Save the exit code and relval status into the database
+      self.store_submission_output(relval, None, exit_code)
       relval_db.save(relval.get_json())
     return relval
 
@@ -140,7 +142,7 @@ class RelvalTestSubmitter(BaseSubmitter):
                 'chmod +x config_test_generate.sh',
                 'export X509_USER_PROXY=$(pwd)/proxy.txt',
                 'echo "$X509_USER_PROXY"',
-                './config_test_generate.sh',
+                './config_test_generate.sh || exit 1',
                 f'rm -rf {workspace_dir}/{prepid}']
     start_time = time.time()
     stdout = ssh.execute_command_new(command)
