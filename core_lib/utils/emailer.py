@@ -58,10 +58,11 @@ class Emailer():
         self.message['Cc'] = 'alcauser@cern.ch'
 
         # Send the self.message via our own SMTP server.
-        smtp = smtplib.SMTP('smtp.cern.ch', 587)
+        smtp = smtplib.SMTP('cernmx.cern.ch', 25)
         smtp.starttls()
-        credentials = json.loads(open(Config.get('credentials_file')).read())
-        smtp.login(*list(credentials.values()))
+        # --- Comment mail credentials to use anonymous authentication
+        #credentials = json.loads(open(Config.get('credentials_file')).read())
+        #smtp.login(*list(credentials.values()))
         self.logger.debug('Sending email %s to %s', self.message['Subject'], self.message['To'])
         try:
             smtp.send_message(self.message)
@@ -87,10 +88,11 @@ class Emailer():
         message['Cc'] = 'alcauser@cern.ch'
 
         # Send the message via our own SMTP server.
-        smtp = smtplib.SMTP('smtp.cern.ch', 587)
+        smtp = smtplib.SMTP('cernmx.cern.ch', 25)
         smtp.starttls()
-        credentials = json.loads(open(Config.get('credentials_file')).read())
-        smtp.login(*list(credentials.values()))
+        # --- Comment mail credentials to use anonymous authentication
+        #credentials = json.loads(open(Config.get('credentials_file')).read())
+        #smtp.login(*list(credentials.values()))
         self.logger.debug('Sending email %s to %s', message['Subject'], message['To'])
         smtp.send_message(message)
         smtp.quit()
