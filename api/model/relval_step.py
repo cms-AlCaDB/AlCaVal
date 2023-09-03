@@ -33,7 +33,6 @@ class RelValStep(ModelBase):
             'conditions': '',
             'customise': '',
             'customise_commands': '',
-            'custom_conditions': '',
             'data': False,
             'datatier': [],
             'era': '',

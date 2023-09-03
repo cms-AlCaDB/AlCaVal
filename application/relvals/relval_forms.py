@@ -121,10 +121,6 @@ class DriverOptionsForm(CustomForm):
                 render_kw = classDict,
                 label_rkw = label_kw
                 )
-    custom_conditions = SStringField('--custom_conditions',
-                render_kw = classDict,
-                label_rkw = label_kw
-                )
     datatier = SStringField('--datatier',
                 render_kw = classDict,
                 label_rkw = label_kw
