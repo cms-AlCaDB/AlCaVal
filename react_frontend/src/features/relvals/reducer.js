@@ -1,7 +1,7 @@
 
   // Need query params for setting first data request
   var urlParams = new URLSearchParams(window.location.search);
-  const shown = urlParams.get('shown')? urlParams.get('shown'): "111111000000000001011";
+  const shown = urlParams.get('shown')? urlParams.get('shown'): "1111110000000000010010";
   const pageValid =  Number(urlParams.get('page')) >= 0
   const pageSizeValid = Number(urlParams.get('limit')) > 0
   const initPageNumber = pageValid? Number(urlParams.get('page')): 0
