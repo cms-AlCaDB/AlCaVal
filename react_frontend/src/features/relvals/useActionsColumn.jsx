@@ -337,16 +337,17 @@ export const useColumns = (state, role, dispatch) => {
               <li key={workflow.name}>
                 <a target="_blank" title="Open workflow in ReqMgr2" href={`https://cmsweb.cern.ch/reqmgr2/fetch?rid=${workflow.name}`}>{workflow.name}</a>
                 <small style={{color: 'gray'}}> open in:</small> <a target="_blank" title="Open workflow in Stats2" href={`https://cms-pdmv.cern.ch/stats?workflow_name=${workflow.name}`}>Stats2</a>
-                {
-                  workflow.output_datasets.map(dataset =>
-                    <li key={dataset.name}>
-                      <div>
-                        <small style={{color: 'gray'}}>datatier: </small> {dataset.name.split('/').pop()}
-                        <small style={{letterSpacing: "-0.1px"}}><a target="_blank" title="Open dataset in DAS" href={()=>makeDASLink(dataset.name)}>{dataset.name}</a></small>
-                      </div>
-                    </li>
-                  )
-                }
+		if (typeof workflow.output_datasets !== "undefined")
+			{
+	                  workflow.output_datasets.map(dataset =>
+	                    <li key={dataset.name}>
+	                      <div>
+	                        <small style={{color: 'gray'}}>datatier: </small> {dataset.name.split('/').pop()}
+	                        <small style={{letterSpacing: "-0.1px"}}><a target="_blank" title="Open dataset in DAS" href={()=>makeDASLink(dataset.name)}>{dataset.name}</a></small>
+	                      </div>
+	                    </li>
+	                  )
+	                }
                 <br/>
                 <small style={{color: 'gray'}}>Last status: </small> <span style={{color: 'brown'}}>{workflow.status_history[workflow.status_history.length - 1].status}</span>
                 <small style={{color: 'gray'}}> was set </small> { timeSince(new Date(workflow.status_history[workflow.status_history.length - 1].time*1000 ))}
