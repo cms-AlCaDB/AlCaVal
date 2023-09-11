@@ -41,7 +41,7 @@ services:
       - app
   database:
     container_name: mongodb
-    image: mongo
+    image: mongo:6.0
     env_file: secrets/environs.txt
     ports:
       - 27017
