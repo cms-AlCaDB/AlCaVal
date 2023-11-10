@@ -26,7 +26,7 @@ class JiraTicketController():
                 'issuetype': {'name': 'Task'},
                 'summary': jira_json['jira_summary'],
                 'description': jira_json['jira_description'],
-                'assignee': {'name': 'tvami'},
+                'assignee': {'name': 'matheus'},
                 'priority': {'name': 'Major'},
                 'components': [{'name' : 'AlCaDB'}] + [{'name': a} for a in components],
                 'labels': [l.strip() for l in jira_json['jira_labels'].split(',')]
@@ -49,14 +49,16 @@ class Jira():
         self.credentials_file = credentials_file
         self.host = host
 
+
     def setup_jira_connection(self):
         with open(self.credentials_file) as json_file:
             credentials = json.load(json_file)
 
         options = {'check_update': False}
         self.client  = JIRA(self.host, 
-                            basic_auth=(credentials['username'], 
-                                        credentials['password']), 
+                            token_auth=(credentials["token"]), 
                             options=options)
         self.logger.debug('Done setting up jira connection')
         return self.client
+
+    
