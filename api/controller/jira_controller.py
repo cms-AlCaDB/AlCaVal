@@ -49,16 +49,13 @@ class Jira():
         self.credentials_file = credentials_file
         self.host = host
 
-
     def setup_jira_connection(self):
         with open(self.credentials_file) as json_file:
             credentials = json.load(json_file)
 
         options = {'check_update': False}
         self.client  = JIRA(self.host, 
-                            token_auth=(credentials["token"]), # change the old methods to authentication to new using token  
+                            token_auth=(credentials["token"]), 
                             options=options)
         self.logger.debug('Done setting up jira connection')
         return self.client
-
-    
