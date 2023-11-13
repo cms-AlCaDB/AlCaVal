@@ -56,7 +56,7 @@ class Jira():
 
         options = {'check_update': False}
         self.client  = JIRA(self.host, 
-                            token_auth=(credentials["token"]), 
+                            token_auth=(credentials["token"]), # change the old methods to authentication to new using token  
                             options=options)
         self.logger.debug('Done setting up jira connection')
         return self.client
