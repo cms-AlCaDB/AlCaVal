@@ -43,7 +43,7 @@ class JiraTicketController():
         connection.close()
 
 class Jira():
-    def __init__(self, credentials_file, host='http://its.cern.ch/jira'):
+    def __init__(self, credentials_file, host='https://its.cern.ch/jira'):
         self.client = None
         self.logger = logging.getLogger()
         self.credentials_file = credentials_file
