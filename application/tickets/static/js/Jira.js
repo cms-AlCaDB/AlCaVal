@@ -46,7 +46,7 @@ function jira_api(data) {
   $('body').addClass('loading');    
   fetch('api/jira/create',
     {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json'}
     }
