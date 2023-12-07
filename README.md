@@ -54,8 +54,56 @@ GRID user-certificate to be used for accessing cmsweb services
 
 ### Launching the application
 Install docker in case it is not installed in your machine. Follow [Install Docker Engine](https://docs.docker.com/engine/install/) and [Install Docker Compose](https://docs.docker.com/compose/install/).
+
+#### Installing Docker Engine
+##### 1) Install required packages
+```
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+```
+##### 2) Add Docker's official GPG key
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+```
+##### 3) Set up the Docker stable repository
+```
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+```
+
+#### 4) Update the package database
+```
+sudo apt-get update
+```
+
+#### 5) Install Docker
+```
+sudo apt-get install docker-ce
+```
+
+#### 6) Verify Docker installation
+```
+sudo docker --version
+```
+
+### Installing Docker Compose
+
+#### 1) Download Docker Compose
+```
+sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+```
+Note: Replace 1.29.2 with the latest version of Docker Compose.
+
+#### 2) Apply executable permissions
+```
+sudo chmod +x /usr/local/bin/docker-compose
+```
+#### 3) Verify Docker Compose installation
+```
+docker-compose --version
+```
+
 Then launch application using:
 
 ```docker-compose up app```
 
 Application is accesible at http://localhost:8080 and database can be accessed from http://localhost:8081.
+

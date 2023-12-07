@@ -16,7 +16,7 @@ class CreateJiraTicketAPI(APIBase):
     @APIBase.ensure_request_data
     @APIBase.exceptions_to_errors
     @APIBase.ensure_role('manager')
-    def put(self):
+    def post(self):
         """
         Create a ticket with the provided JSON content
         """
