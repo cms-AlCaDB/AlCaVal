@@ -49,21 +49,16 @@ class RelvalTestSubmitter(BaseSubmitter):
     # Ensure stdout is a string
     stdout_str = '' if stdout is None else stdout
 
-    # If dbdoc is not None, concatenate the previous stdout with the new stdout
+    # Concatenate the previous stdout with the new stdout, if any
     test_stdout = dbdoc.get('test_stdout', '') + stdout_str if dbdoc else stdout_str
 
-    # Check if the test is complete with an exit code
-    if exit_code is not None and type(exit_code) == int:
-        status = 'done' if exit_code == 0 else 'new'  # 'new' status if test failed
-        test_exit_code = str(exit_code)
-    else:
-        status = 'running'
-        test_exit_code = '0'  # Standard exit code representing test in progress
+    # Determine status based on exit code
+    status = 'done' if exit_code == 0 else 'new'  # Assume 'new' if test failed or exit_code is None
 
     # Update the database document with the new information
     doc = {
         "_id": relval.get_prepid(),
-        "test_exit_code": test_exit_code,
+        "test_exit_code": str(exit_code) if exit_code is not None else 'N/A',
         "test_status": status,
         "test_stdout": test_stdout
     }
