@@ -42,25 +42,26 @@ class RelvalTestSubmitter(BaseSubmitter):
     return params
 
   def store_submission_output(self, relval, stdout, exit_code):
-    """
-    Novice way to store std output to db. 
-    if exit_code is other that 'None' then status is set to 'done'
-    """
-    if (not stdout) and type(exit_code)!=int: return
+    """Store output and exit code of relval test to the database."""
     test_db = Database('relval-tests')
     dbdoc = test_db.get(relval.get_prepid())
-    if not dbdoc:
-      test_stdout = stdout
-      new = True
-    else:
-      test_stdout = dbdoc['test_stdout']
-      new = dbdoc['test_status']=='done' and (exit_code==None)
-    stdout = None if type(exit_code)==int else stdout if new else test_stdout + stdout
-    status = 'done' if type(exit_code)==int else 'running'
-    doc = {"_id": relval.get_prepid(),
-           "test_exit_code": str(exit_code) if type(exit_code)==int else '0',
-           "test_status": status
-          } | {"test_stdout": stdout if stdout else test_stdout}
+
+    # Ensure stdout is a string
+    stdout_str = '' if stdout is None else stdout
+
+    # Concatenate the previous stdout with the new stdout, if any
+    test_stdout = dbdoc.get('test_stdout', '') + stdout_str if dbdoc else stdout_str
+
+    # Determine status based on exit code
+    status = 'done' if exit_code == 0 else 'new'  # Assume 'new' if test failed or exit_code is None
+
+    # Update the database document with the new information
+    doc = {
+        "_id": relval.get_prepid(),
+        "test_exit_code": str(exit_code) if exit_code is not None else 'N/A',
+        "test_status": status,
+        "test_stdout": test_stdout
+    }
     test_db.save(doc)
 
   def submit_relval_test(self, relval, controller):
