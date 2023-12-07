@@ -49,7 +49,7 @@ class RelvalTestSubmitter(BaseSubmitter):
     # Ensure stdout is a string
     stdout_str = '' if stdout is None else stdout
 
-    # Concatenate the previous stdout with the new stdout, if any
+    # Concatenate the previous stdout with the new stdout 
     test_stdout = dbdoc.get('test_stdout', '') + stdout_str if dbdoc else stdout_str
 
     # Determine status based on exit code
