@@ -45,7 +45,12 @@ class RelvalTestSubmitter(BaseSubmitter):
     """Store output and exit code of relval test to the database."""
     test_db = Database('relval-tests')
     dbdoc = test_db.get(relval.get_prepid())
-    test_stdout = stdout if not dbdoc else dbdoc.get('test_stdout', '') + stdout
+
+    # Ensure stdout is a string
+    stdout_str = '' if stdout is None else stdout
+
+    # If dbdoc is not None, concatenate the previous stdout with the new stdout
+    test_stdout = dbdoc.get('test_stdout', '') + stdout_str if dbdoc else stdout_str
 
     # Check if the test is complete with an exit code
     if exit_code is not None and type(exit_code) == int:
@@ -53,7 +58,7 @@ class RelvalTestSubmitter(BaseSubmitter):
         test_exit_code = str(exit_code)
     else:
         status = 'running'
-        test_exit_code = '0'  # Default exit code representing test in progress
+        test_exit_code = '0'  # Standard exit code representing test in progress
 
     # Update the database document with the new information
     doc = {
