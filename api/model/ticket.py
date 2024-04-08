@@ -48,8 +48,10 @@ class Ticket(ModelBase):
         'prompt_gt': '',
         # Express GT
         'express_gt': '',
-        # Common Prompt GT
-        'common_prompt_gt': '',
+        # Common Prompt GT for HLT
+        'common_prompt_gt_for_hlt': '',
+        # Common Prompt GT for HLT Ref
+        'common_prompt_gt_for_hlt_ref':'',
         # HLT reference GT
         'hlt_gt_ref': '',
         # Prompt reference GT
@@ -128,7 +130,8 @@ class Ticket(ModelBase):
         'hlt_gt': ModelBase.lambda_check('globaltag'),
         'prompt_gt': ModelBase.lambda_check('globaltag'),
         'express_gt': ModelBase.lambda_check('globaltag'),
-        'common_prompt_gt': ModelBase.lambda_check('globaltag'),
+        'common_prompt_gt_for_hlt': ModelBase.lambda_check('globaltag'),
+        'common_prompt_gt_for_hlt_ref': ModelBase.lambda_check('globaltag'),
         'status': lambda status: status in ('new', 'done'),
         'scram_arch': lambda s: not s or ModelBase.lambda_check('scram_arch')(s),
         'workflow_ids': lambda wf: len(wf) > 0,

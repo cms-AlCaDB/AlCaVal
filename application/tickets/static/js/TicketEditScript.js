@@ -19,9 +19,13 @@ function addHelpIcons(){
   var nstreams_help = `${grayHelper} If number of streams is 0, default value will be used</small></td></tr>`
   document.getElementById("n_streams").parentNode.parentNode.insertAdjacentHTML('afterend', nstreams_help)
 
-  var common_gt_help = "Common Prompt GT is usually same as target prompt GT. This field is required if you are using HLT GTs. It will be used in RECO stage of the HLT workflow"
-  common_gt_help = '<span id="commong-gt-help-icon" class="help-icons" data-toggle="popover" data-content="'+common_gt_help+'"><i class="bi bi-question-circle-fill"></i></span>'
-  document.getElementById("common_prompt_gt").insertAdjacentHTML('afterend', common_gt_help)
+  var common_gt_hlt_help = "Common Prompt GT for target HLT is usually the same as the target prompt GT. This field is required when using HLT GTs. It's applied in the RECO stage of the HLTNew workflow."
+  common_gt_hlt_help = '<span class="help-icons" data-toggle="popover" data-content="'+common_gt_hlt_help+'"><i class="bi bi-question-circle-fill"></i></span>'
+  document.getElementById("common_prompt_gt_for_hlt").insertAdjacentHTML('afterend', common_gt_hlt_help)
+
+  var common_gt_hlt_ref_help = "Common Prompt GT for reference HLT is usually the same as the reference prompt GT. This field is required when using HLT GTs. It's applied in the RECO stage of the HLTRef workflow."
+  common_gt_hlt_ref_help = '<span class="help-icons" data-toggle="popover" data-content="'+common_gt_hlt_ref_help+'"><i class="bi bi-question-circle-fill"></i></span>'
+  document.getElementById("common_prompt_gt_for_hlt_ref").insertAdjacentHTML('afterend', common_gt_hlt_ref_help)
 
   var widHelp = `${grayHelper} This is handled by FTV managers, please ignore if you are not the one</small></td></tr>`
   document.getElementById("workflow_ids").parentNode.parentNode.insertAdjacentHTML('afterend', widHelp)
