@@ -429,7 +429,11 @@ class TicketController(ControllerBase):
             if 'HLT' in cond_tag and step_index == 1:
                 new_step['driver']['conditions'] = ticket.get('hlt_gt{}'.format('_ref' if 'Ref' in cond_tag else ''))
             elif 'HLT' in cond_tag and step_index != 0:
-                new_step['driver']['conditions'] = ticket.get('common_prompt_gt')
+                if 'Ref' in cond_tag:
+                    common_prompt_gt = ticket.get('common_prompt_gt_for_hlt_ref')
+                else:
+                    common_prompt_gt = ticket.get('common_prompt_gt_for_hlt')
+                new_step['driver']['conditions'] = common_prompt_gt
             if 'Prompt' in cond_tag and step_index != 0:
                 new_step['driver']['conditions'] = ticket.get('prompt_gt{}'.format('_ref' if 'Ref' in cond_tag else ''))
             if 'Express' in cond_tag and step_index != 0:
