@@ -95,7 +95,8 @@ class TicketController(ControllerBase):
         editing_info['hlt_gt'] = not_done
         editing_info['prompt_gt'] = not_done
         editing_info['express_gt'] = not_done
-        editing_info['common_prompt_gt'] = not_done
+        editing_info['common_prompt_gt_for_hlt'] = not_done
+        editing_info['common_prompt_gt_for_hlt_ref'] = not_done
         editing_info['hlt_gt_ref'] = not_done
         editing_info['prompt_gt_ref'] = not_done
         editing_info['express_gt_ref'] = not_done
@@ -695,8 +696,10 @@ class TicketController(ControllerBase):
             if gt_ref:
                 gt_list += f' * Reference {cond} GT: [{gt_ref}|{tag_link.format(gt_ref)}]\n'
             if cond == 'HLT':
-                common_gt = ticket.get('common_prompt_gt')
-                gt_list += f' * Common Prompt GT: [{common_gt}|{tag_link.format(common_gt)}]\n'
+                common_gt = ticket.get('common_prompt_gt_for_hlt')
+                gt_list += f' * Common Prompt GT for Target HLT: [{common_gt}|{tag_link.format(common_gt)}]\n'
+                common_gt_ref = ticket.get('common_prompt_gt_for_hlt_ref')
+                gt_list += f' * Common Prompt GT for Reference HLT: [{common_gt_ref}|{tag_link.format(common_gt_ref)}]\n'
             if gt and gt_ref:
                 differ = diff.format(target=gt, ref=gt_ref)
                 gt_list += f' * Difference: [{cond} target vs reference|{differ}]\n'
