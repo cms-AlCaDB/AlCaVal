@@ -160,7 +160,7 @@ class TicketForm(FlaskForm):
     common_prompt_gt_for_hlt_ref = SStringField('Common Prompt GT for reference HLT',
                 validators=[GTDataRequired(message="Since you have chosen to use HLT global tag, you are required to provide common prompt global tag for reference HLT, which is to be used in RECO step of workflow")],
                 render_kw=classDict | {'placeholder': 'Global tag to be used in RECO step for reference HLT'},
-                label_rkw={'class': 'col-form-label-sm'}
+                label_rkw=label_rkw
                 )
     prompt_gt = SStringField('Target Prompt GT',
                 render_kw = classDict | {'placeholder': 'Prompt target global tag'},
