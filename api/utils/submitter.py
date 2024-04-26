@@ -266,7 +266,7 @@ class RequestSubmitter(BaseSubmitter):
 
     def monitor_job_status(self):
         """
-        Monitors the status of lawns and sends an email when the status changes to 'announced'.
+        Monitors the status of RelVals and sends an email when the status changes to 'announced'.
         """
         relvals_db = Database('relvals')
         pipeline = [
