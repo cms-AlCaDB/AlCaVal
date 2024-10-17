@@ -36,8 +36,10 @@ class Tier0Api(object):
         self.request.url = url
         # at the moment the authorization is not required, but it might be in the future
         # this is the way to handle it
-        cert = os.getenv('X509_USER_PROXY')
-        response = self.session.send(self.request, verify=False, cert=(cert, cert))
+        
+        grid_cert = Config.get('grid_user_cert')
+        grid_key = Config.get('grid_user_key')
+        response = self.session.send(self.request, verify=False, cert=(grid_cert, grid_key))
         # if there is a problem with the service (usually 503) print the reason
         response.raise_for_status()
         return response.json()
