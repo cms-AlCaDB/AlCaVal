@@ -203,52 +203,12 @@ def change_workflow_priority(workflow_names, priority):
             logger.debug(response)
 
 
-def refresh_workflows_in_stats(workflow_names):
-    """
-    Force Stats2 to update workflows with given workflow names
-    """
-    workflow_names = [w.strip() for w in workflow_names if w.strip()]
-    if not workflow_names:
-        return
-
-    logger = logging.getLogger('logger')
-    credentials_file = Config.get('credentials_file')
-    commands = ['cd /home/pdmvserv/private',
-                'source setup_credentials.sh',
-                'cd /home/pdmvserv/Stats2']
-    commands += [f'python3 stats_update.py --action update --name {w}' for w in workflow_names]
-    logger.info('Will make Stats2 refresh these workflows: %s', ', '.join(workflow_names))
-    with Locker().get_lock('refresh-stats'):
-        with SSHExecutor('vocms074.cern.ch', credentials_file) as ssh_executor:
-            ssh_executor.execute_command(commands)
-
-    logger.info('Finished making Stats2 refresh workflows')
-
-
 def sort_workflows_by_name(workflows, name_attr):
     """
     Sort workflows by their submission date
     """
     return sorted(workflows, key=lambda w: '_'.join(w[name_attr].split('_')[-3:]))
 
-
-def get_workflows_from_stats_for_prepid(prepid):
-    """
-    Fetch workflows from Stats for given prepid
-    """
-    if not prepid:
-        return []
-
-    with ConnectionWrapper('http://vocms074.cern.ch:5984') as stats_conn:
-        response = stats_conn.api(
-            'GET',
-            f'/requests/_design/_designDoc/_view/prepids?key="{prepid}"&include_docs=True'
-        )
-
-    response = json.loads(response.decode('utf-8'))
-    workflows = [x['doc'] for x in response['rows']]
-    workflows = sort_workflows_by_name(workflows, 'RequestName')
-    return workflows
 
 def get_workflows_from_reqmgr2_for_prepid(prepid):
     """Fetch workflows from given prepid"""
@@ -274,24 +234,6 @@ def get_workflows_from_reqmgr2_for_prepid(prepid):
     workflows = sort_workflows_by_name(workflows, 'RequestName')
     return workflows
 
-def get_workflows_from_stats(workflow_names):
-    """
-    Fetch workflows from Stats with given names
-    """
-    workflow_names = [w.strip() for w in workflow_names if w.strip()]
-    if not workflow_names:
-        return []
-
-    data = {'docs': [{'id': name} for name in workflow_names]}
-    headers = {'Content-type': 'application/json',
-               'Accept': 'application/json'}
-    with ConnectionWrapper('http://vocms074.cern.ch:5984') as stats_conn:
-        response = stats_conn.api('POST', '/requests/_bulk_get', data, headers)
-
-    response = json.loads(response.decode('utf-8')).get('results', [])
-    workflows = [r['docs'][-1]['ok'] for r in response if r.get('docs') if r['docs'][-1].get('ok')]
-    workflows = sort_workflows_by_name(workflows, 'RequestName')
-    return workflows
 
 def get_workflows_from_reqmgr2(workflow_names):
     """

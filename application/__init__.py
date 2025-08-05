@@ -78,6 +78,7 @@ def create_app():
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
     # Set paramiko logging to warning
     logging.getLogger('paramiko').setLevel(logging.WARNING)
+    logging.getLogger('urllib3.connectionpool').setLevel(logging.INFO)
 
     app = Flask(__name__,
                 static_folder='../react_frontend/build/static',

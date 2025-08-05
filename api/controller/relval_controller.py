@@ -944,7 +944,7 @@ class RelValController(ControllerBase):
 
     def update_workflows(self, relval):
         """
-        Update computing workflows from Stats2
+        Update computing workflows from Reqmgr2
         """
         prepid = relval.get_prepid()
         relval_db = Database('relvals')
@@ -960,7 +960,7 @@ class RelValController(ControllerBase):
             all_workflows = {}
             for workflow in stats_workflows:
                 if not workflow or not workflow.get('RequestName'):
-                    raise Exception('Could not find workflow in Stats2')
+                    raise Exception('Could not find workflow in Reqmgr2')
 
                 name = workflow.get('RequestName')
                 all_workflows[name] = workflow

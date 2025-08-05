@@ -315,7 +315,7 @@ class RelValPreviousStatus(APIBase):
 
 class UpdateRelValWorkflowsAPI(APIBase):
     """
-    Endpoint for trigerring one or multiple RelVal update from Stats2 (ReqMgr2 + DBS)
+    Endpoint for trigerring one or multiple RelVal update from ReqMgr2
     """
 
     def __init__(self):
@@ -326,7 +326,7 @@ class UpdateRelValWorkflowsAPI(APIBase):
     @APIBase.ensure_role('manager')
     def post(self):
         """
-        Pull workflows from Stats2 (ReqMgr2 + DBS) and update RelVal with that information
+        Pull workflows from ReqMgr2 and update RelVal with that information
         """
         data = flask.request.data
         relval_json = json.loads(data.decode('utf-8'))

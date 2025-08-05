@@ -352,7 +352,6 @@ export const useColumns = (state, role, dispatch) => {
                 <small style={{color: 'gray'}}>Last status: </small> <span style={{color: 'brown'}}>{workflow.status_history[workflow.status_history.length - 1].status}</span>
                 <small style={{color: 'gray'}}> was set </small> { timeSince(new Date(workflow.status_history[workflow.status_history.length - 1].time*1000 ))}
                 <small style={{color: 'gray'}}> ({ new Date( workflow.status_history[workflow.status_history.length - 1].time*1000 ).toLocaleString()}) </small>
-                <Button size="sm" variant="outline-dark" onClick={e=>updateWorkflows(e, Object.values(state.selectedItems).flat().map(item =>item.id))}>Update</Button>
               </li>
             )
           }

@@ -5,13 +5,13 @@ import os
 import time
 from core_lib.utils.ssh_executor import SSHExecutor
 from core_lib.utils.locker import Locker
-from database.database import Database
 from core_lib.utils.connection_wrapper import ConnectionWrapper
 from core_lib.utils.submitter import Submitter as BaseSubmitter
 from core_lib.utils.common_utils import clean_split
 from core_lib.utils.global_config import Config
-from ..utils.emailer import Emailer
+from database.database import Database
 from resources.smart_tricks import askfor
+from ..utils.emailer import Emailer
 
 class RequestSubmitter(BaseSubmitter):
     """
@@ -263,48 +263,3 @@ class RequestSubmitter(BaseSubmitter):
         controller.update_workflows(relval)
 
         self.logger.info('Successfully finished %s submission', prepid)
-
-    def monitor_job_status(self):
-        """
-        Monitors the status of RelVals and sends an email when the status changes to 'announced'.
-        """
-        relvals_db = Database('relvals')
-        pipeline = [
-            {"$match": {"operationType": "update", "updateDescription.updatedFields.status": "announced"}}
-        ]
-        try:
-            with relvals_db.collection.watch(pipeline) as stream:
-                for change in stream:
-                    relval_id = change['documentKey']['_id']
-                    self.__notify_announced(relval_id)
-        except Exception as e:
-            self.logger.error(f"Error when monitoring relvals status: {e}")
-
-    def __notify_announced(self, relval_id):
-        """
-        Notifies when a relval is updated to 'announced'.
-        """
-        relval_db = Database('relvals')
-        relval = relval_db.get(relval_id)
-        if not relval:
-            self.logger.error(f"RelVal with ID {relval_id} not found.")
-            return
-
-        if relval.get('status') != 'announced':
-            self.logger.error(f"RelVal {relval_id} is not in 'announced' status.")
-            return
-
-        prepid = relval.get_prepid()
-        last_workflow = relval.get('workflows')[-1]['name'] if relval.get('workflows') else 'N/A'
-
-        service_url = Config.get('service_url')
-        cmsweb_url = Config.get('cmsweb_url')
-        subject = f'RelVal {prepid} Status Updated to Announced'
-        body = f'Hello,\n\nThe status of RelVal {prepid} has been updated to "announced".\n'
-        body += f'You can find this RelVal at <a href="{service_url}/relvals?prepid={prepid}">{prepid}</a>\n'
-        body += f'Last workflow: <a href="{cmsweb_url}/reqmgr2/fetch?rid={last_workflow}">{last_workflow}</a>'
-
-        emailer = Emailer()
-        recipients = emailer.get_recipients(relval)
-        emailer.send_with_mime(subject, body, recipients)
-        self.logger.info(f"Email sent to {recipients} about the status update of RelVal {relval_id} to 'announced'.")

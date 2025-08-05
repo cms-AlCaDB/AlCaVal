@@ -61,9 +61,8 @@ class ControllerBase():
         """
         database = Database(self.database_name)
         object_json = database.get(prepid)
-        self.logger.debug('Fetched object for prepid %s: %s',
-                          prepid,
-                          json.dumps(object_json, indent=2))
+        self.logger.debug('Fetched object for prepid %s',
+                          prepid)
         if not object_json:
             raise ObjectNotFound(prepid)
 
